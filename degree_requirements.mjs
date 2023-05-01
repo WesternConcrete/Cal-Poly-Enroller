@@ -1,7 +1,7 @@
 import cheerio from "cheerio";
 
 // select from the following
-const SFTF = /\s*Select (one sequence)? from the following.*/;
+const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 // If we're in a sftf block the courses are in one of the following formats:
 // a)
 // [course]
@@ -41,29 +41,53 @@ async function scrape_degree_requirements(page) {
         // see comment at top of file which explains these flags
         var in_sftf = false;
         var sftf_sep = null;
+        var prev_was_or = false;
         const rows = $(table).find("tr");
-        const push_requirement = (course) => {};
         for (let i = 0; i < rows.length; i++) {
             const tr = rows[i];
             // TODO: extracting <sup>1</sup> footnote tags
 
             if ($(tr).hasClass("areaheader")) {
                 if (cur_section && data[cur_section]) {
-                    console.log(cur_section, "=", data[cur_section]);
+                    console.log(
+                        cur_section,
+                        "=",
+                        JSON.stringify(data[cur_section], null, 2)
+                    );
                 }
-                // section
+                in_sftf = false;
+                prev_was_or = false;
+                sftf_sep = null;
+                // new section
                 cur_section = $(tr).text().trim();
                 data[cur_section] = [];
                 if (!cur_section) {
                     console.error("no text in header:", $(tr));
                     break;
                 }
-            } else if ($(tr).hasClass("orclass")) {
-                // TODO:
+            } else if ($(tr).find("span.courselistcomment").length > 0) {
+                const comment = $(tr)
+                    .find("span.courselistcomment")
+                    .text()
+                    .trim();
+                if (comment.match(SFTF_RE)) {
+                    in_sftf = true;
+                    data[cur_section].push({ or: [] });
+                    sftf_sep = null;
+                } else if (comment.includes("or")) {
+                    if (!in_sftf) {
+                        console.error(
+                            "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/"
+                        );
+                        break;
+                    }
+                    sftf_sep = "or";
+                    prev_was_or = true;
+                }
             } else {
-                // Normal row
-                const course = $(tr).find("td.codecol a[title]");
-                if (course.length > 1) {
+                var course = $(tr).find("td.codecol a[title]");
+                const is_and = course.length > 1;
+                if (is_and) {
                     // course is actually courses plural
                     // make sure it's actually an '&' of the courses
                     if (!$(tr).find("span.blockindent").text().includes("&")) {
@@ -76,42 +100,54 @@ async function scrape_degree_requirements(page) {
                     $(course).each((_i, c) =>
                         course_titles.push($(c).text().trim())
                     );
-                    data[cur_section].push({ and: course_titles });
-                } else if (course.length === 1) {
-                    const title = course.text().trim();
-                    data[cur_section].push(title);
-                } else {
-                    if (
-                        $(tr).find("span.courselistcomment").length > 0 ||
-                        $(tr).hasClass("listsum")
-                    ) {
-                        // TODO: handle
+                    course = { and: course_titles };
+                } else if (course.length !== 1) {
+                    if ($(tr).hasClass("listsum")) {
                         continue;
                     }
+                    // TODO: handle sections with references to other information on page
                     console.log(
                         "no title for:",
                         $(tr).find("td.codecol").text().trim()
                     );
                 }
+                if (!is_and && course.length === 1) {
+                    course = course.text().trim();
+                }
+                const has_orclass = $(tr).hasClass("orclass");
+                const last = data[cur_section].length - 1;
+
+                if (in_sftf) {
+                    const last_or = data[cur_section][last].or;
+                    if (last_or.length === 0) {
+                        last_or.push(course);
+                    } else if (last_or.length >= 1) {
+                        if (last_or.length === 1 && has_orclass) {
+                            sftf_sep = "or";
+                        }
+                        if (has_orclass || prev_was_or || sftf_sep == null) {
+                            data[cur_section][last].or.push(course);
+                        } else {
+                            in_sftf = false;
+                            sftf_sep = null;
+                        }
+                    }
+                    prev_was_or = false;
+                }
+                if (!in_sftf && has_orclass) {
+                    // TODO: assert data.cur.last is not or already
+                    // (multiple or's chained togehter outside of sftf)
+                    data[cur_section][last] = {
+                        or: [data[cur_section][last], course],
+                    };
+                } else if (!in_sftf) {
+                    // Normal row
+                    data[cur_section].push(course);
+                }
             }
         }
-        console.log("end");
-        // .each((_i, tr) => {
-        //     // TODO: extracting <sup>1</sup> footnote tags
-        //     if ($(tr).hasClass("areaheader")) {
-        //         cur_section = $(tr).text().trim();
-        //         if (!cur_section) {
-        //             console.error("no text in header:", $(tr));
-        //             return false;
-        //         }
-        //     } else {
-        //         // Normal column case
-        //     }
-        //     if (cur_section && data[cur_section]) {
-        //         console.log(data[cur_section]);
-        //     }
-        // });
-        // TODO: don't end iteration after first table
+        // TODO: Parse GE table
+        // (returning false prevents it from being parsed by ending the iteration)
         return false;
     });
 }
