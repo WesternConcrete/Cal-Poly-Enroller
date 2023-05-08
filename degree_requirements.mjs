@@ -25,8 +25,11 @@ const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 // To differentiate these cases the in_sftf flag signifies if we're in a
 // stft block and the sftf_sep is either "or" (for cases a or b) or null (for case c)
 //
-// Note that or conditions can occur OUTSIDE of a sftf block in which case we check the in_sftf
-// flag and or the element together with the previous element
+// Note that or conditions can occur OUTSIDE of a sftf block in which
+// case we get our FOURTH and (hopefullly) final option:
+// d)
+// [course]
+// or [course]
 
 async function scrape_degree_requirements(page) {
     const $ = cheerio.load(page);
