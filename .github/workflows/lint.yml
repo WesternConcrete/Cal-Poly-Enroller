@@ -1,0 +1,26 @@
+name: Lint
+
+on:
+  push:
+    branches: '**'
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install eslint
+        run: npm install eslint
+      - name: Install tsc
+        run: npm install typescript
+
+      - name: Run linters
+        # https://github.com/marketplace/actions/lint-action
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          tsc: true
