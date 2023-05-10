@@ -1,6 +1,6 @@
 # Prisma
 
-`prisma.schema` file defines the schema for the database
+The `prisma.schema` file defines the schema for the database
 
 The schema in UML form is as follows:
 
