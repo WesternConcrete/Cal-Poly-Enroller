@@ -4,4 +4,7 @@ commit instructions
 
 Nobody should develop directly on `main`.
 
+A Github action will run after every push and will run a lint check 
+using Prettier, ESlint, and Typescript. These checks must all pass before you merge into main.
+
 
