@@ -6,6 +6,9 @@ on:
       - kanban-dashboard/prisma/schema.prisma
       - kanban-dashboard/prisma/README.md
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
