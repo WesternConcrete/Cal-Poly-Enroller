@@ -7,4 +7,4 @@ The schema in UML form is as follows:
 ![UML Diagram](./uml.png)
 
 > **Note**
-> The UML diagram above is generated based on the Prisma schema using [the prisma-uml tool](https://github.com/emyann/prisma-uml)_
+> The UML diagram above is generated based on the Prisma schema using [the prisma-uml tool](https://github.com/emyann/prisma-uml)
