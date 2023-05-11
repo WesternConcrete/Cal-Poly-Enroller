@@ -99,7 +99,7 @@ model User {
   year            Int
   quarters        Quarter[]
   programId       Int
-  UserFlowchart   UserFlowchart[]
+  flowcharts   UserFlowchart[]
 }
 
 model UserFlowchart {
