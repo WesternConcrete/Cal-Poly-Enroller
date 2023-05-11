@@ -32,6 +32,8 @@ model Course {
 
   prerequisites   Prerequisite[] @relation("Prereq")
   prerequisiteFor Prerequisite[] @relation("PrereqFor")
+  Quarter         Quarter?       @relation(fields: [quarterId], references: [id])
+  quarterId       Int?
 
   @@unique([department, number])
 }
@@ -66,16 +68,43 @@ model Program {
   type         String
   requirements Requirement[]
   departmentId Int
-  catologue    Catologue     @relation(fields: [catologueId], references: [id])
-  catologueId  Int
+  catolog      Catolog       @relation(fields: [catologId], references: [id])
+  catologId    Int
+  User         User[]
 
   @@unique([departmentId, type])
 }
 
-model Catologue {
+model Catolog {
   id        Int       @id @default(autoincrement())
   startYear Int
   endYear   Int
   programs  Program[]
-  // ?? Department[]
+}
+
+model Quarter {
+  id                  Int            @id @default(autoincrement())
+  term                String
+  year                Int
+  courses             Course[]
+  User                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  userCalPolyUsername String?
+  UserFlowchart       UserFlowchart? @relation(fields: [userFlowchartId], references: [id])
+  userFlowchartId     Int?
+}
+
+model User {
+  calPolyUsername String          @id
+  program         Program         @relation(fields: [programId], references: [id])
+  year            Int
+  quarters        Quarter[]
+  programId       Int
+  UserFlowchart   UserFlowchart[]
+}
+
+model UserFlowchart {
+  id                  Int       @id @default(autoincrement())
+  user                User      @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  quarters            Quarter[]
+  userCalPolyUsername String
 }
