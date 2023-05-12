@@ -8,6 +8,9 @@ export default createMuiTheme({
   palette: {
     primary: {
       main: "#1a6b1e",
+    },
+    secondary: {
+      main: "#6B718B",
     }
   },
   overrides: {

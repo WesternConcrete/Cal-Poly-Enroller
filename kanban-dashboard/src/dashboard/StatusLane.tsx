@@ -12,7 +12,7 @@ import {
 } from 'react-beautiful-dnd';
 import { hooks, emptyArray } from './store';
 import CourseCard from './CourseCard';
-import { useLaneStyles } from './styles';
+import { useCardStyles, useLaneStyles } from './styles';
 import { useCurrentUserId } from './CurrentUser';
 
 
