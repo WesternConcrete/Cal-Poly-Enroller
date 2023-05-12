@@ -5,13 +5,17 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-
 import { OptionsPopper } from '../components/options-popper';
-
 import { hooks } from './store';
 import CourseDetails from './CourseDetails';
 import { useCardStyles } from './styles';
-
+import { CourseType } from './store/types';
+import CompleteIcon from '../components/icons/complete';
+// // @ts-ignore
+// import InProgressIcon from '@/images/in-progress.svg';
+// @ts-ignore
+// import CompletedIcon from '@/images/complete.svg';
+// // @ts-ignore
 
 export interface Props {
   id: string,
@@ -21,7 +25,7 @@ export interface Props {
 
 export default function CourseCard({ id, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description } = hooks.useCourse(id);
+  const { title, assigneeId, description, courseType, units } = hooks.useCourse(id);
   const assignee = hooks.useUser(assigneeId);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {
@@ -34,8 +38,23 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
   const openDetails = () => setIsDetailsOpen(true);
   const closeDetails = () => setIsDetailsOpen(false);
 
+  const courseTypeClass = (courseType) => {
+    switch (courseType) {
+      case CourseType.SUPPORT:
+        return classNames.support;
+      case CourseType.CONCENTRATION:
+        return classNames.concentration;
+      case CourseType.GWR:
+        return classNames.gwe;
+      case CourseType.GE:
+        return classNames.ge;
+      default:
+        return classNames.major;
+    } 
+  };
+
   return (
-    <Paper className={classNames.task} {...dragHandleProps}>
+    <Paper className={`${classNames.task} ${courseTypeClass(courseType)}`} {...dragHandleProps}>
       <div className={classNames.taskHeader}>
         <div>
           <Typography className={classNames.title}>{title}</Typography>
@@ -43,16 +62,17 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
           <Typography variant="subtitle2">{description}</Typography>
         </div>
 
-        <OptionsPopper>
+        {/* <OptionsPopper>
           <List>
-            {/* <ListItem button onClick={openDetails}>
+            <ListItem button onClick={openDetails}>
               <ListItemText primary="View & Edit"/>
-            </ListItem> */}
+            </ListItem>
             <ListItem button onClick={handleClickDelete}>
               <ListItemText primary="Delete"/>
             </ListItem>
           </List>
-        </OptionsPopper>
+        </OptionsPopper> */}
+        <CompleteIcon />
       </div>
 
       {isDetailsOpen &&
