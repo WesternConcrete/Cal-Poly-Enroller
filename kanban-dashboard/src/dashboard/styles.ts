@@ -134,6 +134,9 @@ export const useLaneStyles = makeStyles((theme) => ({
   taskContainer: {
     marginBottom: theme.spacing(.5),
     display: 'flex',
+    border: '1px solid #6B718B',
+    borderRadius: theme.spacing(.5),
+
   },
   dialog: {
     padding: theme.spacing(2)
@@ -146,8 +149,26 @@ export const useCardStyles = makeStyles((theme) => ({
     width: '100%',
     minHeight: "120px",
   },
+  support: {
+    background: "#F5D2A4",
+  },
+  concentration: {
+    background: "#F19ECA",
+  },
+  ge: {
+    background: "#E2FCD6",
+  },
+  major: {
+    background: "#FEFDA6",
+  },
+  gwe: {
+    background: "#D09895",
+  },
   taskHeader: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: "1fr min-content",
+    height: "100%",
+    width: "100%",
     justifyContent: 'space-between'
   },
   title: {
