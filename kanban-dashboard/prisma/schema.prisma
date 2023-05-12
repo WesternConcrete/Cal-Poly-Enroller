@@ -11,10 +11,11 @@ datasource db {
 }
 
 model Department {
-  id         Int       @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   long_name  String
-  short_name String    @unique
+  short_name String       @unique
   Program    Program[]
+  Instructor Instructor[]
 }
 
 model Course {
@@ -32,8 +33,7 @@ model Course {
 
   prerequisites   Prerequisite[] @relation("Prereq")
   prerequisiteFor Prerequisite[] @relation("PrereqFor")
-  Quarter         Quarter?       @relation(fields: [quarterId], references: [id])
-  quarterId       Int?
+  sections        Section[]
 
   @@unique([department, number])
 }
@@ -82,15 +82,69 @@ model Catolog {
   programs  Program[]
 }
 
+model Instructor {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  officeHours  String
+  Section      Section[]
+}
+
+// TODO: make sure this is the best way we could store this
+model Meeting {
+  id                 Int      @id @default(autoincrement())
+  startTime          DateTime
+  endTime            DateTime
+  section            Section? @relation(fields: [sectionClassNumber], references: [classNumber])
+  sectionClassNumber Int?
+  location           String
+}
+
+model Availability {
+  id                 Int      @id @default(autoincrement())
+  seats              Int
+  capacity           Int
+  waitlist           Int
+  waitlistCapacity   Int
+  time               DateTime @default(now())
+  section            Section  @relation(fields: [sectionClassNumber], references: [classNumber])
+  sectionClassNumber Int
+}
+
+model Section {
+  classNumber      Int            @id
+  course           Course         @relation(fields: [courseId], references: [id])
+  courseId         Int
+  quarter          Quarter        @relation(fields: [quarterId], references: [id])
+  quarterId        Int
+  status           String
+  session          String
+  intstructionMode String
+  career           String
+  // TODO: make sure this aligns with a quarters start and end
+  // dates      MeetingTime
+  instructor       Instructor     @relation(fields: [instructorId], references: [id])
+  instructorId     Int
+  meetings         Meeting[]
+  grading          String
+  location         String
+  campus           String
+  classComponents  String
+  availability     Availability[]
+}
+
 model Quarter {
   id                  Int            @id @default(autoincrement())
   term                String
   year                Int
-  courses             Course[]
-  User                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  classes             Section[]
+  user                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
   userCalPolyUsername String?
   UserFlowchart       UserFlowchart? @relation(fields: [userFlowchartId], references: [id])
   userFlowchartId     Int?
+  startDate           DateTime
+  endDate             DateTime
 }
 
 model User {
@@ -99,7 +153,7 @@ model User {
   year            Int
   quarters        Quarter[]
   programId       Int
-  flowcharts   UserFlowchart[]
+  flowcharts      UserFlowchart[]
 }
 
 model UserFlowchart {
