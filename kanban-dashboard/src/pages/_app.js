@@ -4,8 +4,9 @@ import { ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import '../dashboard/overrides.css';
 import theme from '../styles/theme';
+import { api } from '../utils/api';
 
-export default function App(props) {
+function App(props) {
   const { Component, pageProps } = props;
 
   React.useEffect(() => {
@@ -29,3 +30,5 @@ export default function App(props) {
     </React.Fragment>
   );
 }
+
+export default api.withTRPC(App);
