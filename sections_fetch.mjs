@@ -1,5 +1,5 @@
 import assert from "assert";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio/lib/slim";
 
 const URL =
     "https://cmsweb.pscs.calpoly.edu/psc/CSLOPRD/EMPLOYEE/SA/c/COMMUNITY_ACCESS.CLASS_SEARCH.GBL";
@@ -8,8 +8,6 @@ const assertNotPageNoLongerAvailable = async (body) => {
     assert(!body.includes("This page is no longer available."));
     return body;
 };
-
-const initialFetchHeaders = new Headers();
 
 const initialFetch = await fetch(URL, {
     method: "GET",
@@ -92,46 +90,21 @@ await fetch(URL, {
         );
     });
 
-// expand extra options
-ICHiddens.set("ICAction", "DERIVED_CLSRCH_SSR_EXPAND_COLLAPS$149$$1");
-await fetch(URL, {
-    method: "POST",
-    headers,
-    body: ICHiddens,
-})
-    .then((res) => res.text())
-    .then(assertNotPageNoLongerAvailable)
-    .then((page) => {
-        const $ = cheerio.load(page);
-        assert(
-            $("#DERIVED_CLSRCH_SSR_EXPAND_COLLAPS\\$149\\$\\$IMG\\$1")
-                .attr("src")
-                .includes("COLLAPSE_ICN"),
-            "extra options not expanded"
-        );
-    });
-
 // select CS as subject
 ICHiddens.set("SSR_CLSRCH_WRK_SUBJECT_SRCH$0", "CSC");
 
-// Show Closed classes as well
-ICHiddens.set("SSR_CLSRCH_WRK_SSR_OPEN_ONLY$chk$3", "N");
+// set course number >=
+ICHiddens.set("SSR_CLSRCH_WRK_SSR_EXACT_MATCH1$1", "G");
 
-// select main cal poly campus (hack to get two search criteria)
-ICHiddens.set("ICAction", "SSR_CLSRCH_WRK_CAMPUS$14");
-ICHiddens.set("SSR_CLSRCH_WRK_CAMPUS$14", "MAIN");
-await fetch(URL, {
-    method: "POST",
-    headers,
-    body: ICHiddens,
-})
-    .then((res) => res.text())
-    .then(assertNotPageNoLongerAvailable);
-// NOTE: No checking here because I think the option is updated normally in the dom
+// set course number >= than 0 (hack to get the minimum 2 search criteria)
+ICHiddens.set("SSR_CLSRCH_WRK_CATALOG_NBR$1", "0");
+
+// Show Closed classes as well
+// ICHiddens.set("SSR_CLSRCH_WRK_SSR_OPEN_ONLY$chk$3", "N");
 
 // execute search
 ICHiddens.set("ICAction", "CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH");
-const searchResults = await fetch(URL, {
+const searchResultsPage = await fetch(URL, {
     method: "POST",
     headers,
     body: ICHiddens,
@@ -139,13 +112,17 @@ const searchResults = await fetch(URL, {
     .then((res) => res.text())
     .then(assertNotPageNoLongerAvailable)
     .then((page) => {
-        if (page.includes("Your search will return over 50 classes, would you like to continue?")) {
+        if (
+            page.includes(
+                "Your search will return over 50 classes, would you like to continue?"
+            )
+        ) {
             console.log("over 50 classes found, continuing");
             // TODO: ignore this problem for now and redo the search with a constraint on the course number
-            ICHiddensCopy.set("ICAction", "#ICSave");
-            ICHiddensCopy.set("ICAJAX", "1");
-            ICHiddensCopy.set("ICNAVTYPEDROPDOWN", "0");
-            ICHiddensCopy.set("ICBcDomData", "Unknownvalue");
+            // ICHiddensCopy.set("ICAction", "#ICSave");
+            // ICHiddensCopy.set("ICAJAX", "1");
+            // ICHiddensCopy.set("ICNAVTYPEDROPDOWN", "0");
+            // ICHiddensCopy.set("ICBcDomData", "Unknownvalue");
             // ICHiddensCopy.set("ICStateNum", "6");
             // console.log(ICHiddensCopy)
             // console.log(headers.get('Cookie'))
@@ -161,11 +138,24 @@ const searchResults = await fetch(URL, {
             return page;
         }
     })
-.then((page) => {
+    .then((page) => {
         assert(page.includes("Search Results"), "not on search results page");
         return page;
+    })
+    .then((page) => {
+        const $ = cheerio.load(page);
+        const courses = $("div[id*=win0divSSR_CLSRSLT_WRK_GROUPBOX2\\$]");
+        courses.each((i, elem) => {
+            let name = $(elem).find(".PAGROUPBOXLABELLEVEL1").text().trim();
+            console.log(name);
+            let sections = $(elem).find("span[title=Class\\ Nbr]");
+            sections.each((i, elem) => {
+                let action = $(elem).find("a").attr("id");
+                let num = $(elem).text();
+                console.log(num);
+            });
+        });
     });
-// console.log(searchResults);
 // TODO: look into this AppServ link <DIV id='pt_envinfo_win0' Browser='OTHERS/0/WIN' User='SLO_GUEST' DB='CSLOPRD/ORACLE' AppServ='//cslprd400:42005' ToolsRel='8.59.07'></DIV>
 // AppServ is a php/apache/mysql server
 // ToolsRel is a PeopleSoft/Tools function for formatting the current version
