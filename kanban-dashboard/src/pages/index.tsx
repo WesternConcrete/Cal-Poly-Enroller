@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Dashboard } from '../dashboard';
 import { Flowchart as FlowchartState, FlowchartData } from '../dashboard/store/types';
 
-import { api } from '../utils/api'
+import { api } from '~/utils/api'
 
 export default function DashboardPage() {
   const [project, setProject] = useState<FlowchartState>({
@@ -18,6 +18,7 @@ export default function DashboardPage() {
         setFlowchart(quartersQuery.data);
     }, [quartersQuery.isLoading]);
 
+    // TODO: move nested courses fetch here to avoid loading spinner waterfall
   return flowchart ? (
     <Dashboard
       state={flowchart}
