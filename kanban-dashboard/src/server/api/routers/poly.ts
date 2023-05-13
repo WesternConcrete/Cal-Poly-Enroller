@@ -1,3 +1,4 @@
+import { UUID } from "crypto";
 import { z } from "zod";
 import { FlowchartData } from "~/dashboard/store/types";
 
@@ -97,7 +98,7 @@ const quarters: FlowchartData = {
   },
 };
 
-export const exampleRouter = createTRPCRouter({
+export const polyRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
     .query(({ input }) => {
@@ -109,6 +110,6 @@ export const exampleRouter = createTRPCRouter({
     return ctx.prisma.example.findMany();
   }),
   quarters: publicProcedure.query(({ ctx }) => {
-        return quarters;
-    }),
+    return quarters;
+  }),
 });
