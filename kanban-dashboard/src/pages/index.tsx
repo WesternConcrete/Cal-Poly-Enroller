@@ -13,7 +13,7 @@ export default function DashboardPage() {
     },
   });
   const [flowchart, setFlowchart] = useState<FlowchartData>();
-  const quartersQuery = api.example.quarters.useQuery();
+  const quartersQuery = api.poly.quarters.useQuery();
   useEffect(() => {
         setFlowchart(quartersQuery.data);
     }, [quartersQuery.isLoading]);
