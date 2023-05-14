@@ -161,7 +161,9 @@ const scrapeDegreeRequirements = async (
     const tables = $("table.sc_courselist");
     tables.each((_ti, table) => {
         const table_desc = $(table).prevAll().filter("h2").first().text();
-        // console.log(table_desc);
+        if (table_desc !== "Degree Requirements and Curriculum") {
+            console.warn("Parsing table of unrecognized kind:", table_desc);
+        }
 
         const data = {};
         var cur_section: string | null = null;
@@ -213,15 +215,18 @@ const scrapeDegreeRequirements = async (
                     in_sftf = true;
                     data[cur_section].push({ or: [] });
                     sftf_sep = null;
-                } else if (comment.includes("or")) {
+                } else if (comment === "or") {
                     if (!in_sftf) {
-                        console.error(
-                            "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/"
+                        console.warn(
+                            "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
+                            "in", degree.name, "(",degree.link, ")",comment
                         );
                         break;
                     }
                     sftf_sep = "or";
                     prev_was_or = true;
+                } else {
+                    console.error("unrecognized comment:", comment)
                 }
             } else {
                 var course = $(tr).find("td.codecol a[title]");
@@ -315,5 +320,5 @@ const scrapeDegrees = async () => {
     const requirements = await Promise.all(
         degrees.map(scrapeDegreeRequirements)
     );
-    console.log(requirements);
+    // console.log(requirements);
 })();
