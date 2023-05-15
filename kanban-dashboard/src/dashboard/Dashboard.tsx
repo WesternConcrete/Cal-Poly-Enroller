@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { FlowchartData, UpdateFlowchartData } from './store/types';
+import { type FlowchartData, type UpdateFlowchartData } from './store/types';
 import CurrentUser from './CurrentUser';
 import { StoreProvider } from './store';
 import Menubar from './Menubar';

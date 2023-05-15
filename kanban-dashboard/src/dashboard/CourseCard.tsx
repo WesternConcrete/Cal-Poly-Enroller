@@ -4,7 +4,7 @@ import Paper from '@material-ui/core/Paper';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
+import { type DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { OptionsPopper } from '../components/options-popper';
 import { hooks } from './store';
 import CourseDetails from './CourseDetails';

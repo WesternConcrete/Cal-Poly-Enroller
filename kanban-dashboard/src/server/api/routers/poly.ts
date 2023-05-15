@@ -1,7 +1,7 @@
-import { UUID } from "crypto";
+import { type UUID } from "crypto";
 import { z } from "zod";
-import { FlowchartData } from "~/dashboard/store/types";
-import { Course, CourseType } from "~/dashboard/store/types"
+import { type FlowchartData } from "~/dashboard/store/types";
+import { type Course, CourseType } from "~/dashboard/store/types"
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 

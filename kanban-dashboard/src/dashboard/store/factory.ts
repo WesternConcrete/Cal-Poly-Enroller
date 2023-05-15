@@ -1,4 +1,4 @@
-import { Status, Course, User, Tag, Comment, CourseType, CompleteStatus } from './types';
+import { type Status, type Course, type User, type Tag, type Comment, CourseType, CompleteStatus } from './types';
 const { v4: uuid } = require('uuid');
 
 export const makeUser = (user: Partial<User> = {}): User => {

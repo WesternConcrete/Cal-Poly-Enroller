@@ -6,9 +6,9 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import {
   Draggable,
-  DraggableProvided,
+  type DraggableProvided,
   Droppable,
-  DroppableProvided,
+  type DroppableProvided,
 } from 'react-beautiful-dnd';
 import { hooks, emptyArray } from './store';
 import CourseCard from './CourseCard';

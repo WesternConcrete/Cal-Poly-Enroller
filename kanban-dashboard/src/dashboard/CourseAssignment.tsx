@@ -1,4 +1,4 @@
-import React, { ChangeEvent, forwardRef } from 'react';
+import React, { type ChangeEvent, forwardRef } from 'react';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
@@ -22,7 +22,7 @@ export default function CourseAssignment({ id }: Props) {
   };
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value as string;
+    const userId = e.target.value ;
 
     userId
       ? assignCourse(id, userId)

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dashboard } from '../dashboard';
-import { Flowchart as FlowchartState, FlowchartData } from '../dashboard/store/types';
+import { type Flowchart as FlowchartState, type FlowchartData } from '../dashboard/store/types';
 
 import { api } from '~/utils/api'
 

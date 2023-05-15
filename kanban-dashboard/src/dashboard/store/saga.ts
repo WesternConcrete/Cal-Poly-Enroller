@@ -2,7 +2,7 @@ import { spawn, takeEvery, call, select } from 'redux-saga/effects';
 import { CreateAction } from 'normalized-reducer';
 
 import { actionTypes } from './base';
-import { UpdateFlowchartData } from './types';
+import { type UpdateFlowchartData } from './types';
 
 export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
   function* rootSaga() {
@@ -10,7 +10,7 @@ export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
   }
 
   function* watchModelActions() {
-    for (let actionType of Object.values(actionTypes)) {
+    for (const actionType of Object.values(actionTypes)) {
       yield takeEvery(actionType, handleModelAction);
     }
   }

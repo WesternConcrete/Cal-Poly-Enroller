@@ -1,10 +1,10 @@
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { applyMiddleware, createStore } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 
-import { FlowchartData, UpdateFlowchartData } from './types';
+import { type FlowchartData, type UpdateFlowchartData } from './types';
 import { reducer, emptyFlowchartData } from './base';
 import { makeSaga } from './saga';
 

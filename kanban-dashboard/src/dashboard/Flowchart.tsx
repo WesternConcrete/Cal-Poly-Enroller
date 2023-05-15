@@ -3,9 +3,9 @@ import Paper from "@material-ui/core/Paper";
 import Dialog from "@material-ui/core/Dialog";
 import {
   DragDropContext,
-  DropResult,
+  type DropResult,
   Droppable,
-  DroppableProvided,
+  type DroppableProvided,
 } from 'react-beautiful-dnd';
 import AddIcon from '@material-ui/icons/Add';
 import { hooks, emptyArray } from './store';
@@ -15,10 +15,10 @@ import { Fab } from '@material-ui/core';
 import CourseEditorForm from './CourseEditorForm';
 import { useCurrentUserId } from './CurrentUser';
 import {handleCloseModal} from "../helpers/shared"
-import { Course, CourseType } from './store/types';
+import { type Course, CourseType } from './store/types';
 
 import { api } from "~/utils/api";
-import { Course } from "./store/types";
+import { type Course } from "./store/types";
 
 export default function Flowchart() {
   const currentUserId = useCurrentUserId();
