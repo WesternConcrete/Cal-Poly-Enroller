@@ -33,6 +33,7 @@ jobs:
         with:
           eslint: true
           eslint_dir: kanban-dashboard/src
+          eslint_extensions: js,tsx,ts
           prettier: true
           prettier_dir: kanban-dashboard/src
           tsc: true
