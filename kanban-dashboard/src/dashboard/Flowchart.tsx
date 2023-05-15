@@ -6,15 +6,15 @@ import {
   DropResult,
   Droppable,
   DroppableProvided,
-} from 'react-beautiful-dnd';
-import AddIcon from '@material-ui/icons/Add';
-import { hooks, emptyArray } from './store';
-import { useBoardStyles } from './styles';
-import StatusLane from './StatusLane';
-import { Fab } from '@material-ui/core';
-import CourseEditorForm from './CourseEditorForm';
-import { useCurrentUserId } from './CurrentUser';
-import {handleCloseModal} from "../helpers/shared"
+} from "react-beautiful-dnd";
+import AddIcon from "@material-ui/icons/Add";
+import { hooks, emptyArray } from "./store";
+import { useBoardStyles } from "./styles";
+import StatusLane from "./StatusLane";
+import { Fab } from "@material-ui/core";
+import CourseEditorForm from "./CourseEditorForm";
+import { useCurrentUserId } from "./CurrentUser";
+import { handleCloseModal } from "../helpers/shared";
 
 import { api } from "~/utils/api";
 import { Course } from "./store/types";
@@ -57,8 +57,14 @@ export default function Flowchart() {
   const courseQuery = api.poly.courses.useQuery();
   useEffect(() => {
     if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course: Course) => {
-          createCourse({ title: course.title, statusId: status, creatorId: currentUserId, description: course.description, courseType: course.courseType });
+      courseQuery.data.forEach((course: Partial<Course>) => {
+        createCourse({
+          title: course.title,
+          statusId: course.status!,
+          creatorId: currentUserId,
+          description: course.description,
+          courseType: course.courseType,
+        });
       });
     }
   }, [courseQuery.isLoading]);
