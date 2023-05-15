@@ -1,9 +1,5 @@
 import { createMuiTheme } from '@material-ui/core/styles';
-import { blue, green, red } from '@material-ui/core/colors';
 
-const borderRadius = 4;
-
-// @ts-ignore
 export default createMuiTheme({
   palette: {
     primary: {
