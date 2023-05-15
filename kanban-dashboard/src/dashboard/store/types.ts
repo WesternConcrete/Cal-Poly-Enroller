@@ -37,17 +37,17 @@ export interface User {
 }
 
 export interface Course {
-  id: string,
-  title: string,
-  description: string,
-  statusId: string,
-  creatorId: string,
-  courseType: CourseType,
-  completeStatus: CompleteStatus,
-  units: number,
-  assigneeId?: string,
-  tagIds?: string[],
-  rootCommentIds?: string[],
+  id: string;
+  title: string;
+  description: string;
+  statusId: string;
+  creatorId: string;
+  courseType: CourseType;
+  completeStatus: CompleteStatus;
+  units: number;
+  assigneeId?: string;
+  tagIds?: string[];
+  rootCommentIds?: string[];
 }
 
 export enum CourseType {
@@ -59,9 +59,9 @@ export enum CourseType {
 }
 
 export enum CompleteStatus {
-  COMPLETE = "COMPLETE", 
-  INPROGRESS = "INPROGRESS", 
-  INCOMPLETE = "INCOMPLETE", 
+  COMPLETE = "COMPLETE",
+  INPROGRESS = "INPROGRESS",
+  INCOMPLETE = "INCOMPLETE",
 }
 
 export interface Status {

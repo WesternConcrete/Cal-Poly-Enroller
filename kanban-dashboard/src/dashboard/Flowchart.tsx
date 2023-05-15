@@ -6,16 +6,16 @@ import {
   type DropResult,
   Droppable,
   type DroppableProvided,
-} from 'react-beautiful-dnd';
-import AddIcon from '@material-ui/icons/Add';
-import { hooks, emptyArray } from './store';
-import { useBoardStyles } from './styles';
-import StatusLane from './StatusLane';
-import { Fab } from '@material-ui/core';
-import CourseEditorForm from './CourseEditorForm';
-import { useCurrentUserId } from './CurrentUser';
-import {handleCloseModal} from "../helpers/shared"
-import { type Course, CourseType } from './store/types';
+} from "react-beautiful-dnd";
+import AddIcon from "@material-ui/icons/Add";
+import { hooks, emptyArray } from "./store";
+import { useBoardStyles } from "./styles";
+import StatusLane from "./StatusLane";
+import { Fab } from "@material-ui/core";
+import CourseEditorForm from "./CourseEditorForm";
+import { useCurrentUserId } from "./CurrentUser";
+import { handleCloseModal } from "../helpers/shared";
+import { type Course, CourseType } from "./store/types";
 
 import { api } from "~/utils/api";
 import { type Course } from "./store/types";

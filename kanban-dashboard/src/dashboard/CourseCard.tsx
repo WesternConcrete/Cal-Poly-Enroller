@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import { type DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-import { OptionsPopper } from '../components/options-popper';
-import { hooks } from './store';
-import CourseDetails from './CourseDetails';
-import { useCardStyles } from './styles';
-import { CourseType } from './store/types';
-import CompleteIcon from '../components/icons/complete';
+import React, { useState } from "react";
+import Typography from "@material-ui/core/Typography";
+import Paper from "@material-ui/core/Paper";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import { type DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
+import { OptionsPopper } from "../components/options-popper";
+import { hooks } from "./store";
+import CourseDetails from "./CourseDetails";
+import { useCardStyles } from "./styles";
+import { CourseType } from "./store/types";
+import CompleteIcon from "../components/icons/complete";
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
 // @ts-ignore
@@ -18,14 +18,15 @@ import CompleteIcon from '../components/icons/complete';
 // // @ts-ignore
 
 export interface Props {
-  id: string,
-  statusId: string,
-  dragHandleProps: DraggableProvidedDragHandleProps
+  id: string;
+  statusId: string;
+  dragHandleProps: DraggableProvidedDragHandleProps;
 }
 
 export default function CourseCard({ id, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units } = hooks.useCourse(id);
+  const { title, assigneeId, description, courseType, units } =
+    hooks.useCourse(id);
   const assignee = hooks.useUser(assigneeId);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {
@@ -50,11 +51,14 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
         return classNames.ge;
       default:
         return classNames.major;
-    } 
+    }
   };
 
   return (
-    <Paper className={`${classNames.task} ${courseTypeClass(courseType)}`} {...dragHandleProps}>
+    <Paper
+      className={`${classNames.task} ${courseTypeClass(courseType)}`}
+      {...dragHandleProps}
+    >
       <div className={classNames.taskHeader}>
         <div>
           <Typography className={classNames.title}>{title}</Typography>
@@ -75,14 +79,9 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
         <CompleteIcon />
       </div>
 
-      {isDetailsOpen &&
-      <CourseDetails
-        id={id}
-        isOpen={isDetailsOpen}
-        close={closeDetails}
-      />
-      }
+      {isDetailsOpen && (
+        <CourseDetails id={id} isOpen={isDetailsOpen} close={closeDetails} />
+      )}
     </Paper>
   );
 }
-

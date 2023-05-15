@@ -23,7 +23,10 @@ export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
 
   function* handleModelAction(): Generator<SelectEffect | CallEffect<void>> {
     const projectData = yield select();
-    yield call(async (p) => updateFlowchartData(p as FlowchartData), projectData);
+    yield call(
+      async (p) => updateFlowchartData(p as FlowchartData),
+      projectData
+    );
   }
 
   return rootSaga;

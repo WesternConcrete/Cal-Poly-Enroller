@@ -1,7 +1,7 @@
 import { type UUID } from "crypto";
 import { z } from "zod";
 import { type FlowchartData } from "~/dashboard/store/types";
-import { type Course, CourseType } from "~/dashboard/store/types"
+import { type Course, CourseType } from "~/dashboard/store/types";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -115,7 +115,7 @@ const statuses: UUID[] = [
   "c40bfef2-31c2-4228-a8c7-22b52974fbc7",
 ];
 
-const courseType_arr = Object.values(CourseType)
+const courseType_arr = Object.values(CourseType);
 
 const courses = [
   {
