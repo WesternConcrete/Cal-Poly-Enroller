@@ -32,5 +32,8 @@ jobs:
         uses: wearerequired/lint-action@v2
         with:
           eslint: true
+          eslint_dir: kanban-dashboard/src
           prettier: true
+          prettier_dir: kanban-dashboard/src
           tsc: true
+          tsc_dir: kanban-dashboard/src
