@@ -85,4 +85,4 @@ export interface Comment {
   childCommentIds?: string[];
 }
 
-export type UpdateFlowchartData = (projectData: FlowchartData) => Promise<void>;
+export type UpdateFlowchartData = (projectData: FlowchartData) => void;

@@ -250,7 +250,7 @@ const generateQuarterSchedules = () => {
   return courses.map((course) => {
     return {
       ...course,
-      status: statuses[Math.round(Math.random() * statuses.length)]!,
+      status: statuses[Math.round(Math.random() * statuses.length)],
     };
   });
 };
@@ -263,13 +263,10 @@ export const polyRouter = createTRPCRouter({
         greeting: `Hello ${input.text}`,
       };
     }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
-  }),
-  quarters: publicProcedure.query(({ ctx }) => {
+  quarters: publicProcedure.query(() => {
     return quarters;
   }),
-  courses: publicProcedure.query(({ ctx }) => {
+  courses: publicProcedure.query(() => {
     return generateQuarterSchedules();
   }),
 });
