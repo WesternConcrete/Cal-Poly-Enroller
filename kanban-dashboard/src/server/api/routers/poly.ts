@@ -1,6 +1,7 @@
 import { UUID } from "crypto";
 import { z } from "zod";
 import { FlowchartData } from "~/dashboard/store/types";
+import { Course, CourseType } from "~/dashboard/store/types"
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -114,80 +115,136 @@ const statuses: UUID[] = [
   "c40bfef2-31c2-4228-a8c7-22b52974fbc7",
 ];
 
+const courseType_arr = Object.values(CourseType)
+
 const courses = [
   {
-    classcode: "CSC 101",
-    classname: "Intro to Computer Science",
+    title: "CSC 101",
+    description: "Intro to Computer Science",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 102",
-    classname: "Data Structures and Algorithms",
+    title: "CSC 102",
+    description: "Data Structures and Algorithms",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 202",
-    classname: "Discrete Structures",
+    title: "CSC 202",
+    description: "Discrete Structures",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 225",
-    classname: "Introduction to Computer Organization",
+    title: "CSC 225",
+    description: "Introduction to Computer Organization",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 248",
-    classname: "Introduction to Database Systems",
+    title: "CSC 248",
+    description: "Introduction to Database Systems",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 307",
-    classname: "Systems Programming",
+    title: "CSC 307",
+    description: "Systems Programming",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 357",
-    classname: "Design & Analysis of Algorithms",
+    title: "CSC 357",
+    description: "Design & Analysis of Algorithms",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 453",
-    classname: "Operating Systems",
+    title: "CSC 453",
+    description: "Operating Systems",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 491",
-    classname: "Senior Project Lab I",
+    title: "CSC 491",
+    description: "Senior Project Lab I",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 492",
-    classname: "Senior Project Lab II",
+    title: "CSC 492",
+    description: "Senior Project Lab II",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CSC 497",
-    classname: "Research Senior Project I",
+    title: "CSC 497",
+    description: "Research Senior Project I",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CPE 102",
-    classname: "Introduction to Computer Science II",
+    title: "CPE 102",
+    description: "Introduction to Computer Science II",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CPE 103",
-    classname: "Object-Oriented Design",
+    title: "CPE 103",
+    description: "Object-Oriented Design",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "CPE 357",
-    classname: "Introduction to Software Engineering",
+    title: "CPE 357",
+    description: "Introduction to Software Engineering",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "MATH 141",
-    classname: "Calculus I",
+    title: "MATH 141",
+    description: "Calculus I",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "MATH 142",
-    classname: "Calculus II",
+    title: "MATH 142",
+    description: "Calculus II",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "MATH 206",
-    classname: "Statistical Methods for Engineers",
+    title: "MATH 206",
+    description: "Statistical Methods for Engineers",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
   {
-    classcode: "MATH 244",
-    classname: "Applied Linear Models",
+    title: "MATH 244",
+    description: "Applied Linear Models",
+    units: 4,
+    courseType:
+      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
   },
-];
+] as Partial<Course>[];
 
 const generateQuarterSchedules = () => {
   return courses.map((course) => {

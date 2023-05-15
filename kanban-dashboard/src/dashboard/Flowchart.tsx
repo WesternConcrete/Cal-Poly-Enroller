@@ -15,10 +15,9 @@ import { Fab } from '@material-ui/core';
 import CourseEditorForm from './CourseEditorForm';
 import { useCurrentUserId } from './CurrentUser';
 import {handleCloseModal} from "../helpers/shared"
-import { Course, CourseType } from './store/types';
 
 import { api } from "~/utils/api";
-import { UUID } from "crypto";
+import { Course } from "./store/types";
 
 export default function Flowchart() {
   const currentUserId = useCurrentUserId();
@@ -58,13 +57,8 @@ export default function Flowchart() {
   const courseQuery = api.poly.courses.useQuery();
   useEffect(() => {
     if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course) => {
-        createCourse({
-          title: course.classcode,
-          statusId: course.status,
-          creatorId: currentUserId,
-          description: course.classname,
-        });
+      courseQuery.data.forEach((course: Course) => {
+          createCourse({ title: course.title, statusId: status, creatorId: currentUserId, description: course.description, courseType: course.courseType });
       });
     }
   }, [courseQuery.isLoading]);
