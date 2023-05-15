@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { actions, selectors, State } from './index';
+import { Course } from './types';
 
 export function useCreateUser() {
   const dispatch = useDispatch();
@@ -17,7 +18,7 @@ export function useUpdateUser() {
 
 export function useCreateCourse() {
   const dispatch = useDispatch();
-  return useCallback((task: { title: string, creatorId: string, statusId: string, description: string }) => {
+  return useCallback((task: Partial<Course>) => {
     dispatch(actions.createCourse(task));
   }, [dispatch]);
 }
