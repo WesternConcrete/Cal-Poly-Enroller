@@ -83,7 +83,13 @@ function toTitleCase(str) {
         .join(" ");
 }
 
-export const BACHELOR_DEGREE_KINDS = ["BA", "BFA", "BS", "BArch", "BLA"] as const;
+export const BACHELOR_DEGREE_KINDS = [
+    "BA",
+    "BFA",
+    "BS",
+    "BArch",
+    "BLA",
+] as const;
 
 export const BACHELOR_DEGREE_KIND_NAMES = Object.freeze({
     BA: "Bachelor of Arts",
@@ -95,35 +101,57 @@ export const BACHELOR_DEGREE_KIND_NAMES = Object.freeze({
 
 export const RequirementTypeSchema = z.enum([
     "major",
-    "tech",
+    "elective",
     "ge",
     "support",
-    "free",
 ]);
+
+export const RequirementCourseSchema = z.string();
+
+export const RequirementOneOfSchema = z.object({
+    kind: z.literal("oneof"),
+    oneof: z.array(
+        RequirementCourseSchema.or(z.lazy(() => RequirementAllOfSchema))
+    ),
+});
+export const RequirementAllOfSchema = z.object({
+    kind: z.literal("allof"),
+    allof: z.array(RequirementCourseSchema.or(RequirementOneOfSchema)),
+});
 export type RequirementType = z.infer<typeof RequirementTypeSchema>;
-export const RequirementCollection = z.enum(["or", "and"]);
-export const BaseRequirementSchema = z.string();
-export const RequirementSchema = BaseRequirementSchema.or(
-    z.record(RequirementCollection, z.array(z.lazy(() => RequirementSchema)))
-);
-export const RequirementTypeListSchema = z.record(
-    RequirementTypeSchema,
-    z.array(RequirementSchema)
-);
+export const RequirementSchema = z.object({
+    kind: RequirementTypeSchema.or(z.string()),
+    fulfilledBy: z.array(
+        RequirementCourseSchema.or(RequirementAllOfSchema).or(
+            RequirementOneOfSchema
+        )
+    ),
+});
+
+export const CourseSchema = z.object({
+    code: z.string(),
+    units: z.number(),
+    title: z.string(),
+});
 
 export const DegreeSchema = z.object({
     name: z.string(),
     kind: z.enum(BACHELOR_DEGREE_KINDS),
     link: z.string().url(),
-    requirements: RequirementTypeListSchema,
 });
+
 export type Degree = z.infer<typeof DegreeSchema>;
-export const DegreeWORequirementsSchema = DegreeSchema.omit({ requirements: true });
-export type DegreeWithoutRequirements = z.infer<typeof DegreeWORequirementsSchema>;
+export const DegreeWithRequirementsSchema = DegreeSchema.extend({
+    requirements: z.array(RequirementSchema),
+    courses: z.map(z.string(), CourseSchema),
+});
+export type DegreeWithRequirements = z.infer<
+    typeof DegreeWithRequirementsSchema
+>;
 
 export const scrapeDegreeRequirements = async (
-    degreeWOReqs: DegreeWithoutRequirements
-) => {
+    degreeWOReqs: Degree
+): Promise<DegreeWithRequirements> => {
     // select from the following
     // If we're in a sftf block the courses are in one of the following formats:
     // a)
@@ -155,17 +183,20 @@ export const scrapeDegreeRequirements = async (
     // or [course]
     const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 
-    const degree: Degree = { ...degreeWOReqs, requirements: {} };
+    const degree: DegreeWithRequirements = { ...degreeWOReqs, requirements: [], courses: new Map() };
     const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
 
     const tables = $("table.sc_courselist");
+
+    const requirements = degree.requirements;
+    const courses = degree.courses;
+
     tables.each((_ti, table) => {
         const table_desc = $(table).prevAll().filter("h2").first().text();
         if (table_desc !== "Degree Requirements and Curriculum") {
             console.warn("Parsing table of unrecognized kind:", table_desc);
         }
 
-        const data = {};
         var cur_section: string | null = null;
         // within a select from the following block
         // see comment at top of file which explains these flags
@@ -178,30 +209,24 @@ export const scrapeDegreeRequirements = async (
             // TODO: extracting <sup>1</sup> footnote tags
 
             if ($(tr).hasClass("areaheader")) {
-                if (cur_section) {
-                    let cur_section_kind: RequirementType;
-                    if (
-                        cur_section.includes("MAJOR COURSES") ||
-                        cur_section.includes("Technical Electives") ||
-                        cur_section.includes("GENERAL EDUCATION") ||
-                        cur_section.includes("SUPPORT COURSES")
-                    ) {
-                        cur_section_kind = toTitleCase(
-                            cur_section
-                        ) as RequirementType;
-                    } else {
-                        cur_section_kind = cur_section as RequirementType;
-                        // console.log("Unrecognized section kind for", cur_section);
-                    }
-                    degree.requirements[cur_section_kind] =
-                        data[cur_section] ?? [];
-                }
                 in_sftf = false;
                 prev_was_or = false;
                 sftf_sep = null;
                 // new section
-                cur_section = $(tr).text().trim();
-                data[cur_section] = [];
+                const cur_section_title = $(tr).text().trim();
+                if (cur_section_title.includes("MAJOR COURSES")) {
+                    cur_section = "major";
+                } else if (cur_section_title.includes("Electives")) {
+                    // FIXME: include the type of elective
+                    cur_section = "elective";
+                } else if (cur_section_title.includes("GENERAL EDUCATION")) {
+                    cur_section = "ge";
+                } else if (cur_section_title.includes("SUPPORT COURSES")) {
+                    cur_section = "support";
+                } else {
+                    cur_section = cur_section_title as RequirementType;
+                    // console.log("Unrecognized section kind for", cur_section_title);
+                }
                 if (!cur_section) {
                     console.error("no text in header:", $(tr));
                     break;
@@ -213,23 +238,28 @@ export const scrapeDegreeRequirements = async (
                     .trim();
                 if (comment.match(SFTF_RE)) {
                     in_sftf = true;
-                    data[cur_section].push({ or: [] });
+                    requirements.push({ or: [] });
                     sftf_sep = null;
                 } else if (comment === "or") {
                     if (!in_sftf) {
                         console.warn(
                             "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
-                            "in", degree.name, "(",degree.link, ")",comment
+                            "in",
+                            degree.name,
+                            "(",
+                            degree.link,
+                            ")",
+                            comment
                         );
                         break;
                     }
                     sftf_sep = "or";
                     prev_was_or = true;
                 } else {
-                    console.error("unrecognized comment:", comment)
+                    console.error("unrecognized comment:", comment);
                 }
             } else {
-                var course = $(tr).find("td.codecol a[title]");
+                let course = $(tr).find("td.codecol a[title]");
                 const is_and = course.length > 1;
                 if (is_and) {
                     // course is actually courses plural
@@ -244,6 +274,7 @@ export const scrapeDegreeRequirements = async (
                     $(course).each((_i, c) =>
                         course_titles.push($(c).text().trim())
                     );
+                    // TODO: push courses here
                     course = { and: course_titles };
                 } else if (course.length !== 1) {
                     if ($(tr).hasClass("listsum")) {
@@ -259,10 +290,10 @@ export const scrapeDegreeRequirements = async (
                     course = course.text().trim();
                 }
                 const has_orclass = $(tr).hasClass("orclass");
-                const last = data[cur_section].length - 1;
+                const last = requirements.length - 1;
 
                 if (in_sftf) {
-                    const last_or = data[cur_section][last].or;
+                    const last_or = requirements[last].or;
                     if (last_or.length === 0) {
                         last_or.push(course);
                     } else if (last_or.length >= 1) {
@@ -270,7 +301,7 @@ export const scrapeDegreeRequirements = async (
                             sftf_sep = "or";
                         }
                         if (has_orclass || prev_was_or || sftf_sep == null) {
-                            data[cur_section][last].or.push(course);
+                            requirements[last].or.push(course);
                         } else {
                             in_sftf = false;
                             sftf_sep = null;
@@ -281,12 +312,21 @@ export const scrapeDegreeRequirements = async (
                 if (!in_sftf && has_orclass) {
                     // TODO: assert data.cur.last is not or already
                     // (multiple or's chained togehter outside of sftf)
-                    data[cur_section][last] = {
-                        or: [data[cur_section][last], course],
+                    requirements[last] = {
+                        or: [requirements[last], course],
                     };
                 } else if (!in_sftf) {
                     // Normal row
-                    data[cur_section].push(course);
+                    requirements.push(course);
+                }
+                if (typeof course === "string") {
+                    const title = $(tr).find("td:not([class])").text().trim();
+                    // TODO: more accurate units when in or/and block
+                    const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
+                    let units = parseInt(unitsStr);
+                    const code = course;
+                    const courseObj = CourseSchema.parse({title, units, code});
+                    courses[code] = courseObj;
                 }
             }
         }
@@ -294,6 +334,9 @@ export const scrapeDegreeRequirements = async (
         // (returning false prevents it from being parsed by ending the iteration)
         return false;
     });
+
+    // TODO: check for correctness by counting the units and comparing to the degree's unit count
+
     return degree;
 };
 
@@ -309,7 +352,7 @@ export const scrapeDegrees = async () => {
             const [matched, name, kind] = $(elem).text().match(majorRE) ?? [];
             const link = DOMAIN + $(elem).find("a").attr("href");
             degrees.push(
-                DegreeWORequirementsSchema.parse({ name, kind, link })
+                DegreeSchema.parse({ name, kind, link })
             );
         });
     return degrees;
