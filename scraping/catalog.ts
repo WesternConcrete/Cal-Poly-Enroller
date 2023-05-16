@@ -4,20 +4,20 @@ import { z } from "zod";
 
 const DOMAIN = "https://catalog.calpoly.edu";
 
-const DepartmentSchema = z.object({
+export const DepartmentSchema = z.object({
     name: z.string(),
     link: z.string().url(),
 });
-type Department = z.infer<typeof DepartmentSchema>;
+export type Department = z.infer<typeof DepartmentSchema>;
 
 const CollegeSchema = z.object({
     name: z.string(),
     link: z.string().url(),
     departments: z.array(DepartmentSchema),
 });
-type College = z.infer<typeof CollegeSchema>;
+export type College = z.infer<typeof CollegeSchema>;
 
-const scrapeCollegesAndDepartments = async () => {
+export const scrapeCollegesAndDepartments = async () => {
     const URL = DOMAIN + "/collegesanddepartments/";
     const page = await fetch(URL).then((res) => res.text());
     const $ = cheerio.load(page);
@@ -52,14 +52,14 @@ const scrapeCollegesAndDepartments = async () => {
     return colleges;
 };
 
-const SubjectCodeSchema = z.string().regex(/[A-Z]+/);
-const SubjectSchema = z.object({
+export const SubjectCodeSchema = z.string().regex(/[A-Z]+/);
+export const SubjectSchema = z.object({
     subject: z.string(),
     code: SubjectCodeSchema,
 });
-type Subject = z.infer<typeof SubjectSchema>;
+export type Subject = z.infer<typeof SubjectSchema>;
 
-const scrapeSubjects = async () => {
+export const scrapeSubjects = async () => {
     const subjectRE = /(.+)\s+\(([A-Z ]+)\)/;
 
     const URL = "https://catalog.calpoly.edu/coursesaz/";
@@ -83,9 +83,9 @@ function toTitleCase(str) {
         .join(" ");
 }
 
-const BACHELOR_DEGREE_KINDS = ["BA", "BFA", "BS", "BArch", "BLA"] as const;
+export const BACHELOR_DEGREE_KINDS = ["BA", "BFA", "BS", "BArch", "BLA"] as const;
 
-const BACHELOR_DEGREE_KIND_NAMES = Object.freeze({
+export const BACHELOR_DEGREE_KIND_NAMES = Object.freeze({
     BA: "Bachelor of Arts",
     BFA: "Bachelor of Fine Arts",
     BS: "Bachelor of Science",
@@ -93,35 +93,35 @@ const BACHELOR_DEGREE_KIND_NAMES = Object.freeze({
     BLA: "Bachelor of Landscape Architecture",
 });
 
-const RequirementTypeSchema = z.enum([
+export const RequirementTypeSchema = z.enum([
     "major",
     "tech",
     "ge",
     "support",
     "free",
 ]);
-type RequirementType = z.infer<typeof RequirementTypeSchema>;
-const RequirementCollection = z.enum(["or", "and"]);
-const BaseRequirementSchema = z.string();
-const RequirementSchema = BaseRequirementSchema.or(
+export type RequirementType = z.infer<typeof RequirementTypeSchema>;
+export const RequirementCollection = z.enum(["or", "and"]);
+export const BaseRequirementSchema = z.string();
+export const RequirementSchema = BaseRequirementSchema.or(
     z.record(RequirementCollection, z.array(z.lazy(() => RequirementSchema)))
 );
-const RequirementTypeListSchema = z.record(
+export const RequirementTypeListSchema = z.record(
     RequirementTypeSchema,
     z.array(RequirementSchema)
 );
 
-const DegreeSchema = z.object({
+export const DegreeSchema = z.object({
     name: z.string(),
     kind: z.enum(BACHELOR_DEGREE_KINDS),
     link: z.string().url(),
     requirements: RequirementTypeListSchema,
 });
-type Degree = z.infer<typeof DegreeSchema>;
-const DegreeWORequirementsSchema = DegreeSchema.omit({ requirements: true });
-type DegreeWithoutRequirements = z.infer<typeof DegreeWORequirementsSchema>;
+export type Degree = z.infer<typeof DegreeSchema>;
+export const DegreeWORequirementsSchema = DegreeSchema.omit({ requirements: true });
+export type DegreeWithoutRequirements = z.infer<typeof DegreeWORequirementsSchema>;
 
-const scrapeDegreeRequirements = async (
+export const scrapeDegreeRequirements = async (
     degreeWOReqs: DegreeWithoutRequirements
 ) => {
     // select from the following
@@ -297,7 +297,7 @@ const scrapeDegreeRequirements = async (
     return degree;
 };
 
-const scrapeDegrees = async () => {
+export const scrapeDegrees = async () => {
     const URL = "https://catalog.calpoly.edu/programsaz/";
     const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
     const majorRE = /(.+),\s+(B\w+)/;
@@ -315,10 +315,12 @@ const scrapeDegrees = async () => {
     return degrees;
 };
 
-(async () => {
-    const degrees = await scrapeDegrees();
-    const requirements = await Promise.all(
-        degrees.map(scrapeDegreeRequirements)
-    );
-    // console.log(requirements);
-})();
+if (require.main === module) {
+    (async () => {
+        const degrees = await scrapeDegrees();
+        const requirements = await Promise.all(
+            degrees.map(scrapeDegreeRequirements)
+        );
+        // console.log(requirements);
+    })();
+}
