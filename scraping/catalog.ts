@@ -314,13 +314,3 @@ export const scrapeDegrees = async () => {
         });
     return degrees;
 };
-
-if (require.main === module) {
-    (async () => {
-        const degrees = await scrapeDegrees();
-        const requirements = await Promise.all(
-            degrees.map(scrapeDegreeRequirements)
-        );
-        // console.log(requirements);
-    })();
-}
