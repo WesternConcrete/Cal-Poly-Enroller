@@ -25,11 +25,6 @@
       "src/*"
     ]
   },
-  "paths": {
-    "@/*": [
-      "src/*"
-    ]
-  },
   "include": [
     ".eslintrc.cjs",
     "next-env.d.ts",
