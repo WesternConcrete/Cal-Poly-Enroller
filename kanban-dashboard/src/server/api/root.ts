@@ -245,7 +245,9 @@ const courses = [
   },
 ] as Partial<Course>[];
 
-const generateQuarterSchedules = () => {
+type Section = Partial<Course> & { status: UUID };
+
+const assignRandomQuartersToCourses = (courses: Partial<Course>[]): Section[] => {
   return courses.map((course) => {
     return {
       ...course,
@@ -264,7 +266,7 @@ export const appRouter = createTRPCRouter({
     return quarters;
   }),
   courses: publicProcedure.query(() => {
-    return generateQuarterSchedules();
+    return assignRandomQuartersToCourses(courses);
   }),
 });
 
