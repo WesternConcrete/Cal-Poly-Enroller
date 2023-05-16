@@ -183,7 +183,11 @@ export const scrapeDegreeRequirements = async (
     // or [course]
     const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 
-    const degree: DegreeWithRequirements = { ...degreeWOReqs, requirements: [], courses: new Map() };
+    const degree: DegreeWithRequirements = {
+        ...degreeWOReqs,
+        requirements: [],
+        courses: new Map(),
+    };
     const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
 
     const tables = $("table.sc_courselist");
@@ -259,8 +263,9 @@ export const scrapeDegreeRequirements = async (
                     console.error("unrecognized comment:", comment);
                 }
             } else {
-                let course = $(tr).find("td.codecol a[title]");
-                const is_and = course.length > 1;
+                let course_elem = $(tr).find("td.codecol a[title]");
+                let course: any; // TODO: type this
+                const is_and = course_elem.length > 1;
                 if (is_and) {
                     // course is actually courses plural
                     // make sure it's actually an '&' of the courses
@@ -270,13 +275,47 @@ export const scrapeDegreeRequirements = async (
                             $(tr)
                         );
                     }
+                    let course_codes: string[] = [];
+                    $(course_elem).each((_i, c) => {
+                        course_codes.push($(c).text().trim());
+                    });
                     let course_titles = [];
-                    $(course).each((_i, c) =>
-                        course_titles.push($(c).text().trim())
-                    );
-                    // TODO: push courses here
-                    course = { and: course_titles };
-                } else if (course.length !== 1) {
+                    let titles = $(tr).find("td:not([class])");
+                    $(titles)
+                        .contents()
+                        .each((i, t) => {
+                            if (t.type === "text" && i === 0) {
+                                course_titles.push($(t).text().trim());
+                            } else if (t.type === "tag" && t.name === "span") {
+                                course_titles.push(
+                                    $(t).text().trim().replace(/^and /, "")
+                                );
+                            }
+                        });
+                    if (course_codes.length !== course_titles.length) {
+                        console.warn(
+                            "found different length code,title lists in and block:",
+                            { course_titles, course_codes },
+                            "in",
+                            degree.name
+                        );
+                    } else if (course_titles.length === 0) {
+                        console.warn(
+                            "didnt find any titles for course list:",
+                            course_codes
+                        );
+                    } else {
+                        course_codes.map((code, i) => {
+                            courses.set(code, {
+                                code,
+                                title: course_titles[i],
+                                units: 0, // TODO: total units
+                            });
+                        });
+                    }
+
+                    course = { and: course_codes };
+                } else if (course_elem.length !== 1) {
                     if ($(tr).hasClass("listsum")) {
                         continue;
                     }
@@ -286,8 +325,8 @@ export const scrapeDegreeRequirements = async (
                         $(tr).find("td.codecol").text().trim()
                     );
                 }
-                if (!is_and && course.length === 1) {
-                    course = course.text().trim();
+                if (!is_and && course_elem.length === 1) {
+                    course = course_elem.text().trim();
                 }
                 const has_orclass = $(tr).hasClass("orclass");
                 const last = requirements.length - 1;
@@ -322,10 +361,15 @@ export const scrapeDegreeRequirements = async (
                 if (typeof course === "string") {
                     const title = $(tr).find("td:not([class])").text().trim();
                     // TODO: more accurate units when in or/and block
-                    const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
+                    const unitsStr =
+                        $(tr).find("td.hourscol").text().trim() || 0;
                     let units = parseInt(unitsStr);
                     const code = course;
-                    const courseObj = CourseSchema.parse({title, units, code});
+                    const courseObj = CourseSchema.parse({
+                        title,
+                        units,
+                        code,
+                    });
                     courses[code] = courseObj;
                 }
             }
@@ -351,9 +395,7 @@ export const scrapeDegrees = async () => {
         .each((i, elem) => {
             const [matched, name, kind] = $(elem).text().match(majorRE) ?? [];
             const link = DOMAIN + $(elem).find("a").attr("href");
-            degrees.push(
-                DegreeSchema.parse({ name, kind, link })
-            );
+            degrees.push(DegreeSchema.parse({ name, kind, link }));
         });
     return degrees;
 };
