@@ -2,7 +2,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type UUID } from "crypto";
 import { type FlowchartData } from "~/dashboard/store/types";
 import { type Course, CourseType } from "~/dashboard/store/types";
-
+import { scrapeDegreeRequirements } from "scraping/catalog";
 
 const quarters: FlowchartData = {
   entities: {
@@ -247,15 +247,33 @@ const courses = [
 
 type Section = Partial<Course> & { status: UUID };
 
-const assignRandomQuartersToCourses = (courses: Partial<Course>[]): Section[] => {
-  return courses.map((course) => {
-    return {
-      ...course,
-      status: statuses[Math.round(Math.random() * statuses.length)],
-    };
-  });
+// TODO: remove this once degree selection is added
+const CSC_DEGREE = {
+  name: "Computer Science",
+  kind: "BS",
+  link: "https://catalog.calpoly.edu/collegesandprograms/collegeofengineering/computersciencesoftwareengineering/bscomputerscience/",
 };
 
+// TODO: remove this once scrapeDegreeRequirements returns a better datastructure
+const flattenReqs = (reqs, acc) => {
+  if (!reqs) {
+    throw new Error("No requirements found");
+  } else if (Array.isArray(reqs)) {
+    for (const req of reqs) {
+      flattenReqs(req, acc);
+    }
+  } else if (typeof reqs === "object") {
+    if (reqs.or) {
+      flattenReqs(reqs.or, acc);
+    } else if (reqs.and) {
+      flattenReqs(reqs.and, acc);
+    } else {
+      throw new Error("Unknown requirement type:", reqs);
+    }
+  } else if (typeof reqs === "string") {
+    acc.push(reqs);
+  }
+};
 /**
  * This is the primary router for your server.
  *
@@ -265,8 +283,21 @@ export const appRouter = createTRPCRouter({
   quarters: publicProcedure.query(() => {
     return quarters;
   }),
-  courses: publicProcedure.query(() => {
-    return assignRandomQuartersToCourses(courses);
+  courses: publicProcedure.query(async () => {
+    const scrapedRequirements = (await scrapeDegreeRequirements(CSC_DEGREE))
+      .requirements;
+    const cscCourses = [];
+    for (const reqGroup of Object.values(scrapedRequirements)) {
+      flattenReqs(reqGroup, cscCourses);
+    }
+    return cscCourses.map((course) => ({
+      title: course,
+      description: "", // TODO: scrape this
+      units: 4, // TODO: scrape this
+      courseType:
+        courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
+      status: statuses[Math.round(Math.random() * statuses.length)],
+    }));
   }),
 });
 
