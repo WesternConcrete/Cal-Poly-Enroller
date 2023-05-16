@@ -1,23 +1,22 @@
-import React, { Fragment } from 'react';
-import Link from 'next/link'
-import MuiAppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import FlowchartsIcon from '@material-ui/icons/Apps';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import Drawer from '@material-ui/core/Drawer';
+import React, { Fragment } from "react";
+import Link from "next/link";
+import MuiAppBar from "@material-ui/core/AppBar";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import FlowchartsIcon from "@material-ui/icons/Apps";
+import AccountCircle from "@material-ui/icons/AccountCircle";
+import Drawer from "@material-ui/core/Drawer";
 
-import UsersMenu from './UsersMenu';
-import { useCurrentUsername } from './CurrentUser';
-import { useMenubarStyles } from './styles';
+import UsersMenu from "./UsersMenu";
+import { useCurrentUsername } from "./CurrentUser";
+import { useMenubarStyles } from "./styles";
 
-const noop = () => {
-};
+const noop = () => {};
 
 export interface MenubarProps {
-  title: string,
-  projectsUrlPath: string,
+  title: string;
+  projectsUrlPath: string;
 }
 
 export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
@@ -47,7 +46,9 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
             ><FlowchartsIcon/></IconButton>
           </Link> */}
 
-          <Typography variant="h6" className={classes.title}>{title}</Typography>
+          <Typography variant="h6" className={classes.title}>
+            {title}
+          </Typography>
 
           <div className={classes.currentUser}>
             <Typography variant="subtitle2" className={classes.currentUsername}>
@@ -55,7 +56,7 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
             </Typography>
 
             <IconButton onClick={handleMenu} color="inherit">
-              <AccountCircle/>
+              <AccountCircle />
             </IconButton>
           </div>
         </Toolbar>
@@ -67,6 +68,5 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
         </div>
       </Drawer> */}
     </Fragment>
-
   );
 }

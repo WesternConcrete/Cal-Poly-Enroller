@@ -1,5 +1,5 @@
-import { UUID } from "crypto";
-import { State as NormalizedState } from "normalized-reducer";
+import { type UUID } from "crypto";
+import { type State as NormalizedState } from "normalized-reducer";
 
 export interface Flowchart {
   meta: FlowchartMeta;
@@ -37,17 +37,17 @@ export interface User {
 }
 
 export interface Course {
-  id: string,
-  title: string,
-  description: string,
-  statusId: string,
-  creatorId: string,
-  courseType: CourseType,
-  completeStatus: CompleteStatus,
-  units: number,
-  assigneeId?: string,
-  tagIds?: string[],
-  rootCommentIds?: string[],
+  id: string;
+  title: string;
+  description: string;
+  statusId: string;
+  creatorId: string;
+  courseType: CourseType;
+  completeStatus: CompleteStatus;
+  units: number;
+  assigneeId?: string;
+  tagIds?: string[];
+  rootCommentIds?: string[];
 }
 
 export enum CourseType {
@@ -59,9 +59,9 @@ export enum CourseType {
 }
 
 export enum CompleteStatus {
-  COMPLETE = "COMPLETE", 
-  INPROGRESS = "INPROGRESS", 
-  INCOMPLETE = "INCOMPLETE", 
+  COMPLETE = "COMPLETE",
+  INPROGRESS = "INPROGRESS",
+  INCOMPLETE = "INCOMPLETE",
 }
 
 export interface Status {
@@ -85,4 +85,4 @@ export interface Comment {
   childCommentIds?: string[];
 }
 
-export type UpdateFlowchartData = (projectData: FlowchartData) => Promise<void>;
+export type UpdateFlowchartData = (projectData: FlowchartData) => void;

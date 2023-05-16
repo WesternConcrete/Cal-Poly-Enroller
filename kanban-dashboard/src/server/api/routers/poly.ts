@@ -1,7 +1,7 @@
-import { UUID } from "crypto";
+import { type UUID } from "crypto";
 import { z } from "zod";
-import { FlowchartData } from "~/dashboard/store/types";
-import { Course, CourseType } from "~/dashboard/store/types"
+import { type FlowchartData } from "~/dashboard/store/types";
+import { type Course, CourseType } from "~/dashboard/store/types";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -115,7 +115,7 @@ const statuses: UUID[] = [
   "c40bfef2-31c2-4228-a8c7-22b52974fbc7",
 ];
 
-const courseType_arr = Object.values(CourseType)
+const courseType_arr = Object.values(CourseType);
 
 const courses = [
   {
@@ -250,7 +250,7 @@ const generateQuarterSchedules = () => {
   return courses.map((course) => {
     return {
       ...course,
-      status: statuses[Math.round(Math.random() * statuses.length)]!,
+      status: statuses[Math.round(Math.random() * statuses.length)],
     };
   });
 };
@@ -263,13 +263,10 @@ export const polyRouter = createTRPCRouter({
         greeting: `Hello ${input.text}`,
       };
     }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
-  }),
-  quarters: publicProcedure.query(({ ctx }) => {
+  quarters: publicProcedure.query(() => {
     return quarters;
   }),
-  courses: publicProcedure.query(({ ctx }) => {
+  courses: publicProcedure.query(() => {
     return generateQuarterSchedules();
   }),
 });

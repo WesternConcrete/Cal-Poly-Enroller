@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import Dialog from '@material-ui/core/Dialog';
-import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
+import React, { useState } from "react";
+import Dialog from "@material-ui/core/Dialog";
+import Typography from "@material-ui/core/Typography";
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
 
-import { EditButton, CloseButton, TextButton } from '../components/buttons';
-import { NewComment } from '../components/comment';
+import { EditButton, CloseButton, TextButton } from "../components/buttons";
+import { NewComment } from "../components/comment";
 
-import { hooks } from './store';
-import Comment from './Comment';
-import CourseAssignment from './CourseAssignment';
-import { useCourseDetailsStyles } from './styles';
-import { useCurrentUserId } from './CurrentUser';
-import { useUser } from './store/hooks';
+import { hooks } from "./store";
+import Comment from "./Comment";
+import CourseAssignment from "./CourseAssignment";
+import { useCourseDetailsStyles } from "./styles";
+import { useCurrentUserId } from "./CurrentUser";
+import { useUser } from "./store/hooks";
 
 export interface Props {
-  id: string,
-  isOpen?: boolean,
-  close: () => void
+  id: string;
+  isOpen?: boolean;
+  close: () => void;
 }
 export default function CourseDetails({ id, isOpen, close }: Props) {
   const { title, rootCommentIds, creatorId } = hooks.useCourse(id);
@@ -52,7 +52,12 @@ export default function CourseDetails({ id, isOpen, close }: Props) {
   const showCommentForm = () => setIsCommentFormShown(true);
   const hideCommentForm = () => setIsCommentFormShown(false);
   const handleSubmitComment = (value: string) => {
-    createComment({ value, taskId: id, creatorId: currentUserId, ts: new Date() });
+    createComment({
+      value,
+      taskId: id,
+      creatorId: currentUserId,
+      ts: new Date(),
+    });
     hideCommentForm();
   };
 
@@ -61,62 +66,74 @@ export default function CourseDetails({ id, isOpen, close }: Props) {
   return (
     <Dialog open={isOpen} onBackdropClick={close} fullWidth>
       <div className={classNames.root}>
-          <div className={classNames.header}>
-            <div className={classNames.title}>
-              {!isTitleEditable &&
+        <div className={classNames.header}>
+          <div className={classNames.title}>
+            {!isTitleEditable && (
               <Typography>
                 {title} <EditButton onClick={enableTitleEditing} />
               </Typography>
-              }
+            )}
 
-              {isTitleEditable &&
+            {isTitleEditable && (
               <>
                 <TextField
                   fullWidth
                   autoFocus
                   value={editedTitle}
-                  onChange={e => setEditedTitle(e.target.value)}
+                  onChange={(e) => setEditedTitle(e.target.value)}
                   placeholder="Title"
                 />
 
                 <div>
-                  <Button onClick={handleClickCancelEditing} variant="text">Cancel</Button>
+                  <Button onClick={handleClickCancelEditing} variant="text">
+                    Cancel
+                  </Button>
                   <Button
                     onClick={handleClickDoneEditing}
                     color="primary"
                     disabled={!editedCleanedTitle}
-                  >Save</Button>
+                  >
+                    Save
+                  </Button>
                 </div>
               </>
-              }
-            </div>
-            <span className={classNames.closeBtn}>
-              <CloseButton onClick={close}/>
-            </span>
+            )}
           </div>
-
-          <div className={classNames.section}>
-            <Typography variant="subtitle2">Created by {creator.username}</Typography>
-          </div>
-
-          <div className={classNames.section}>
-            <Typography variant="subtitle2">Assigned to:</Typography>
-            <CourseAssignment id={id} />
-          </div>
-
-          <div className={classNames.section}>
-            <Typography variant="subtitle2">{rootCommentIds?.length ? 'Comments:' : 'No comments yet...'}</Typography>
-
-            {isCommentFormShown
-              ? <NewComment onSubmit={handleSubmitComment} onCancel={hideCommentForm}/>
-              : <TextButton onClick={showCommentForm}>Leave a comment</TextButton>
-            }
-
-            {rootCommentIds?.map(commentId => (
-              <Comment key={commentId} id={commentId} />
-            ))}
-          </div>
+          <span className={classNames.closeBtn}>
+            <CloseButton onClick={close} />
+          </span>
         </div>
+
+        <div className={classNames.section}>
+          <Typography variant="subtitle2">
+            Created by {creator.username}
+          </Typography>
+        </div>
+
+        <div className={classNames.section}>
+          <Typography variant="subtitle2">Assigned to:</Typography>
+          <CourseAssignment id={id} />
+        </div>
+
+        <div className={classNames.section}>
+          <Typography variant="subtitle2">
+            {rootCommentIds?.length ? "Comments:" : "No comments yet..."}
+          </Typography>
+
+          {isCommentFormShown ? (
+            <NewComment
+              onSubmit={handleSubmitComment}
+              onCancel={hideCommentForm}
+            />
+          ) : (
+            <TextButton onClick={showCommentForm}>Leave a comment</TextButton>
+          )}
+
+          {rootCommentIds?.map((commentId) => (
+            <Comment key={commentId} id={commentId} />
+          ))}
+        </div>
+      </div>
     </Dialog>
   );
 }
