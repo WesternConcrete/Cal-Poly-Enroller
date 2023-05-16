@@ -18,7 +18,6 @@ import {handleCloseModal} from "../helpers/shared"
 import { Course, CourseType } from './store/types';
 
 import { api } from "~/utils/api";
-import { Course } from "./store/types";
 
 export default function Flowchart() {
   const currentUserId = useCurrentUserId();
