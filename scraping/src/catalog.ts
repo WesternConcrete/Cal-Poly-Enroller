@@ -370,7 +370,7 @@ export const scrapeDegreeRequirements = async (
                         units,
                         code,
                     });
-                    courses[code] = courseObj;
+                    courses.set(code, courseObj);
                 }
             }
         }

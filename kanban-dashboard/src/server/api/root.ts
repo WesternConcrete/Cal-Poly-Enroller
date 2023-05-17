@@ -284,16 +284,12 @@ export const appRouter = createTRPCRouter({
     return quarters;
   }),
   courses: publicProcedure.query(async () => {
-    const scrapedRequirements = (await scrapeDegreeRequirements(CSC_DEGREE))
-      .requirements;
-    const cscCourses = [];
-    for (const reqGroup of Object.values(scrapedRequirements)) {
-      flattenReqs(reqGroup, cscCourses);
-    }
-    return cscCourses.map((course) => ({
-      title: course,
-      description: "", // TODO: scrape this
-      units: 4, // TODO: scrape this
+    const cscCourses = (await scrapeDegreeRequirements(CSC_DEGREE))
+      .courses;
+    return Array.from(cscCourses.values()).map((course) => ({
+        title: course.code,
+      description: course.title, // TODO: gather this from the course catalog
+        units: course.units,
       courseType:
         courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
       status: statuses[Math.round(Math.random() * statuses.length)],
