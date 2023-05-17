@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id         Int          @id @default(autoincrement())
+  long_name  String
+  short_name String       @unique
+  Program    Program[]
+  Instructor Instructor[]
+}
+
+model Course {
+  id         Int    @id @default(autoincrement())
+  // TODO: make department table and convert this to a foreign key
+  department String
+  number     Int
+  // string because it can be range or single number and we only need
+  // to display it either way
+  units      String
+  // string of comma separated terms
+  terms      String
+
+  fulfillsRequirements Requirement[]
+
+  prerequisites   Prerequisite[] @relation("Prereq")
+  prerequisiteFor Prerequisite[] @relation("PrereqFor")
+  sections        Section[]
+
+  @@unique([department, number])
+}
+
+model Prerequisite {
+  id               Int    @id @default(autoincrement())
+  requiredCourse   Course @relation(name: "Prereq", fields: [requiredCourseId], references: [id])
+  forCourse        Course @relation(name: "PrereqFor", fields: [forCourseId], references: [id])
+  forCourseId      Int
+  requiredCourseId Int
+
+  @@unique([requiredCourseId, forCourseId])
+}
+
+model Requirement {
+  // TODO: figure out how to make unique ids based on the requirement
+  id      Int     @id @default(autoincrement())
+  course  Course  @relation(fields: [courseId], references: [id])
+  program Program @relation(fields: [programId], references: [id])
+  // Ge, major, tech elective, etc.
+  // TODO: make this an enum
+  kind    String
+
+  courseId  Int
+  programId Int
+}
+
+model Program {
+  id           Int           @id @default(autoincrement())
+  department   Department    @relation(fields: [departmentId], references: [id])
+  // BS, BA, etc.
+  type         String
+  requirements Requirement[]
+  departmentId Int
+  catolog      Catolog       @relation(fields: [catologId], references: [id])
+  catologId    Int
+  User         User[]
+
+  @@unique([departmentId, type])
+}
+
+model Catolog {
+  id        Int       @id @default(autoincrement())
+  startYear Int
+  endYear   Int
+  programs  Program[]
+}
+
+model Instructor {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  officeHours  String
+  Section      Section[]
+}
+
+// TODO: make sure this is the best way we could store this
+model Meeting {
+  id                 Int      @id @default(autoincrement())
+  startTime          DateTime
+  endTime            DateTime
+  section            Section? @relation(fields: [sectionClassNumber], references: [classNumber])
+  sectionClassNumber Int?
+  location           String
+}
+
+model Availability {
+  id                 Int      @id @default(autoincrement())
+  seats              Int
+  capacity           Int
+  waitlist           Int
+  waitlistCapacity   Int
+  time               DateTime @default(now())
+  section            Section  @relation(fields: [sectionClassNumber], references: [classNumber])
+  sectionClassNumber Int
+}
+
+model Section {
+  classNumber      Int            @id
+  course           Course         @relation(fields: [courseId], references: [id])
+  courseId         Int
+  quarter          Quarter        @relation(fields: [quarterId], references: [id])
+  quarterId        Int
+  status           String
+  session          String
+  intstructionMode String
+  career           String
+  // TODO: make sure this aligns with a quarters start and end
+  // dates      MeetingTime
+  instructor       Instructor     @relation(fields: [instructorId], references: [id])
+  instructorId     Int
+  meetings         Meeting[]
+  grading          String
+  location         String
+  campus           String
+  classComponents  String
+  availability     Availability[]
+}
+
+model Quarter {
+  id                  Int            @id @default(autoincrement())
+  term                String
+  year                Int
+  classes             Section[]
+  user                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  userCalPolyUsername String?
+  UserFlowchart       UserFlowchart? @relation(fields: [userFlowchartId], references: [id])
+  userFlowchartId     Int?
+  startDate           DateTime
+  endDate             DateTime
+}
+
+model User {
+  calPolyUsername String          @id
+  program         Program         @relation(fields: [programId], references: [id])
+  year            Int
+  quarters        Quarter[]
+  programId       Int
+  flowcharts      UserFlowchart[]
+}
+
+model UserFlowchart {
+  id                  Int       @id @default(autoincrement())
+  user                User      @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  quarters            Quarter[]
+  userCalPolyUsername String
+}

@@ -1,22 +1,21 @@
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles";
 
-export const useStyles = makeStyles(theme => ({
+export const useStyles = makeStyles((theme) => ({
   buttons: {
-    marginTop: theme.spacing(1)
+    marginTop: theme.spacing(1),
   },
   textButton: {
     border: 0,
     padding: 0,
-    cursor: 'pointer',
+    cursor: "pointer",
     color: theme.palette.primary.main,
     fontSize: 11,
-    '&:focus': {
-      outline: 0
+    "&:focus": {
+      outline: 0,
     },
-    '&:hover': {
-      textDecoration: 'underline'
+    "&:hover": {
+      textDecoration: "underline",
     },
     background: theme.palette.background.paper,
   },
 }));
-

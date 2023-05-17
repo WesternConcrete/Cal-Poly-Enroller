@@ -1,14 +1,14 @@
-import React, { ChangeEvent, forwardRef } from 'react';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
+import React, { type ChangeEvent, forwardRef } from "react";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
 
-import { TextButton } from '../components/buttons';
+import { TextButton } from "../components/buttons";
 
-import { hooks } from './store';
-import { useCourseAssignmentStyles } from './styles';
+import { hooks } from "./store";
+import { useCourseAssignmentStyles } from "./styles";
 
 export interface Props {
-  id: string
+  id: string;
 }
 
 export default function CourseAssignment({ id }: Props) {
@@ -22,11 +22,9 @@ export default function CourseAssignment({ id }: Props) {
   };
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value as string;
+    const userId = e.target.value;
 
-    userId
-      ? assignCourse(id, userId)
-      : handleUnassignment();
+    userId ? assignCourse(id, userId) : handleUnassignment();
   };
 
   const classNames = useCourseAssignmentStyles();
@@ -34,31 +32,36 @@ export default function CourseAssignment({ id }: Props) {
   return (
     <div className={classNames.container}>
       <Select
-        value={assigneeId || ''}
+        value={assigneeId || ""}
         onChange={handleChange}
         variant="outlined"
         className={classNames.select}
       >
-        <MenuItem value="" selected={!assigneeId}>&nbsp;</MenuItem>
-        {userIds.map(userId => (
-          <MenuItem key={userId} value={userId} selected={userId === assigneeId}>
-            <AssignableUsername id={userId}/>
+        <MenuItem value="" selected={!assigneeId}>
+          &nbsp;
+        </MenuItem>
+        {userIds.map((userId) => (
+          <MenuItem
+            key={userId}
+            value={userId}
+            selected={userId === assigneeId}
+          >
+            <AssignableUsername id={userId} />
           </MenuItem>
         ))}
       </Select>
 
-      {assigneeId &&
-      <div className={classNames.unassignBtn}>
-        <TextButton onClick={handleUnassignment}>Unassign</TextButton>
-      </div>
-      }
+      {assigneeId && (
+        <div className={classNames.unassignBtn}>
+          <TextButton onClick={handleUnassignment}>Unassign</TextButton>
+        </div>
+      )}
     </div>
   );
 }
 
-
 export interface AssignableUsernameProps {
-  id: string
+  id: string;
 }
 function AssignableUsername({ id }: AssignableUsernameProps) {
   const user = hooks.useUser(id);
@@ -66,8 +69,5 @@ function AssignableUsername({ id }: AssignableUsernameProps) {
     return null;
   }
 
-  return (
-    <span>{user.username}</span>
-  );
+  return <span>{user.username}</span>;
 }
-

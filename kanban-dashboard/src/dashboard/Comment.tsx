@@ -1,13 +1,13 @@
-import React from 'react';
+import React from "react";
 
-import { Comment as CommentView } from '../components/comment';
-import { hooks, emptyArray } from './store';
-import { useCurrentUserId } from './CurrentUser';
+import { Comment as CommentView } from "../components/comment";
+import { hooks, emptyArray } from "./store";
+import { useCurrentUserId } from "./CurrentUser";
 
 export interface Props {
-  id: string,
-  taskId?: string,
-  parentCommentId?: string,
+  id: string;
+  taskId?: string;
+  parentCommentId?: string;
 }
 export default function Comment({ id }: Props) {
   const comment = hooks.useComment(id);
@@ -22,11 +22,20 @@ export default function Comment({ id }: Props) {
   const { value, childCommentIds } = comment;
 
   const handleSubmitReply = (value: string, ts: Date) => {
-    createChildComment({ value, parentCommentId: id, creatorId: currentUserId, ts });
+    createChildComment({
+      value,
+      parentCommentId: id,
+      creatorId: currentUserId,
+      ts,
+    });
   };
 
   const childCommentsElement = (
-    <>{(childCommentIds || emptyArray).map(childId => <Comment key={childId} id={childId}/>)}</>
+    <>
+      {(childCommentIds || emptyArray).map((childId) => (
+        <Comment key={childId} id={childId} />
+      ))}
+    </>
   );
 
   return (

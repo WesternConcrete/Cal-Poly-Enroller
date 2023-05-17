@@ -1,19 +1,24 @@
-import React from 'react';
+import React from "react";
 
-import { FlowchartData, UpdateFlowchartData } from './store/types';
-import CurrentUser from './CurrentUser';
-import { StoreProvider } from './store';
-import Menubar from './Menubar';
-import Flowchart from './Flowchart';
-import { useDashboardStyles } from './styles';
+import { type FlowchartData, type UpdateFlowchartData } from "./store/types";
+import CurrentUser from "./CurrentUser";
+import { StoreProvider } from "./store";
+import Menubar from "./Menubar";
+import Flowchart from "./Flowchart";
+import { useDashboardStyles } from "./styles";
 
 export interface Props {
-  projectsUrlPath: string,
-  title: string,
-  state: FlowchartData,
-  updateFlowchartData: UpdateFlowchartData,
+  projectsUrlPath: string;
+  title: string;
+  state: FlowchartData;
+  updateFlowchartData: UpdateFlowchartData;
 }
-export default function Dashboard({ state, title, updateFlowchartData, projectsUrlPath }: Props) {
+export default function Dashboard({
+  state,
+  title,
+  updateFlowchartData,
+  projectsUrlPath,
+}: Props) {
   const classNames = useDashboardStyles();
 
   return (
@@ -22,7 +27,7 @@ export default function Dashboard({ state, title, updateFlowchartData, projectsU
         <div className={classNames.root}>
           <Menubar projectsUrlPath={projectsUrlPath} title={title} />
           <div className={classNames.content}>
-            <Flowchart/>
+            <Flowchart />
           </div>
         </div>
       </CurrentUser>

@@ -1,8 +1,14 @@
-import { spawn, takeEvery, call, select } from 'redux-saga/effects';
-import { CreateAction } from 'normalized-reducer';
+import {
+  spawn,
+  takeEvery,
+  call,
+  select,
+  type SelectEffect,
+  type CallEffect,
+} from "redux-saga/effects";
 
-import { actionTypes } from './base';
-import { UpdateFlowchartData } from './types';
+import { actionTypes } from "./base";
+import { type FlowchartData, type UpdateFlowchartData } from "./types";
 
 export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
   function* rootSaga() {
@@ -10,14 +16,17 @@ export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
   }
 
   function* watchModelActions() {
-    for (let actionType of Object.values(actionTypes)) {
+    for (const actionType of Object.values(actionTypes)) {
       yield takeEvery(actionType, handleModelAction);
     }
   }
 
-  function* handleModelAction() {
+  function* handleModelAction(): Generator<SelectEffect | CallEffect<void>> {
     const projectData = yield select();
-    yield call(updateFlowchartData, projectData)
+    yield call(
+      async (p) => updateFlowchartData(p as FlowchartData),
+      projectData
+    );
   }
 
   return rootSaga;
