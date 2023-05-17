@@ -4,20 +4,22 @@ import puppeteer from "puppeteer";
 const URL =
     "https://cmsweb.pscs.calpoly.edu/psc/CSLOPRD/EMPLOYEE/SA/c/COMMUNITY_ACCESS.CLASS_SEARCH.GBL";
 
-const browser = await puppeteer.launch({ headless: false});
+const browser = await puppeteer.launch({ headless: false });
 
 const page = await browser.newPage();
 await page.goto(URL);
 
-
 await page.evaluate(() => {
-    submitAction_win0(document.win0, "DERIVED_CLSRCH_SSR_EXPAND_COLLAPS$149$$1")
+    submitAction_win0(
+        document.win0,
+        "DERIVED_CLSRCH_SSR_EXPAND_COLLAPS$149$$1"
+    );
 });
 
 const institutionSelect = await page.$("#CLASS_SRCH_WRK2_INSTITUTION\\$31\\$");
 await institutionSelect.evaluate((select) => {
     addchg_win0(select);
-    submitAction_win0(select.form,select.id);
+    submitAction_win0(select.form, select.id);
 });
 // await institutionSelect.select("SLCMP");
 
@@ -43,7 +45,7 @@ await institutionSelect.evaluate((select) => {
 // while (true) {
 //     continue;
 // }
-browser.disconnect()
+browser.disconnect();
 
 // await page.screenshot({ path: "./ss.png" });
 // await browser.close();

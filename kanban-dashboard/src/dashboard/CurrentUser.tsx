@@ -1,19 +1,28 @@
-import React, { ReactNode, createContext, useContext, useState, useEffect } from 'react';
-import { hooks } from './store';
-import { v4 as uuid } from 'uuid';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
+import { hooks } from "./store";
+import { v4 as uuid } from "uuid";
 
 export interface CurrentUserContextValue {
-  userId: string,
-  setUserId: (userId: string) => void
+  userId: string;
+  setUserId: (userId: string) => void;
 }
 
 const CurrentUserContext = createContext<CurrentUserContextValue>(null);
 
 export interface Props {
-  children: ReactNode,
-  userId: string
+  children: ReactNode;
+  userId: string;
 }
-export default function CurrentUserProvider({ children, userId: initialUserId }: Props) {
+export default function CurrentUserProvider({
+  children,
+  userId: initialUserId,
+}: Props) {
   const [userId, setUserId] = useState(initialUserId);
 
   // initialize a default user if given an empty userId
@@ -21,11 +30,10 @@ export default function CurrentUserProvider({ children, userId: initialUserId }:
   useEffect(() => {
     if (!userId) {
       const id = uuid();
-      createUser({ id, username: 'Wes Convery (wconvery@calpoly.edu)' });
-      setUserId(id)
+      createUser({ id, username: "Wes Convery (wconvery@calpoly.edu)" });
+      setUserId(id);
     }
-  }, [userId, setUserId, createUser])
-
+  }, [userId, setUserId, createUser]);
 
   const value = { userId, setUserId };
   return (
@@ -49,7 +57,7 @@ export function useCurrentUsername() {
   const userId = useCurrentUserId();
   const user = hooks.useUser(userId);
   if (!user) {
-    return '';
+    return "";
   }
 
   return user.username;

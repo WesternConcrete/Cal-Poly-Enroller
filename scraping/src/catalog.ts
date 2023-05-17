@@ -106,33 +106,35 @@ export const RequirementTypeSchema = z.enum([
     "support",
 ]);
 
-export const RequirementCourseSchema = z.string();
+export const RequirementCourseCodeSchema = z.string();
 
 export const RequirementOneOfSchema = z.object({
     kind: z.literal("oneof"),
     oneof: z.array(
-        RequirementCourseSchema.or(z.lazy(() => RequirementAllOfSchema))
+        RequirementCourseCodeSchema.or(z.lazy(() => RequirementAllOfSchema))
     ),
 });
 export const RequirementAllOfSchema = z.object({
     kind: z.literal("allof"),
-    allof: z.array(RequirementCourseSchema.or(RequirementOneOfSchema)),
+    allof: z.array(RequirementCourseCodeSchema.or(RequirementOneOfSchema)),
 });
 export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 export const RequirementSchema = z.object({
     kind: RequirementTypeSchema.or(z.string()),
     fulfilledBy: z.array(
-        RequirementCourseSchema.or(RequirementAllOfSchema).or(
+        RequirementCourseCodeSchema.or(RequirementAllOfSchema).or(
             RequirementOneOfSchema
         )
     ),
 });
 
-export const CourseSchema = z.object({
+export const RequirementCourseSchema = z.object({
     code: z.string(),
     units: z.number(),
     title: z.string(),
 });
+
+export type RequirementCourse = z.infer<typeof RequirementCourseSchema>;
 
 export const DegreeSchema = z.object({
     name: z.string(),
@@ -143,7 +145,7 @@ export const DegreeSchema = z.object({
 export type Degree = z.infer<typeof DegreeSchema>;
 export const DegreeWithRequirementsSchema = DegreeSchema.extend({
     requirements: z.array(RequirementSchema),
-    courses: z.map(z.string(), CourseSchema),
+    courses: z.map(z.string(), RequirementCourseSchema),
 });
 export type DegreeWithRequirements = z.infer<
     typeof DegreeWithRequirementsSchema
@@ -365,7 +367,7 @@ export const scrapeDegreeRequirements = async (
                         $(tr).find("td.hourscol").text().trim() || 0;
                     let units = parseInt(unitsStr);
                     const code = course;
-                    const courseObj = CourseSchema.parse({
+                    const courseObj = RequirementCourseSchema.parse({
                         title,
                         units,
                         code,

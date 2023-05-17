@@ -1,19 +1,19 @@
-import React, { ReactNode, Children, CSSProperties } from 'react';
-import Popper from '@material-ui/core/Popper';
-import Paper from '@material-ui/core/Paper';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import { PopperPlacementType } from '@material-ui/core/Popper';
-import { OptionsButton } from '../buttons';
+import React, { ReactNode, Children, CSSProperties } from "react";
+import Popper from "@material-ui/core/Popper";
+import Paper from "@material-ui/core/Paper";
+import ClickAwayListener from "@material-ui/core/ClickAwayListener";
+import { PopperPlacementType } from "@material-ui/core/Popper";
+import { OptionsButton } from "../buttons";
 
 export interface Props {
   children: ReactNode;
   placement?: PopperPlacementType;
-  style?: CSSProperties,
+  style?: CSSProperties;
 }
 
 export default function OptionsPopper({
   children,
-  placement = 'bottom-end',
+  placement = "bottom-end",
   style = {},
 }: Props) {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -28,7 +28,7 @@ export default function OptionsPopper({
 
   const isOpen = Boolean(anchorEl);
 
-  children = Children.map(children, child => <div>{child}</div>);
+  children = Children.map(children, (child) => <div>{child}</div>);
 
   return (
     <ClickAwayListener onClickAway={handleClose}>

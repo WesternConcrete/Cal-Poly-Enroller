@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import TextField from '@material-ui/core/TextField';
+import React, { useState } from "react";
+import TextField from "@material-ui/core/TextField";
 
-import { ConfirmationButtons } from '../components/buttons';
-import { TextareaAutosize } from '@material-ui/core';
+import { ConfirmationButtons } from "../components/buttons";
+import { TextareaAutosize } from "@material-ui/core";
 
 export interface Props {
-  title?: string,
-  description?: string,
-  onSubmit: (title: string, description: string) => void
-  onCancel: () => void
+  title?: string;
+  description?: string;
+  onSubmit: (title: string, description: string) => void;
+  onCancel: () => void;
 }
 
 export default function CourseEditorForm({
   onSubmit,
   onCancel,
-  title: initialTitle = '',
-  description: initialDesc = '',
+  title: initialTitle = "",
+  description: initialDesc = "",
 }: Props) {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDesc] = useState(initialDesc);
@@ -23,13 +23,13 @@ export default function CourseEditorForm({
   const handleSubmit = () => {
     if (title && description) {
       onSubmit(title, description);
-      setTitle('');
+      setTitle("");
     }
   };
 
   const handleCancel = () => {
     onCancel();
-    setTitle('');
+    setTitle("");
   };
 
   return (
@@ -39,7 +39,7 @@ export default function CourseEditorForm({
         fullWidth
         placeholder="Course ID"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
       />
       <TextField
         multiline
@@ -47,7 +47,7 @@ export default function CourseEditorForm({
         rows={3}
         placeholder="Class Name"
         value={description}
-        onChange={e => setDesc(e.target.value)}
+        onChange={(e) => setDesc(e.target.value)}
       />
 
       <ConfirmationButtons onConfirm={handleSubmit} onCancel={handleCancel} />

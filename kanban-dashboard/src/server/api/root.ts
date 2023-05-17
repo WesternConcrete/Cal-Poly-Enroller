@@ -2,7 +2,10 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type UUID } from "crypto";
 import { type FlowchartData } from "~/dashboard/store/types";
 import { type Course, CourseType } from "~/dashboard/store/types";
-import { scrapeDegreeRequirements } from "scraping/catalog";
+import {
+  scrapeDegreeRequirements,
+  type RequirementCourse,
+} from "scraping/catalog";
 
 const quarters: FlowchartData = {
   entities: {
@@ -116,137 +119,6 @@ const statuses: UUID[] = [
 
 const courseType_arr = Object.values(CourseType);
 
-const courses = [
-  {
-    title: "CSC 101",
-    description: "Intro to Computer Science",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 102",
-    description: "Data Structures and Algorithms",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 202",
-    description: "Discrete Structures",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 225",
-    description: "Introduction to Computer Organization",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 248",
-    description: "Introduction to Database Systems",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 307",
-    description: "Systems Programming",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 357",
-    description: "Design & Analysis of Algorithms",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 453",
-    description: "Operating Systems",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 491",
-    description: "Senior Project Lab I",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 492",
-    description: "Senior Project Lab II",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CSC 497",
-    description: "Research Senior Project I",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CPE 102",
-    description: "Introduction to Computer Science II",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CPE 103",
-    description: "Object-Oriented Design",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "CPE 357",
-    description: "Introduction to Software Engineering",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "MATH 141",
-    description: "Calculus I",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "MATH 142",
-    description: "Calculus II",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "MATH 206",
-    description: "Statistical Methods for Engineers",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-  {
-    title: "MATH 244",
-    description: "Applied Linear Models",
-    units: 4,
-    courseType:
-      courseType_arr[Math.round(Math.random() * courseType_arr.length)],
-  },
-] as Partial<Course>[];
-
-type Section = Partial<Course> & { status: UUID };
-
 // TODO: remove this once degree selection is added
 const CSC_DEGREE = {
   name: "Computer Science",
@@ -254,26 +126,6 @@ const CSC_DEGREE = {
   link: "https://catalog.calpoly.edu/collegesandprograms/collegeofengineering/computersciencesoftwareengineering/bscomputerscience/",
 };
 
-// TODO: remove this once scrapeDegreeRequirements returns a better datastructure
-const flattenReqs = (reqs, acc) => {
-  if (!reqs) {
-    throw new Error("No requirements found");
-  } else if (Array.isArray(reqs)) {
-    for (const req of reqs) {
-      flattenReqs(req, acc);
-    }
-  } else if (typeof reqs === "object") {
-    if (reqs.or) {
-      flattenReqs(reqs.or, acc);
-    } else if (reqs.and) {
-      flattenReqs(reqs.and, acc);
-    } else {
-      throw new Error("Unknown requirement type:", reqs);
-    }
-  } else if (typeof reqs === "string") {
-    acc.push(reqs);
-  }
-};
 /**
  * This is the primary router for your server.
  *
@@ -284,16 +136,18 @@ export const appRouter = createTRPCRouter({
     return quarters;
   }),
   courses: publicProcedure.query(async () => {
-    const cscCourses = (await scrapeDegreeRequirements(CSC_DEGREE))
-      .courses;
-    return Array.from(cscCourses.values()).map((course) => ({
+    const cscCourses = await scrapeDegreeRequirements(CSC_DEGREE);
+    // generate random info for the data that isn't being scraped yet
+    return Array.from(cscCourses.courses.values()).map(
+      (course: RequirementCourse) => ({
         title: course.code,
-      description: course.title, // TODO: gather this from the course catalog
+        description: course.title, // TODO: gather this from the course catalog
         units: course.units,
-      courseType:
-        courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-      status: statuses[Math.round(Math.random() * statuses.length)],
-    }));
+        courseType:
+          courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
+        status: statuses[Math.round(Math.random() * statuses.length)],
+      })
+    );
   }),
 });
 

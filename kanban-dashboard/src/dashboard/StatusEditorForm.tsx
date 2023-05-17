@@ -1,27 +1,31 @@
-import React, { useState } from 'react';
-import TextField from '@material-ui/core/TextField';
+import React, { useState } from "react";
+import TextField from "@material-ui/core/TextField";
 
-import { ConfirmationButtons } from '../components/buttons';
+import { ConfirmationButtons } from "../components/buttons";
 
 export interface Props {
-  title?: string,
-  onSubmit: (title: string) => void,
-  onCancel: () => void
+  title?: string;
+  onSubmit: (title: string) => void;
+  onCancel: () => void;
 }
 
-export default function StatusEditorForm({ title: initialTitle = '', onSubmit, onCancel }: Props) {
+export default function StatusEditorForm({
+  title: initialTitle = "",
+  onSubmit,
+  onCancel,
+}: Props) {
   const [value, setValue] = useState(initialTitle);
 
   const handleSubmit = () => {
     if (value) {
       onSubmit(value);
-      setValue('');
+      setValue("");
     }
   };
 
   const handleCancel = () => {
     onCancel();
-    setValue('');
+    setValue("");
   };
 
   return (
@@ -31,7 +35,7 @@ export default function StatusEditorForm({ title: initialTitle = '', onSubmit, o
         fullWidth
         placeholder="Column Title"
         value={value}
-        onChange={e => setValue(e.target.value)}
+        onChange={(e) => setValue(e.target.value)}
       />
 
       <ConfirmationButtons onConfirm={handleSubmit} onCancel={handleCancel} />

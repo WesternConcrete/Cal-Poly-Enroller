@@ -1,5 +1,5 @@
-import { createMuiTheme } from '@material-ui/core/styles';
-import { blue, green, red } from '@material-ui/core/colors';
+import { createMuiTheme } from "@material-ui/core/styles";
+import { blue, green, red } from "@material-ui/core/colors";
 
 const borderRadius = 4;
 
@@ -11,28 +11,28 @@ export default createMuiTheme({
     },
     secondary: {
       main: "#6B718B",
-    }
+    },
   },
   overrides: {
     MuiLink: {
       root: {
-        cursor: 'pointer',
+        cursor: "pointer",
       },
     },
     MuiInputBase: {
-      input: { background: '#fff' },
-      multiline: { background: '#fff' }
+      input: { background: "#fff" },
+      multiline: { background: "#fff" },
     },
     MuiSelect: {
       outlined: {
         paddingTop: 10.5,
-        paddingBottom: 10.5
-      }
-    }
+        paddingBottom: 10.5,
+      },
+    },
   },
   props: {
     MuiButtonBase: {
-      disableRipple: true // No ripple on the whole application
+      disableRipple: true, // No ripple on the whole application
     },
     MuiDialog: {
       transitionDuration: 0,
@@ -45,27 +45,26 @@ export default createMuiTheme({
       arrow: true,
     },
     MuiIconButton: {
-      size: 'small',
+      size: "small",
     },
     MuiIcon: {
-      fontSize: 'small'
+      fontSize: "small",
     },
     MuiButton: {
       disableElevation: true,
-      variant: 'contained',
+      variant: "contained",
       disableRipple: true,
     },
     MuiTextField: {
-      variant: 'outlined',
-      margin: 'dense',
+      variant: "outlined",
+      margin: "dense",
       InputLabelProps: {
         shrink: true,
       },
     },
     MuiFormControl: {
-      variant: 'outlined',
-      margin: 'dense',
+      variant: "outlined",
+      margin: "dense",
     },
   },
 });
-
