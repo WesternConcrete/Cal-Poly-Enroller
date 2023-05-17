@@ -9,7 +9,7 @@ import { OptionsPopper } from '../components/options-popper';
 import { hooks } from './store';
 import CourseDetails from './CourseDetails';
 import { useCardStyles } from './styles';
-import { CourseType } from './store/types';
+import { Course, CourseType } from './store/types';
 import CompleteIcon from '../components/icons/complete';
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
@@ -25,8 +25,8 @@ export interface Props {
 
 export default function CourseCard({ id, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units } = hooks.useCourse(id);
-  const assignee = hooks.useUser(assigneeId);
+  const { title, assigneeId, description, courseType, units } = hooks.useCourse(id) as Course;
+  const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {
     if (deleteCourse) {
