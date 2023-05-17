@@ -6,7 +6,7 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import {
   Draggable,
-  DraggableProvided,
+  type DraggableProvided,
   Droppable,
   DroppableProvided,
 } from "react-beautiful-dnd";

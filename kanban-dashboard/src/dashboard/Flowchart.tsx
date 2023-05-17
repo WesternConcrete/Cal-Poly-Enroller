@@ -3,7 +3,7 @@ import Paper from "@material-ui/core/Paper";
 import Dialog from "@material-ui/core/Dialog";
 import {
   DragDropContext,
-  DropResult,
+  type DropResult,
   Droppable,
   DroppableProvided,
 } from "react-beautiful-dnd";

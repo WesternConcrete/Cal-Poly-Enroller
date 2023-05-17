@@ -1,5 +1,5 @@
-import { UUID } from "crypto";
-import { State as NormalizedState } from "normalized-reducer";
+import { type UUID } from "crypto";
+import { type State as NormalizedState } from "normalized-reducer";
 
 export interface Flowchart {
   meta: FlowchartMeta;
@@ -85,4 +85,4 @@ export interface Comment {
   childCommentIds?: string[];
 }
 
-export type UpdateFlowchartData = (projectData: FlowchartData) => Promise<void>;
+export type UpdateFlowchartData = (projectData: FlowchartData) => void;

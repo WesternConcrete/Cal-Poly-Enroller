@@ -22,7 +22,7 @@ export default function CourseAssignment({ id }: Props) {
   };
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value as string;
+    const userId = e.target.value;
 
     userId ? assignCourse(id, userId) : handleUnassignment();
   };

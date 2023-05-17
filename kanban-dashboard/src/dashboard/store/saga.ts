@@ -10,12 +10,12 @@ export function makeSaga(updateFlowchartData: UpdateFlowchartData) {
   }
 
   function* watchModelActions() {
-    for (let actionType of Object.values(actionTypes)) {
+    for (const actionType of Object.values(actionTypes)) {
       yield takeEvery(actionType, handleModelAction);
     }
   }
 
-  function* handleModelAction() {
+  function* handleModelAction(): Generator<SelectEffect | CallEffect<void>> {
     const projectData = yield select();
     yield call(updateFlowchartData, projectData);
   }
