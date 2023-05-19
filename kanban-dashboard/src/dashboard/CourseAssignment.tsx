@@ -22,7 +22,9 @@ export default function CourseAssignment({ id }: Props) {
     unassignCourse(id, assigneeId as string);
   };
 
-  const handleChange = (e: ChangeEvent<{ name?: string | undefined; value: unknown; }>) => {
+  const handleChange = (
+    e: ChangeEvent<{ name?: string | undefined; value: unknown }>
+  ) => {
     const userId = (e.target as HTMLSelectElement).value;
 
     userId ? assignCourse(id, userId) : handleUnassignment();

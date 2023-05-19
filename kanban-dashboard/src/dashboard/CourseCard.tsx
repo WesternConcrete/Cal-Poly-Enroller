@@ -28,7 +28,8 @@ export interface Props {
 
 export default function CourseCard({ id, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units, completeStatus } = hooks.useCourse(id) as Course;
+  const { title, assigneeId, description, courseType, units, completeStatus } =
+    hooks.useCourse(id) as Course;
   const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {
@@ -71,7 +72,9 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
 
   return (
     <Paper
-      className={`${classNames.task} ${courseTypeClass(courseType)} ${completeStatusClass(completeStatus)}`}
+      className={`${classNames.task} ${courseTypeClass(
+        courseType
+      )} ${completeStatusClass(completeStatus)}`}
       {...dragHandleProps}
     >
       <div className={classNames.taskHeader}>
@@ -108,13 +111,12 @@ interface CompleteStatusProps {
 function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
   switch (completeStatus) {
     case CompleteStatus.COMPLETE:
-      return (<CompleteIcon />);
+      return <CompleteIcon />;
     case CompleteStatus.INCOMPLETE:
-      return (<div></div>);
+      return <div></div>;
     case CompleteStatus.INPROGRESS:
-      return (<InProgressIcon/>);
+      return <InProgressIcon />;
     default:
-      return (<div>unset</div>);
+      return <div>unset</div>;
   }
 }
-

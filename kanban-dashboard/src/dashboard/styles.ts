@@ -162,14 +162,14 @@ export const useCardStyles = makeStyles((theme) => ({
     background: "#D09895",
   },
   complete_status: {
-   opacity: .4,
-   cursor: "pointer",
+    opacity: 0.4,
+    cursor: "pointer",
   },
   in_progress_status: {
     opacity: 1,
   },
   incomplete_status: {
-    opacity: .85,
+    opacity: 0.85,
   },
   taskHeader: {
     display: "grid",
