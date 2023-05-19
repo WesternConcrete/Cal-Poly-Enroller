@@ -55,7 +55,7 @@ export default function Flowchart() {
       }
     }
   };
-  const courseQuery = api.courses.useQuery();
+  const courseQuery = api.degreeRequirements.useQuery({});
   useEffect(() => {
     if (courseQuery.isSuccess && courseQuery.data) {
       courseQuery.data.forEach((course) => {
