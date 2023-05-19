@@ -140,6 +140,7 @@ export const DegreeSchema = z.object({
     name: z.string(),
     kind: z.enum(BACHELOR_DEGREE_KINDS),
     link: z.string().url(),
+    id: z.number().nonnegative(),
 });
 
 export type Degree = z.infer<typeof DegreeSchema>;
@@ -395,9 +396,9 @@ export const scrapeDegrees = async () => {
         .nextUntil("a[name=concentrations]")
         .filter("p.plist:has(a[href])") // only <a> with href
         .each((i, elem) => {
-            const [matched, name, kind] = $(elem).text().match(majorRE) ?? [];
+            const [_matched, name, kind] = $(elem).text().match(majorRE) ?? [];
             const link = DOMAIN + $(elem).find("a").attr("href");
-            degrees.push(DegreeSchema.parse({ name, kind, link }));
+            degrees.push(DegreeSchema.parse({ name, kind, link, id: i}));
         });
     return degrees;
 };

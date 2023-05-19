@@ -8,7 +8,8 @@ import {
   type RequirementCourse,
   type Degree,
   DegreeSchema,
-} from "scraping/catalog";
+} from "~/scraping/catalog";
+export type { Degree, RequirementCourse } from "~/scraping/catalog";
 import { z } from "zod";
 
 const quarters: FlowchartData = {
@@ -128,6 +129,7 @@ const CSC_DEGREE: Degree = {
   name: "Computer Science",
   kind: "BS",
   link: "https://catalog.calpoly.edu/collegesandprograms/collegeofengineering/computersciencesoftwareengineering/bscomputerscience/",
+  id: 1000,
 };
 
 /**
