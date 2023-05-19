@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import React, { Reducer, type ReactNode } from "react";
 import { applyMiddleware, createStore } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import { Provider } from "react-redux";
@@ -7,11 +7,12 @@ import createSagaMiddleware from "redux-saga";
 import { type FlowchartData, type UpdateFlowchartData } from "./types";
 import { reducer, emptyFlowchartData } from "./base";
 import { makeSaga } from "./saga";
+import { Action } from "normalized-reducer";
 
 export interface StoreProviderProps {
   children: ReactNode;
   updateFlowchartData: UpdateFlowchartData;
-  state?: FlowchartData;
+  state: FlowchartData;
 }
 
 export function StoreProvider({
@@ -21,8 +22,8 @@ export function StoreProvider({
 }: StoreProviderProps) {
   const sagaMiddleware = createSagaMiddleware();
 
-  // @ts-ignore
   const store = createStore(
+    // @ts-ignore
     reducer,
     state,
     composeWithDevTools(applyMiddleware(sagaMiddleware))

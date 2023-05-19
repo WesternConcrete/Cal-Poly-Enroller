@@ -161,6 +161,16 @@ export const useCardStyles = makeStyles((theme) => ({
   gwe: {
     background: "#D09895",
   },
+  complete_status: {
+   opacity: .4,
+   cursor: "pointer",
+  },
+  in_progress_status: {
+    opacity: 1,
+  },
+  incomplete_status: {
+    opacity: .85,
+  },
   taskHeader: {
     display: "grid",
     gridTemplateColumns: "1fr min-content",

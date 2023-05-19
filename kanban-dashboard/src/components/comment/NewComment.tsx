@@ -6,7 +6,7 @@ import { useStyles } from "./styles";
 
 export interface Props {
   onSubmit: (value: string, ts: Date) => void;
-  onCancel?: () => void;
+  onCancel: () => void;
 }
 
 export default function NewComment({ onSubmit, onCancel }: Props) {

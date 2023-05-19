@@ -13,7 +13,10 @@ export interface CurrentUserContextValue {
   setUserId: (userId: string) => void;
 }
 
-const CurrentUserContext = createContext<CurrentUserContextValue>(null);
+const CurrentUserContext = createContext<CurrentUserContextValue>({
+  userId: "",
+  setUserId: () => {},
+});
 
 export interface Props {
   children: ReactNode;

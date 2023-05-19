@@ -9,7 +9,7 @@ import { useStyles } from "./styles";
 export interface Props {
   username: string;
   value: string;
-  ts: Date | null;
+  ts: Date;
   childComments?: ReactNode;
   onSubmitReply?: (value: string, ts: Date) => void;
 }

@@ -4,13 +4,16 @@ import Paper from "@material-ui/core/Paper";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
+// @ts-ignore
 import { type DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
 import { OptionsPopper } from "../components/options-popper";
 import { hooks } from "./store";
 import CourseDetails from "./CourseDetails";
 import { useCardStyles } from "./styles";
-import { CourseType } from "./store/types";
+import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
+import InProgressIcon from "../components/icons/in-progress";
+
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
 // @ts-ignore
@@ -25,9 +28,8 @@ export interface Props {
 
 export default function CourseCard({ id, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units } =
-    hooks.useCourse(id);
-  const assignee = hooks.useUser(assigneeId);
+  const { title, assigneeId, description, courseType, units, completeStatus } = hooks.useCourse(id) as Course;
+  const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {
     if (deleteCourse) {
@@ -39,7 +41,7 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
   const openDetails = () => setIsDetailsOpen(true);
   const closeDetails = () => setIsDetailsOpen(false);
 
-  const courseTypeClass = (courseType) => {
+  const courseTypeClass = (courseType: CourseType) => {
     switch (courseType) {
       case CourseType.SUPPORT:
         return classNames.support;
@@ -54,9 +56,22 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
     }
   };
 
+  const completeStatusClass = (completeStatus: CompleteStatus) => {
+    switch (completeStatus) {
+      case CompleteStatus.COMPLETE:
+        return classNames.complete_status;
+      case CompleteStatus.INPROGRESS:
+        return classNames.in_progress_status;
+      case CompleteStatus.INCOMPLETE:
+        return classNames.incomplete_status;
+      default:
+        return classNames.incomplete_status;
+    }
+  };
+
   return (
     <Paper
-      className={`${classNames.task} ${courseTypeClass(courseType)}`}
+      className={`${classNames.task} ${courseTypeClass(courseType)} ${completeStatusClass(completeStatus)}`}
       {...dragHandleProps}
     >
       <div className={classNames.taskHeader}>
@@ -76,7 +91,7 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
             </ListItem>
           </List>
         </OptionsPopper> */}
-        <CompleteIcon />
+        <CompleteStatusIcon completeStatus={completeStatus} />
       </div>
 
       {isDetailsOpen && (
@@ -85,3 +100,21 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
     </Paper>
   );
 }
+
+interface CompleteStatusProps {
+  completeStatus: CompleteStatus;
+}
+
+function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
+  switch (completeStatus) {
+    case CompleteStatus.COMPLETE:
+      return (<CompleteIcon />);
+    case CompleteStatus.INCOMPLETE:
+      return (<div></div>);
+    case CompleteStatus.INPROGRESS:
+      return (<InProgressIcon/>);
+    default:
+      return (<div>unset</div>);
+  }
+}
+
