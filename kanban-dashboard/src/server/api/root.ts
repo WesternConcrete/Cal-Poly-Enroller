@@ -3,8 +3,10 @@ import { type UUID } from "crypto";
 import { type FlowchartData } from "~/dashboard/store/types";
 import { type Course, CourseType } from "~/dashboard/store/types";
 import {
+  scrapeDegrees,
   scrapeDegreeRequirements,
   type RequirementCourse,
+  type Degree,
 } from "scraping/catalog";
 
 const quarters: FlowchartData = {
@@ -148,6 +150,9 @@ export const appRouter = createTRPCRouter({
         status: statuses[Math.round(Math.random() * statuses.length)],
       })
     );
+  }),
+  degrees: publicProcedure.query(async (): Promise<Degree[]> => {
+    return scrapeDegrees();
   }),
 });
 
