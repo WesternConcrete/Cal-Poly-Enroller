@@ -1,5 +1,5 @@
 import React, {
-  type ReactNode,
+  ReactNode,
   createContext,
   useContext,
   useState,

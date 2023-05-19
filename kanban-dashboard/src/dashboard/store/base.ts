@@ -1,7 +1,4 @@
-import makeNormalizedSlice, {
-  Cardinalities,
-  type Schema,
-} from "normalized-reducer";
+import makeNormalizedSlice, { Cardinalities, Schema } from "normalized-reducer";
 import { FlowchartData } from "./types";
 
 const { MANY, ONE } = Cardinalities;

@@ -1,4 +1,4 @@
-import { type Course, type User, type Tag } from "./types";
+import { Course, User, Tag } from "./types";
 import { actionCreators } from "./base";
 import {
   makeCourse,

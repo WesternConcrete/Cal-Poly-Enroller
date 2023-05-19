@@ -1,13 +1,13 @@
 import {
-  type Status,
-  type Course,
-  type User,
-  type Tag,
-  type Comment,
+  Status,
+  Course,
+  User,
+  Tag,
+  Comment,
   CourseType,
   CompleteStatus,
 } from "./types";
-import { v4 as uuid } from "uuid";
+const { v4: uuid } = require("uuid");
 
 export const makeUser = (user: Partial<User> = {}): User => {
   return {

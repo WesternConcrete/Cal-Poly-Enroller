@@ -1,6 +1,7 @@
 import { makeStyles } from "@material-ui/core/styles";
+import { BorderBottom } from "@material-ui/icons";
 
-export const useDashboardStyles = makeStyles((_theme) => ({
+export const useDashboardStyles = makeStyles((theme) => ({
   root: {
     height: "100vh",
     display: "flex",
@@ -205,7 +206,7 @@ export const useCourseDetailsStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useCommentStyles = makeStyles((_theme) => ({}));
+export const useCommentStyles = makeStyles((theme) => ({}));
 
 export const useCourseAssignmentStyles = makeStyles((theme) => ({
   container: {

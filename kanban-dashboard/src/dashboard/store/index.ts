@@ -1,4 +1,4 @@
-import { type FlowchartData } from "./types";
+import { FlowchartData } from "./types";
 import * as actions from "./actions";
 import * as selectors from "./selectors";
 import * as hooks from "./hooks";

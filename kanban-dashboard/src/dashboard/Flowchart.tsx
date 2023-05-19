@@ -55,13 +55,13 @@ export default function Flowchart() {
       }
     }
   };
-  const courseQuery = api.poly.courses.useQuery();
+  const courseQuery = api.courses.useQuery();
   useEffect(() => {
     if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course: Partial<Course>) => {
+      courseQuery.data.forEach((course) => {
         createCourse({
           title: course.title,
-          statusId: (course as unknown as { status: string }).status!,
+          statusId: course.status,
           creatorId: currentUserId,
           description: course.description,
           units: course.units,

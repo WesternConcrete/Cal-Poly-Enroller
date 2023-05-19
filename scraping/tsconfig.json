@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+      "declaration": true,
+      "declarationMap": true,
+      "rootDir": "./src",
+      "composite": true
+  },
+  "paths": {
+    "@/*": [
+      "src/*"
+    ]
+  },
+  "include": [
+    ".eslintrc.cjs",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.cjs",
+    "**/*.mjs"
+  ],
+  "references": [],
+  "exclude": ["node_modules"]
+}

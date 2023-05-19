@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Dashboard } from "../dashboard";
 import {
-  type Flowchart as FlowchartState,
-  type FlowchartData,
+  Flowchart as FlowchartState,
+  FlowchartData,
 } from "../dashboard/store/types";
 
 import { api } from "~/utils/api";
@@ -16,7 +16,7 @@ export default function DashboardPage() {
     },
   };
   const [flowchart, setFlowchart] = useState<FlowchartData>();
-  const quartersQuery = api.poly.quarters.useQuery();
+  const quartersQuery = api.quarters.useQuery();
   useEffect(() => {
     setFlowchart(quartersQuery.data);
   }, [quartersQuery.data]);

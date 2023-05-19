@@ -1,11 +1,4 @@
-import {
-  type Comment,
-  type Status,
-  type Tag,
-  type Course,
-  type User,
-  type FlowchartData,
-} from "./types";
+import { Comment, Status, Tag, Course, User, FlowchartData } from "./types";
 import { selectors } from "./base";
 
 export const getUserIds = (state: FlowchartData) =>
