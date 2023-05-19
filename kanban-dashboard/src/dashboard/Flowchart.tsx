@@ -18,12 +18,9 @@ import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
 import { Course, CourseType } from "./store/types";
 
-import { api } from "~/utils/api";
-
 export default function Flowchart() {
   const currentUserId = useCurrentUserId();
   const statusIds = hooks.useStatusIds();
-  const createCourse = hooks.useCreateCourse();
   const moveStatus = hooks.useMoveStatus();
   const moveCourse = hooks.useMoveStatusCourse();
 
@@ -55,23 +52,6 @@ export default function Flowchart() {
       }
     }
   };
-  const courseQuery = api.degreeRequirements.useQuery({});
-  useEffect(() => {
-    if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course) => {
-        createCourse({
-          title: course.title,
-          statusId: course.status,
-          creatorId: currentUserId,
-          description: course.description,
-          units: course.units,
-          courseType: course.courseType,
-          completeStatus: course.completeStatus,
-        });
-      });
-    }
-  }, [courseQuery.isLoading]);
-
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
