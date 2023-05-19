@@ -15,10 +15,9 @@ import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
-import { type Course, CourseType } from "./store/types";
+import { Course, CourseType } from "./store/types";
 
 import { api } from "~/utils/api";
-import { type Course } from "./store/types";
 
 export default function Flowchart() {
   const currentUserId = useCurrentUserId();
@@ -61,7 +60,7 @@ export default function Flowchart() {
       courseQuery.data.forEach((course: Partial<Course>) => {
         createCourse({
           title: course.title,
-          statusId: course.status!,
+          statusId: (course as unknown as {status: string}).status!,
           creatorId: currentUserId,
           description: course.description,
           courseType: course.courseType,
@@ -70,28 +69,9 @@ export default function Flowchart() {
     }
   }, [courseQuery.isLoading]);
 
-  const handleSubmitNewCourse = (_title: string, _desc: string) => {
-    if (createCourse && currentUserId) {
-      // pass
-    }
-    closeCourseForm();
-  };
 
   return (
     <div className={classNames.board}>
-      <Dialog
-        open={isCourseFormOpen}
-        onClose={(event, reason) =>
-          handleCloseModal(event, reason, closeCourseForm)
-        }
-      >
-        <Paper className={classNames.dialog}>
-          <CourseEditorForm
-            onSubmit={handleSubmitNewCourse}
-            onCancel={closeCourseForm}
-          />
-        </Paper>
-      </Dialog>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable
           type="statusLane"

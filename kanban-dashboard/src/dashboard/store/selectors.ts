@@ -30,7 +30,7 @@ export const getTag = (state: FlowchartData, args: { id: string }) =>
 export const getComment = (state: FlowchartData, args: { id: string }) =>
   selectors.getEntity<Comment>(state, { type: "comment", id: args.id });
 
-export const getCommentUsername = (state: FlowchartData, args: { id }) => {
+export const getCommentUsername = (state: FlowchartData, args: { id: string }) => {
   const comment = getComment(state, args);
   if (!comment) {
     return "";

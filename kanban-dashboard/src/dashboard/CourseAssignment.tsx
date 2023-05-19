@@ -6,6 +6,7 @@ import { TextButton } from "../components/buttons";
 
 import { hooks } from "./store";
 import { useCourseAssignmentStyles } from "./styles";
+import { Course } from "./store/types";
 
 export interface Props {
   id: string;
@@ -13,16 +14,16 @@ export interface Props {
 
 export default function CourseAssignment({ id }: Props) {
   const userIds = hooks.useUserIds();
-  const { assigneeId } = hooks.useCourse(id);
+  const { assigneeId } = hooks.useCourse(id) as Course;
   const assignCourse = hooks.useAssignCourse();
   const unassignCourse = hooks.useUnassignCourse();
 
   const handleUnassignment = () => {
-    unassignCourse(id, assigneeId);
+    unassignCourse(id, assigneeId as string);
   };
 
-  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value;
+  const handleChange = (e: ChangeEvent<{ name?: string | undefined; value: unknown; }>) => {
+    const userId = (e.target as HTMLSelectElement).value;
 
     userId ? assignCourse(id, userId) : handleUnassignment();
   };

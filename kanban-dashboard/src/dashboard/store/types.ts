@@ -83,6 +83,7 @@ export interface Comment {
   taskId?: string;
   parentCommentId?: string;
   childCommentIds?: string[];
+  ts?: Date;
 }
 
 export type UpdateFlowchartData = (projectData: FlowchartData) => void;

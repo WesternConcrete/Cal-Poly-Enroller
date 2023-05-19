@@ -2,7 +2,7 @@ import makeNormalizedSlice, {
   Cardinalities,
   type Schema,
 } from "normalized-reducer";
-import { type FlowchartData } from "./types";
+import { FlowchartData } from "./types";
 
 const { MANY, ONE } = Cardinalities;
 

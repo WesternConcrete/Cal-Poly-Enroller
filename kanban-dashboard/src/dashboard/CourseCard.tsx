@@ -9,7 +9,7 @@ import { OptionsPopper } from "../components/options-popper";
 import { hooks } from "./store";
 import CourseDetails from "./CourseDetails";
 import { useCardStyles } from "./styles";
-import { CourseType } from "./store/types";
+import { Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 
 // // @ts-ignore
@@ -39,7 +39,7 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
   const openDetails = () => setIsDetailsOpen(true);
   const closeDetails = () => setIsDetailsOpen(false);
 
-  const courseTypeClass = (courseType) => {
+  const courseTypeClass = (courseType: CourseType) => {
     switch (courseType) {
       case CourseType.SUPPORT:
         return classNames.support;
