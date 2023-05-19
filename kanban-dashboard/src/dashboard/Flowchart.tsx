@@ -6,6 +6,7 @@ import {
   type DropResult,
   Droppable,
   type DroppableProvided,
+// @ts-ignore
 } from "react-beautiful-dnd";
 import AddIcon from "@material-ui/icons/Add";
 import { hooks, emptyArray } from "./store";
