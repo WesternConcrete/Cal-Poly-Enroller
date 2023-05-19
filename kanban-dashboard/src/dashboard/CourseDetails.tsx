@@ -13,6 +13,7 @@ import CourseAssignment from "./CourseAssignment";
 import { useCourseDetailsStyles } from "./styles";
 import { useCurrentUserId } from "./CurrentUser";
 import { useUser } from "./store/hooks";
+import { Course, User } from "./store/types";
 
 export interface Props {
   id: string;
@@ -20,7 +21,7 @@ export interface Props {
   close: () => void;
 }
 export default function CourseDetails({ id, isOpen, close }: Props) {
-  const { title, rootCommentIds, creatorId } = hooks.useCourse(id);
+  const { title, rootCommentIds, creatorId } = hooks.useCourse(id) as Course;
   const updateCourse = hooks.useUpdateCourse();
   const createComment = hooks.useCreateRootComment();
   const currentUserId = useCurrentUserId();
@@ -64,7 +65,7 @@ export default function CourseDetails({ id, isOpen, close }: Props) {
   const classNames = useCourseDetailsStyles();
 
   return (
-    <Dialog open={isOpen} onBackdropClick={close} fullWidth>
+    <Dialog open={isOpen as boolean} onBackdropClick={close} fullWidth>
       <div className={classNames.root}>
         <div className={classNames.header}>
           <div className={classNames.title}>
@@ -106,7 +107,7 @@ export default function CourseDetails({ id, isOpen, close }: Props) {
 
         <div className={classNames.section}>
           <Typography variant="subtitle2">
-            Created by {creator.username}
+            Created by {(creator as User).username}
           </Typography>
         </div>
 

@@ -42,7 +42,15 @@ export const createCourse = (data: Partial<Course>) => {
     actionCreators.create("task", task.id, task),
     actionCreators.attach("task", task.id, "creatorId", task.creatorId),
     actionCreators.attach("task", task.id, "statusId", task.statusId),
-    actionCreators.attach("task", task.id, "description", task.description)
+    actionCreators.attach("task", task.id, "description", task.description),
+    actionCreators.attach("task", task.id, "units", task.units),
+    actionCreators.attach("task", task.id, "courseType", task.courseType),
+    actionCreators.attach(
+      "task",
+      task.id,
+      "completeStatus",
+      task.completeStatus
+    )
   );
 };
 

@@ -13,6 +13,7 @@ import { hooks } from "./store";
 import { useCurrentUserId, useSetCurrentUserId } from "./CurrentUser";
 import { ConfirmationButtons, EditButton } from "../components/buttons";
 import { useUserItemStyles, useUserEditorStyles } from "./styles";
+import { User } from "./store/types";
 
 export default function UsersMenu() {
   const ids = hooks.useUserIds();
@@ -47,7 +48,7 @@ export interface UserItemProps {
   id: string;
 }
 export function UserItem({ id }: UserItemProps) {
-  const user = hooks.useUser(id);
+  const user = hooks.useUser(id) as User;
   const currentUserId = useCurrentUserId();
   const setCurrentUserId = useSetCurrentUserId();
   const updateUser = hooks.useUpdateUser();

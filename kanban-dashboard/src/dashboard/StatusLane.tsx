@@ -6,7 +6,8 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import {
   Draggable,
-  type DraggableProvided,
+  DraggableProvided,
+  DraggableProvidedDragHandleProps,
   Droppable,
   DroppableProvided,
 } from "react-beautiful-dnd";
@@ -14,6 +15,7 @@ import { hooks, emptyArray } from "./store";
 import CourseCard from "./CourseCard";
 import { useCardStyles, useLaneStyles } from "./styles";
 import { useCurrentUserId } from "./CurrentUser";
+import { Status } from "./store/types";
 
 export interface Props {
   id: string;
@@ -24,7 +26,7 @@ export default function StatusLane({ id }: Props) {
   const createCourse = hooks.useCreateCourse();
   const updateStatus = hooks.useUpdateStatus();
   const deleteStatus = hooks.useDeleteStatus();
-  const { title, taskIds } = hooks.useStatus(id);
+  const { title, taskIds } = hooks.useStatus(id) as Status;
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);

@@ -25,6 +25,7 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
   const open = Boolean(anchorEl);
   const currentUsername = useCurrentUsername();
 
+  // @ts-ignore
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };

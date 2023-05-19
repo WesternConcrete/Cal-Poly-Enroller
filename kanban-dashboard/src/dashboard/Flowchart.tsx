@@ -5,7 +5,8 @@ import {
   DragDropContext,
   type DropResult,
   Droppable,
-  DroppableProvided,
+  type DroppableProvided,
+  // @ts-ignore
 } from "react-beautiful-dnd";
 import AddIcon from "@material-ui/icons/Add";
 import { hooks, emptyArray } from "./store";
@@ -63,34 +64,16 @@ export default function Flowchart() {
           statusId: course.status,
           creatorId: currentUserId,
           description: course.description,
+          units: course.units,
           courseType: course.courseType,
+          completeStatus: course.completeStatus,
         });
       });
     }
   }, [courseQuery.isLoading]);
 
-  const handleSubmitNewCourse = (_title: string, _desc: string) => {
-    if (createCourse && currentUserId) {
-      // pass
-    }
-    closeCourseForm();
-  };
-
   return (
     <div className={classNames.board}>
-      <Dialog
-        open={isCourseFormOpen}
-        onClose={(event, reason) =>
-          handleCloseModal(event, reason, closeCourseForm)
-        }
-      >
-        <Paper className={classNames.dialog}>
-          <CourseEditorForm
-            onSubmit={handleSubmitNewCourse}
-            onCancel={closeCourseForm}
-          />
-        </Paper>
-      </Dialog>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable
           type="statusLane"

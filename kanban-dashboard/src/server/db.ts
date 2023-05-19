@@ -1,3 +1,4 @@
+// @ts-ignore
 import { PrismaClient } from "@prisma/client";
 
 import { env } from "~/env.mjs";
