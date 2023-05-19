@@ -1,23 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Dashboard } from "../dashboard";
-import {
-  Flowchart as FlowchartState,
-  FlowchartData,
-} from "../dashboard/store/types";
+import { FlowchartData } from "../dashboard/store/types";
+import { type Degree } from "~/server/api/root";
 
 import { api } from "~/utils/api";
 
 export default function DashboardPage() {
-  const project: FlowchartState = {
-    meta: {
-      id: "2658eced-fd21-446a-8d7c-4896f0d423b3",
-      title: "Computer Science ML/AI (2021 - 2022)",
-      description: "An example project with a basic Kanban setup",
-    },
-  };
+  const degreeState = useState<Degree>();
   const [flowchart, setFlowchart] = useState<FlowchartData>();
   const quartersQuery = api.quarters.useQuery();
   useEffect(() => {
+    // TODO: make quarters query return quarters not global state
     setFlowchart(quartersQuery.data);
   }, [quartersQuery.data]);
 
@@ -25,10 +18,10 @@ export default function DashboardPage() {
   return flowchart ? (
     <Dashboard
       state={flowchart}
+      degreeState={degreeState}
       updateFlowchartData={(newFlowchart: FlowchartData) =>
         setFlowchart(newFlowchart)
       }
-      title={project.meta.title}
       projectsUrlPath="/"
     />
   ) : (
