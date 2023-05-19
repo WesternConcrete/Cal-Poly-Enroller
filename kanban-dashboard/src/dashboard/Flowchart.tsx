@@ -6,7 +6,7 @@ import {
   type DropResult,
   Droppable,
   type DroppableProvided,
-// @ts-ignore
+  // @ts-ignore
 } from "react-beautiful-dnd";
 import AddIcon from "@material-ui/icons/Add";
 import { hooks, emptyArray } from "./store";
@@ -61,7 +61,7 @@ export default function Flowchart() {
       courseQuery.data.forEach((course: Partial<Course>) => {
         createCourse({
           title: course.title,
-          statusId: (course as unknown as {status: string}).status!,
+          statusId: (course as unknown as { status: string }).status!,
           creatorId: currentUserId,
           description: course.description,
           units: course.units,
@@ -71,7 +71,6 @@ export default function Flowchart() {
       });
     }
   }, [courseQuery.isLoading]);
-
 
   return (
     <div className={classNames.board}>

@@ -10,13 +10,13 @@ import {
   DraggableProvidedDragHandleProps,
   Droppable,
   DroppableProvided,
-// @ts-ignore
-} from 'react-beautiful-dnd';
-import { hooks, emptyArray } from './store';
-import CourseCard from './CourseCard';
-import { useCardStyles, useLaneStyles } from './styles';
-import { useCurrentUserId } from './CurrentUser';
-import { Status } from './store/types';
+  // @ts-ignore
+} from "react-beautiful-dnd";
+import { hooks, emptyArray } from "./store";
+import CourseCard from "./CourseCard";
+import { useCardStyles, useLaneStyles } from "./styles";
+import { useCurrentUserId } from "./CurrentUser";
+import { Status } from "./store/types";
 
 export interface Props {
   id: string;
@@ -91,7 +91,6 @@ export default function StatusLane({ id }: Props) {
                 >
                   {(provided: DraggableProvided) => {
                     return (
-
                       <div
                         className={classNames.taskContainer}
                         ref={provided.innerRef}
