@@ -10,6 +10,7 @@ import {
   DraggableProvidedDragHandleProps,
   Droppable,
   DroppableProvided,
+// @ts-ignore
 } from 'react-beautiful-dnd';
 import { hooks, emptyArray } from './store';
 import CourseCard from './CourseCard';

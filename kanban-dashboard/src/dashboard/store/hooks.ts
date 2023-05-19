@@ -25,8 +25,8 @@ export function useUpdateUser() {
 export function useCreateCourse() {
   const dispatch = useDispatch();
   return useCallback(
-    (task: Partial<Course>) => {
-      dispatch(actions.createCourse(task));
+    (course: Partial<Course>) => {
+      dispatch(actions.createCourse(course));
     },
     [dispatch]
   );

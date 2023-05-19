@@ -64,7 +64,9 @@ export default function Flowchart() {
           statusId: (course as unknown as {status: string}).status!,
           creatorId: currentUserId,
           description: course.description,
+          units: course.units,
           courseType: course.courseType,
+          completeStatus: course.completeStatus,
         });
       });
     }
