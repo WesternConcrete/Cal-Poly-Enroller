@@ -154,6 +154,7 @@ export const appRouter = createTRPCRouter({
           courseType:
             courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
           status: statuses[Math.round(Math.random() * statuses.length)],
+          id: course.code,
         })
       );
     }),

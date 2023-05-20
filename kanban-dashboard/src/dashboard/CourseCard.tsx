@@ -20,15 +20,14 @@ import InProgressIcon from "../components/icons/in-progress";
 // // @ts-ignore
 
 export interface Props {
-  id: string;
+  requirement: Course;
   statusId: string;
   dragHandleProps: DraggableProvidedDragHandleProps;
 }
 
-export default function CourseCard({ id, dragHandleProps }: Props) {
+export default function CourseCard({ requirement, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units, completeStatus } =
-    hooks.useCourse(id) as Course;
+  const { title, assigneeId, description, courseType, units, completeStatus } = requirement;
   const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
   const handleClickDelete = () => {

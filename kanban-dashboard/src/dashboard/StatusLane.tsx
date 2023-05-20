@@ -15,18 +15,19 @@ import { hooks, emptyArray } from "./store";
 import CourseCard from "./CourseCard";
 import { useCardStyles, useLaneStyles } from "./styles";
 import { useCurrentUserId } from "./CurrentUser";
-import { Status } from "./store/types";
+import { Course, Status } from "./store/types";
 
 export interface Props {
   id: string;
+  requirements: Course[];
 }
 
-export default function StatusLane({ id }: Props) {
+export default function StatusLane({ id, requirements }: Props) {
   const currentUserId = useCurrentUserId();
   const createCourse = hooks.useCreateCourse();
   const updateStatus = hooks.useUpdateStatus();
   const deleteStatus = hooks.useDeleteStatus();
-  const { title, taskIds } = hooks.useStatus(id) as Status;
+  const { title } = hooks.useStatus(id) as Status;
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);
@@ -82,10 +83,10 @@ export default function StatusLane({ id }: Props) {
               {...provided.droppableProps}
               className={classNames.tasks}
             >
-              {(taskIds || emptyArray).map((taskId, index) => (
+              {(requirements).map((requirement, index) => (
                 <Draggable
-                  key={taskId}
-                  draggableId={taskId.toString()}
+                  key={requirement.id}
+                  draggableId={requirement.toString()}
                   index={index}
                 >
                   {(provided: DraggableProvided) => {
@@ -96,8 +97,8 @@ export default function StatusLane({ id }: Props) {
                         {...provided.draggableProps}
                       >
                         <CourseCard
-                          statusId={id}
-                          id={taskId}
+                          requirement={requirement}
+                          id={requirement.id}
                           dragHandleProps={provided.dragHandleProps}
                         />
                       </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 
-import { FlowchartData, UpdateFlowchartData } from "./store/types";
+import { Course, FlowchartData, UpdateFlowchartData } from "./store/types";
 import CurrentUser from "./CurrentUser";
 import { StoreProvider } from "./store";
 import Menubar from "./Menubar";
@@ -20,12 +20,12 @@ const FlowchartState = React.createContext({});
 export default function Dashboard({ projectsUrlPath }: Props) {
   const classNames = useDashboardStyles();
   const [degree, setDegree] = useState<Degree>();
-  const [requirements, setRequirements] = useState<RequirementCourse[]>([]);
+  const [requirements, setRequirements] = useState<Course[]>([]);
   const [flowchart, setFlowchart] = useState<FlowchartData>();
   const quartersQuery = api.quarters.useQuery();
   const requirementsQuery = api.degreeRequirements.useQuery(
     { degree },
-    { enabled: false }
+    { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
   useEffect(() => {
     requirementsQuery.refetch();
@@ -38,17 +38,14 @@ export default function Dashboard({ projectsUrlPath }: Props) {
   // TODO: move nested courses fetch here to avoid loading spinner waterfall
 
   return flowchart ? (
-    <StoreProvider
-      state={flowchart}
-      updateFlowchartData={setFlowchart}
-    >
+    <StoreProvider state={flowchart} updateFlowchartData={setFlowchart}>
       <FlowchartState.Provider
         value={{ degree, setDegree, requirements, setRequirements }}
       >
         <div className={classNames.root}>
           <Menubar projectsUrlPath={projectsUrlPath} setDegree={setDegree} />
           <div className={classNames.content}>
-            <Flowchart />
+            <Flowchart requirements={requirements} />
           </div>
         </div>
       </FlowchartState.Provider>

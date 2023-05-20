@@ -18,7 +18,10 @@ import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
 import { Course, CourseType } from "./store/types";
 
-export default function Flowchart() {
+export interface Props {
+    requirements: Course[];
+}
+export default function Flowchart({ requirements }: Props) {
   const currentUserId = useCurrentUserId();
   const statusIds = hooks.useStatusIds();
   const moveStatus = hooks.useMoveStatus();
@@ -69,7 +72,7 @@ export default function Flowchart() {
               >
                 {(statusIds || emptyArray).map((statusId, index) => (
                   <div className={classNames.laneContainer} key={index}>
-                    <StatusLane id={statusId} />
+                    <StatusLane id={statusId} requirements={requirements.filter(req => req.status === statusId)}/>
                   </div>
                 ))}
                 {provided.placeholder}
