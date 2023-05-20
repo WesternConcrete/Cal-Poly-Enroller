@@ -124,14 +124,6 @@ const statuses: UUID[] = [
 
 const courseType_arr = Object.values(CourseType);
 
-// TODO: remove this once degree selection is added
-const CSC_DEGREE: Degree = {
-  name: "Computer Science",
-  kind: "BS",
-  link: "https://catalog.calpoly.edu/collegesandprograms/collegeofengineering/computersciencesoftwareengineering/bscomputerscience/",
-  id: 1000,
-};
-
 /**
  * This is the primary router for your server.
  *
@@ -142,8 +134,11 @@ export const appRouter = createTRPCRouter({
     return quarters;
   }),
   degreeRequirements: publicProcedure
-    .input(z.object({ degree: DegreeSchema.default(CSC_DEGREE) }))
+    .input(z.object({ degree: DegreeSchema.nullable() }))
     .query(async ({ input }) => {
+      if (input.degree === null) {
+        return [];
+      }
       const courses = await scrapeDegreeRequirements(input.degree);
       // generate random info for the data that isn't being scraped yet
       return Array.from(courses.courses.values()).map(

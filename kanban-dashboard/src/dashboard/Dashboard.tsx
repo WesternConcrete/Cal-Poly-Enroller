@@ -11,15 +11,24 @@ import { useDashboardStyles } from "./styles";
 import { RequirementCourse, type Degree } from "~/server/api/root";
 import { api } from "~/utils/api";
 
+type Setter<S> = React.Dispatch<React.SetStateAction<S>>;
+
+type FlowchartStateType = {
+  requirements: Course[];
+  setRequirements: Setter<Course[]>;
+  degree: Degree | null;
+  setDegree: Setter<Degree | null>;
+};
+
+const FlowchartState = React.createContext<FlowchartStateType>({} as FlowchartStateType);
+
 export interface Props {
   projectsUrlPath: string;
 }
 
-const FlowchartState = React.createContext({});
-
 export default function Dashboard({ projectsUrlPath }: Props) {
   const classNames = useDashboardStyles();
-  const [degree, setDegree] = useState<Degree>();
+  const [degree, setDegree] = useState<Degree | null>(null);
   const [requirements, setRequirements] = useState<Course[]>([]);
   const [flowchart, setFlowchart] = useState<FlowchartData>();
   const quartersQuery = api.quarters.useQuery();
