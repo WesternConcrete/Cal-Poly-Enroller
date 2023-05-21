@@ -11,7 +11,7 @@ import {
 import AddIcon from "@material-ui/icons/Add";
 import { hooks, emptyArray } from "./store";
 import { useBoardStyles } from "./styles";
-import StatusLane from "./StatusLane";
+import Quarter from "./Quarter";
 import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
@@ -20,7 +20,7 @@ import { Course, CourseType } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
 
 export default function Flowchart() {
-  const statusIds = hooks.useStatusIds();
+  const quarterIds = hooks.useStatusIds();
   const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
@@ -58,9 +58,9 @@ export default function Flowchart() {
                 {...provided.droppableProps}
                 className={classNames.lanes}
               >
-                {(statusIds || emptyArray).map((statusId, index) => (
+                {(quarterIds || emptyArray).map((statusId, index) => (
                   <div className={classNames.laneContainer} key={index}>
-                    <StatusLane id={statusId} />
+                    <Quarter id={statusId} />
                   </div>
                 ))}
                 {provided.placeholder}

@@ -22,7 +22,7 @@ export interface Props {
   id: string;
 }
 
-export default function StatusLane({ id }: Props) {
+export default function Quarter({ id }: Props) {
   const { title } = hooks.useStatus(id) as Status;
   const classNames = useLaneStyles();
   const { requirements } = useContext(FlowchartState);
