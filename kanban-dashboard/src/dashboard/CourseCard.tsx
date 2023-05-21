@@ -1,13 +1,8 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import { DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
-import { OptionsPopper } from "../components/options-popper";
+import { Draggable, DraggableProvided } from "react-beautiful-dnd";
 import { hooks } from "./store";
-import CourseDetails from "./CourseDetails";
 import { useCardStyles } from "./styles";
 import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
@@ -22,19 +17,13 @@ import { FlowchartState } from "~/dashboard/Dashboard";
 
 export interface Props {
   requirement: Course;
-  dragHandleProps: DraggableProvidedDragHandleProps;
+  index: number;
 }
 
-export default function CourseCard({ requirement, dragHandleProps }: Props) {
+export default function CourseCard({ requirement, index }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units, completeStatus } =
-    requirement;
-  const assignee = hooks.useUser(assigneeId as string);
-  const deleteCourse = hooks.useDeleteCourse();
+  const { title, description, courseType, units, completeStatus } = requirement;
 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const openDetails = () => setIsDetailsOpen(true);
-  const closeDetails = () => setIsDetailsOpen(false);
   const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: CourseType) => {
@@ -66,36 +55,37 @@ export default function CourseCard({ requirement, dragHandleProps }: Props) {
   };
 
   return (
-    <Paper
-      className={`${classNames.task} ${courseTypeClass(
-        courseType
-      )} ${completeStatusClass(completeStatus)}`}
-      {...dragHandleProps}
+    <Draggable
+      key={requirement.id}
+      draggableId={requirement.id.toString()}
+      index={index}
     >
-      <div className={classNames.taskHeader}>
-        <div>
-          <Typography className={classNames.title}>{title}</Typography>
+      {(provided: DraggableProvided) => {
+        return (
+          <div
+            className={classNames.taskContainer}
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+          >
+            <Paper
+              className={`${classNames.task} ${courseTypeClass(
+                courseType
+              )} ${completeStatusClass(completeStatus)}`}
+              {...provided.dragHandleProps}
+            >
+              <div className={classNames.taskHeader}>
+                <div>
+                  <Typography className={classNames.title}>{title}</Typography>
 
-          <Typography variant="subtitle2">{description}</Typography>
-        </div>
-
-        {/* <OptionsPopper>
-          <List>
-            <ListItem button onClick={openDetails}>
-              <ListItemText primary="View & Edit"/>
-            </ListItem>
-            <ListItem button onClick={handleClickDelete}>
-              <ListItemText primary="Delete"/>
-            </ListItem>
-          </List>
-        </OptionsPopper> */}
-        <CompleteStatusIcon completeStatus={completeStatus} />
-      </div>
-
-      {isDetailsOpen && (
-        <CourseDetails id={id} isOpen={isDetailsOpen} close={closeDetails} />
-      )}
-    </Paper>
+                  <Typography variant="subtitle2">{description}</Typography>
+                </div>
+                <CompleteStatusIcon completeStatus={completeStatus} />
+              </div>
+            </Paper>
+          </div>
+        );
+      }}
+    </Draggable>
   );
 }
 

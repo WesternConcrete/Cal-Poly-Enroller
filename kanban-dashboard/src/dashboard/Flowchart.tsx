@@ -35,7 +35,7 @@ export default function Flowchart() {
     destination,
     draggableId,
   }: DropResult) => {
-    if (type !== "taskCard") {
+    if (type !== "quarter") {
       console.warn("tried to drag unrecognized type:", type);
       return;
     }
@@ -46,28 +46,13 @@ export default function Flowchart() {
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable
-          type="statusLane"
-          droppableId="projectBoard"
-          direction="horizontal"
-        >
-          {(provided: DroppableProvided) => {
-            return (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={classNames.lanes}
-              >
-                {(quarterIds || emptyArray).map((statusId, index) => (
-                  <div className={classNames.laneContainer} key={index}>
-                    <Quarter id={statusId} />
-                  </div>
-                ))}
-                {provided.placeholder}
-              </div>
-            );
-          }}
-        </Droppable>
+        <div className={classNames.lanes}>
+          {(quarterIds || emptyArray).map((statusId, index) => (
+            <div className={classNames.laneContainer} key={index}>
+              <Quarter id={statusId} />
+            </div>
+          ))}
+        </div>
       </DragDropContext>
       <div className={classNames.addButtonContainer}>
         <Fab color="primary" aria-label="add" onClick={() => openCourseForm()}>

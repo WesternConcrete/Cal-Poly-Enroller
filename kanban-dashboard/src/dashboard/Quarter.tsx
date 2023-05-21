@@ -1,21 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
-import {
-  Draggable,
-  DraggableProvided,
-  DraggableProvidedDragHandleProps,
-  Droppable,
-  DroppableProvided,
-} from "react-beautiful-dnd";
+import { Droppable, DroppableProvided } from "react-beautiful-dnd";
 import { hooks } from "./store";
 import CourseCard from "./CourseCard";
-import { useCardStyles, useLaneStyles } from "./styles";
-import { useCurrentUserId } from "./CurrentUser";
-import { Course, Status } from "./store/types";
+import { useLaneStyles } from "./styles";
+import { Status } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
 
 export interface Props {
@@ -34,7 +27,7 @@ export default function Quarter({ id }: Props) {
           {title}
         </Typography>
       </div>
-      <Droppable type="taskCard" droppableId={id.toString()}>
+      <Droppable type="quarter" droppableId={id.toString()}>
         {(provided: DroppableProvided) => {
           return (
             <div
@@ -45,26 +38,7 @@ export default function Quarter({ id }: Props) {
               {requirements
                 .filter((req) => req.quarterId === id)
                 .map((requirement, index) => (
-                  <Draggable
-                    key={requirement.id}
-                    draggableId={requirement.id.toString()}
-                    index={index}
-                  >
-                    {(provided: DraggableProvided) => {
-                      return (
-                        <div
-                          className={classNames.taskContainer}
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                        >
-                          <CourseCard
-                            requirement={requirement}
-                            dragHandleProps={provided.dragHandleProps}
-                          />
-                        </div>
-                      );
-                    }}
-                  </Draggable>
+                  <CourseCard requirement={requirement} index={index} />
                 ))}
             </div>
           );
