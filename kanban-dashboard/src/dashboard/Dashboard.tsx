@@ -81,7 +81,7 @@ export default function Dashboard({ projectsUrlPath }: Props) {
     <StoreProvider state={flowchart} updateFlowchartData={setFlowchart}>
       <FlowchartState.Provider value={flowchartContext}>
         <div className={classNames.root}>
-          <Menubar projectsUrlPath={projectsUrlPath} setDegree={setDegree} />
+          <Menubar projectsUrlPath={projectsUrlPath} />
           <div className={classNames.content}>
             <Flowchart />
           </div>
