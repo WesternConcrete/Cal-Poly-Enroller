@@ -53,7 +53,7 @@ export default function Dashboard({ projectsUrlPath }: Props) {
       const newRequirements = requirements.map((r) => {
         if (r.id === requirementId) {
           found = true;
-          console.log("moving:",r,"to:",quarterId)
+          console.log("moving:", r, "to:", quarterId);
           r.quarterId = quarterId;
         }
         return r;

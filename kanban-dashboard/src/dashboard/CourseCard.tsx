@@ -12,7 +12,7 @@ import { useCardStyles } from "./styles";
 import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
-import { FlowchartState } from "~/dashboard/Dashboard"
+import { FlowchartState } from "~/dashboard/Dashboard";
 
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
@@ -25,9 +25,10 @@ export interface Props {
   dragHandleProps: DraggableProvidedDragHandleProps;
 }
 
-export default function CourseCard({requirement, dragHandleProps }: Props) {
+export default function CourseCard({ requirement, dragHandleProps }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units, completeStatus } = requirement;
+  const { title, assigneeId, description, courseType, units, completeStatus } =
+    requirement;
   const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
 

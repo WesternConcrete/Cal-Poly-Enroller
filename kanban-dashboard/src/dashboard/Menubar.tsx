@@ -67,7 +67,9 @@ export default function Menubar({ setDegree, projectsUrlPath }: MenubarProps) {
             onChange={({ target: { value } }) => updateDegree(value as string)}
             labelId="select-degree"
           >
-            <MenuItem value="Select a Degree" key={-1}>Select a Degree</MenuItem>
+            <MenuItem value="Select a Degree" key={-1}>
+              Select a Degree
+            </MenuItem>
             {degreesQuery.data &&
               degreesQuery.data.map((degree, idx) => {
                 return (
