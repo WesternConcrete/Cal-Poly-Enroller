@@ -18,9 +18,12 @@ type FlowchartStateType = {
   setRequirements: Setter<Course[]>;
   degree: Degree | null;
   setDegree: Setter<Degree | null>;
+  moveRequirement: (requirementId: number, quarterId: string) => void;
 };
 
-const FlowchartState = React.createContext<FlowchartStateType>({} as FlowchartStateType);
+export const FlowchartState = React.createContext<FlowchartStateType>(
+  {} as FlowchartStateType
+);
 
 export interface Props {
   projectsUrlPath: string;
@@ -44,17 +47,43 @@ export default function Dashboard({ projectsUrlPath }: Props) {
     setFlowchart(quartersQuery.data);
   }, [quartersQuery.data]);
 
+  const moveRequirement = (requirementId: number, quarterId: string) => {
+    setRequirements((requirements) => {
+      let found = false;
+      const newRequirements = requirements.map((r) => {
+        if (r.id === requirementId) {
+          found = true;
+          console.log("moving:",r,"to:",quarterId)
+          r.quarterId = quarterId;
+        }
+        return r;
+      });
+      if (!found) {
+        console.error(
+          `Tried to move requirement with id: ${requirementId} but couldn't find it...`
+        );
+      }
+      return newRequirements;
+    });
+  };
+
+  const flowchartContext = {
+    degree,
+    setDegree,
+    requirements,
+    setRequirements,
+    moveRequirement,
+  };
+
   // TODO: move nested courses fetch here to avoid loading spinner waterfall
 
   return flowchart ? (
     <StoreProvider state={flowchart} updateFlowchartData={setFlowchart}>
-      <FlowchartState.Provider
-        value={{ degree, setDegree, requirements, setRequirements }}
-      >
+      <FlowchartState.Provider value={flowchartContext}>
         <div className={classNames.root}>
           <Menubar projectsUrlPath={projectsUrlPath} setDegree={setDegree} />
           <div className={classNames.content}>
-            <Flowchart requirements={requirements} />
+            <Flowchart />
           </div>
         </div>
       </FlowchartState.Provider>

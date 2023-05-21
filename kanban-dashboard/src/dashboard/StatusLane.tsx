@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import List from "@material-ui/core/List";
@@ -11,62 +11,21 @@ import {
   Droppable,
   DroppableProvided,
 } from "react-beautiful-dnd";
-import { hooks, emptyArray } from "./store";
+import { hooks } from "./store";
 import CourseCard from "./CourseCard";
 import { useCardStyles, useLaneStyles } from "./styles";
 import { useCurrentUserId } from "./CurrentUser";
 import { Course, Status } from "./store/types";
+import { FlowchartState } from "~/dashboard/Dashboard";
 
 export interface Props {
   id: string;
-  requirements: Course[];
 }
 
-export default function StatusLane({ id, requirements }: Props) {
-  const currentUserId = useCurrentUserId();
-  const createCourse = hooks.useCreateCourse();
-  const updateStatus = hooks.useUpdateStatus();
-  const deleteStatus = hooks.useDeleteStatus();
+export default function StatusLane({ id }: Props) {
   const { title } = hooks.useStatus(id) as Status;
-
-  const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
-  const openCourseForm = () => setIsCourseFormOpen(true);
-  const closeCourseForm = () => setIsCourseFormOpen(false);
-
-  const [isStatusEditorOpen, setIsStatusEditorOpen] = useState(false);
-  const openStatusEditor = () => setIsStatusEditorOpen(true);
-  const closeStatusEditor = () => setIsStatusEditorOpen(false);
-
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const openDeleteConfirm = () => setIsDeleteConfirmOpen(true);
-  const closeDeleteConfirm = () => setIsDeleteConfirmOpen(false);
-
-  const handleSubmitNewCourse = (title: string, desc: string) => {
-    if (createCourse && currentUserId) {
-      createCourse({
-        title,
-        statusId: id,
-        creatorId: currentUserId,
-        description: desc,
-      });
-    }
-    closeCourseForm();
-  };
-
-  const handleSubmitEditStatus = (title: string) => {
-    if (updateStatus) {
-      updateStatus(id, { title });
-    }
-    closeStatusEditor();
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteStatus) {
-      deleteStatus(id);
-    }
-  };
-
   const classNames = useLaneStyles();
+  const { requirements } = useContext(FlowchartState);
 
   return (
     <Paper className={`${classNames.lane} board-status`} elevation={0}>
@@ -83,29 +42,30 @@ export default function StatusLane({ id, requirements }: Props) {
               {...provided.droppableProps}
               className={classNames.tasks}
             >
-              {(requirements).map((requirement, index) => (
-                <Draggable
-                  key={requirement.id}
-                  draggableId={requirement.toString()}
-                  index={index}
-                >
-                  {(provided: DraggableProvided) => {
-                    return (
-                      <div
-                        className={classNames.taskContainer}
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                      >
-                        <CourseCard
-                          requirement={requirement}
-                          id={requirement.id}
-                          dragHandleProps={provided.dragHandleProps}
-                        />
-                      </div>
-                    );
-                  }}
-                </Draggable>
-              ))}
+              {requirements
+                .filter((req) => req.quarterId === id)
+                .map((requirement, index) => (
+                  <Draggable
+                    key={requirement.id}
+                    draggableId={requirement.id.toString()}
+                    index={index}
+                  >
+                    {(provided: DraggableProvided) => {
+                      return (
+                        <div
+                          className={classNames.taskContainer}
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                        >
+                          <CourseCard
+                            requirement={requirement}
+                            dragHandleProps={provided.dragHandleProps}
+                          />
+                        </div>
+                      );
+                    }}
+                  </Draggable>
+                ))}
             </div>
           );
         }}

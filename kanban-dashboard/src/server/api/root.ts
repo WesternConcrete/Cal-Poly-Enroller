@@ -142,14 +142,14 @@ export const appRouter = createTRPCRouter({
       const courses = await scrapeDegreeRequirements(input.degree);
       // generate random info for the data that isn't being scraped yet
       return Array.from(courses.courses.values()).map(
-        (course: RequirementCourse) => ({
+        (course: RequirementCourse, i) => ({
           title: course.code,
           description: course.title, // TODO: gather this from the course catalog
           units: course.units,
           courseType:
             courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-          status: statuses[Math.round(Math.random() * statuses.length)],
-          id: course.code,
+          quarterId: statuses[Math.round(Math.random() * statuses.length)],
+          id: i,
         })
       );
     }),

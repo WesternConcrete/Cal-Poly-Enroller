@@ -17,15 +17,11 @@ import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
 import { Course, CourseType } from "./store/types";
+import { FlowchartState } from "~/dashboard/Dashboard";
 
-export interface Props {
-    requirements: Course[];
-}
-export default function Flowchart({ requirements }: Props) {
-  const currentUserId = useCurrentUserId();
+export default function Flowchart() {
   const statusIds = hooks.useStatusIds();
-  const moveStatus = hooks.useMoveStatus();
-  const moveCourse = hooks.useMoveStatusCourse();
+  const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);
@@ -39,20 +35,12 @@ export default function Flowchart({ requirements }: Props) {
     destination,
     draggableId,
   }: DropResult) => {
+    if (type !== "taskCard") {
+      console.warn("tried to drag unrecognized type:", type);
+      return;
+    }
     if (source && destination) {
-      if (type === "statusLane" && moveStatus) {
-        moveStatus(source.index, destination.index);
-      }
-
-      if (type === "taskCard" && moveCourse) {
-        moveCourse(
-          draggableId,
-          source.droppableId,
-          source.index,
-          destination.droppableId,
-          destination.index
-        );
-      }
+      moveRequirement(parseInt(draggableId), destination.droppableId);
     }
   };
   return (
@@ -72,7 +60,7 @@ export default function Flowchart({ requirements }: Props) {
               >
                 {(statusIds || emptyArray).map((statusId, index) => (
                   <div className={classNames.laneContainer} key={index}>
-                    <StatusLane id={statusId} requirements={requirements.filter(req => req.status === statusId)}/>
+                    <StatusLane id={statusId} />
                   </div>
                 ))}
                 {provided.placeholder}

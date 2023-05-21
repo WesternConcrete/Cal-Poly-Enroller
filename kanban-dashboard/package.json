@@ -20,6 +20,7 @@
     "@trpc/react-query": "^10.18.0",
     "@trpc/server": "^10.18.0",
     "@types/eslint": "^8.21.3",
+    "@types/react-beautiful-dnd": "^13.1.4",
     "cheerio": "1.0.0-rc.12",
     "eslint-config-next": "^13.4.2",
     "moment": "^2.29.4",
