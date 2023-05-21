@@ -1,15 +1,6 @@
 import { type UUID } from "crypto";
 import { type State as NormalizedState } from "normalized-reducer";
-
-export interface Flowchart {
-  meta: FlowchartMeta;
-}
-
-export interface FlowchartMeta {
-  id: UUID;
-  title: string;
-  description: string;
-}
+import { type Degree } from "~/server/api/root";
 
 export interface FlowchartData extends NormalizedState {
   entities: {

@@ -17,15 +17,11 @@ import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
 import { Course, CourseType } from "./store/types";
-
-import { api } from "~/utils/api";
+import { FlowchartState } from "~/dashboard/Dashboard";
 
 export default function Flowchart() {
-  const currentUserId = useCurrentUserId();
   const statusIds = hooks.useStatusIds();
-  const createCourse = hooks.useCreateCourse();
-  const moveStatus = hooks.useMoveStatus();
-  const moveCourse = hooks.useMoveStatusCourse();
+  const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);
@@ -39,39 +35,14 @@ export default function Flowchart() {
     destination,
     draggableId,
   }: DropResult) => {
+    if (type !== "taskCard") {
+      console.warn("tried to drag unrecognized type:", type);
+      return;
+    }
     if (source && destination) {
-      if (type === "statusLane" && moveStatus) {
-        moveStatus(source.index, destination.index);
-      }
-
-      if (type === "taskCard" && moveCourse) {
-        moveCourse(
-          draggableId,
-          source.droppableId,
-          source.index,
-          destination.droppableId,
-          destination.index
-        );
-      }
+      moveRequirement(parseInt(draggableId), destination.droppableId);
     }
   };
-  const courseQuery = api.courses.useQuery();
-  useEffect(() => {
-    if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course) => {
-        createCourse({
-          title: course.title,
-          statusId: course.status,
-          creatorId: currentUserId,
-          description: course.description,
-          units: course.units,
-          courseType: course.courseType,
-          completeStatus: course.completeStatus,
-        });
-      });
-    }
-  }, [courseQuery.isLoading]);
-
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>

@@ -7,19 +7,23 @@ import IconButton from "@material-ui/core/IconButton";
 import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
-
+import { Select, MenuItem, InputLabel } from "@material-ui/core";
 import UsersMenu from "./UsersMenu";
+
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
+import { Degree } from "~/server/api/root";
+
+import { api } from "~/utils/api";
 
 const noop = () => {};
 
 export interface MenubarProps {
-  title: string;
+  setDegree: React.Dispatch<React.SetStateAction<Degree>>;
   projectsUrlPath: string;
 }
 
-export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
+export default function Menubar({ setDegree, projectsUrlPath }: MenubarProps) {
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -33,23 +37,49 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const degreesQuery = api.degrees.useQuery();
+
+  const [selectedDegreeDisplayName, setSelectedDegreeDisplayName] =
+    React.useState<string>("Select a Degree");
+  const updateDegree = (name: string) => {
+    if (!degreesQuery.data) {
+      return;
+    }
+    for (const degree of degreesQuery.data) {
+      // TODO: create record of string id: Degree for faster lookup
+      if (degree.name === name) {
+        setDegree(degree);
+        setSelectedDegreeDisplayName(degree.name);
+        break;
+      }
+    }
+  };
 
   return (
     <Fragment>
       <MuiAppBar position="static">
         <Toolbar>
-          {/* <Link href={projectsUrlPath}>
-            <IconButton
-              onClick={noop}
-              className={classes.menuButton}
-              edge="start"
-              color="inherit"
-            ><FlowchartsIcon/></IconButton>
-          </Link> */}
-
-          <Typography variant="h6" className={classes.title}>
-            {title}
-          </Typography>
+          <InputLabel id="select-degree">
+            <Typography variant="h6">Degree</Typography>
+          </InputLabel>
+          <Select
+            value={selectedDegreeDisplayName}
+            onChange={({ target: { value } }) => updateDegree(value as string)}
+            labelId="select-degree"
+          >
+            <MenuItem value="Select a Degree" key={-1}>
+              Select a Degree
+            </MenuItem>
+            {degreesQuery.data &&
+              degreesQuery.data.map((degree, idx) => {
+                return (
+                  <MenuItem value={degree.name} key={idx}>
+                    {degree.name}, {degree.kind}
+                  </MenuItem>
+                );
+              })}
+          </Select>
+          <div className={classes.title}>{/* spacer with flax grow */}</div>
 
           <div className={classes.currentUser}>
             <Typography variant="subtitle2" className={classes.currentUsername}>
@@ -62,12 +92,6 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
           </div>
         </Toolbar>
       </MuiAppBar>
-
-      {/* <Drawer open={open} anchor="right" onClose={handleClose}>
-        <div style={{ width: 300 }}>
-          <UsersMenu/>
-        </div>
-      </Drawer> */}
     </Fragment>
   );
 }

@@ -3,9 +3,14 @@ import { type UUID } from "crypto";
 import { type FlowchartData } from "~/dashboard/store/types";
 import { type Course, CourseType } from "~/dashboard/store/types";
 import {
+  scrapeDegrees,
   scrapeDegreeRequirements,
   type RequirementCourse,
-} from "scraping/catalog";
+  type Degree,
+  DegreeSchema,
+} from "~/scraping/catalog";
+export type { Degree, RequirementCourse } from "~/scraping/catalog";
+import { z } from "zod";
 
 const quarters: FlowchartData = {
   entities: {
@@ -119,13 +124,6 @@ const statuses: UUID[] = [
 
 const courseType_arr = Object.values(CourseType);
 
-// TODO: remove this once degree selection is added
-const CSC_DEGREE = {
-  name: "Computer Science",
-  kind: "BS",
-  link: "https://catalog.calpoly.edu/collegesandprograms/collegeofengineering/computersciencesoftwareengineering/bscomputerscience/",
-};
-
 /**
  * This is the primary router for your server.
  *
@@ -135,19 +133,28 @@ export const appRouter = createTRPCRouter({
   quarters: publicProcedure.query(() => {
     return quarters;
   }),
-  courses: publicProcedure.query(async () => {
-    const cscCourses = await scrapeDegreeRequirements(CSC_DEGREE);
-    // generate random info for the data that isn't being scraped yet
-    return Array.from(cscCourses.courses.values()).map(
-      (course: RequirementCourse) => ({
-        title: course.code,
-        description: course.title, // TODO: gather this from the course catalog
-        units: course.units,
-        courseType:
-          courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-        status: statuses[Math.round(Math.random() * statuses.length)],
-      })
-    );
+  degreeRequirements: publicProcedure
+    .input(z.object({ degree: DegreeSchema.nullable() }))
+    .query(async ({ input }) => {
+      if (input.degree === null) {
+        return [];
+      }
+      const courses = await scrapeDegreeRequirements(input.degree);
+      // generate random info for the data that isn't being scraped yet
+      return Array.from(courses.courses.values()).map(
+        (course: RequirementCourse, i) => ({
+          title: course.code,
+          description: course.title, // TODO: gather this from the course catalog
+          units: course.units,
+          courseType:
+            courseType_arr[Math.round(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
+          quarterId: statuses[Math.round(Math.random() * statuses.length)],
+          id: i,
+        })
+      );
+    }),
+  degrees: publicProcedure.query(async (): Promise<Degree[]> => {
+    return scrapeDegrees();
   }),
 });
 

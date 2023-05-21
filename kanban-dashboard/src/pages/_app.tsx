@@ -5,7 +5,7 @@ import { ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import "../dashboard/overrides.css";
 import theme from "../styles/theme";
-import { api } from "../utils/api";
+import { api } from "~/utils/api";
 
 const App: AppType = ({ Component, pageProps }) => {
   React.useEffect(() => {

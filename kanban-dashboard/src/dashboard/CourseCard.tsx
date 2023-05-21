@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
 import List from "@material-ui/core/List";
@@ -12,6 +12,7 @@ import { useCardStyles } from "./styles";
 import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
+import { FlowchartState } from "~/dashboard/Dashboard";
 
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
@@ -20,26 +21,21 @@ import InProgressIcon from "../components/icons/in-progress";
 // // @ts-ignore
 
 export interface Props {
-  id: string;
-  statusId: string;
+  requirement: Course;
   dragHandleProps: DraggableProvidedDragHandleProps;
 }
 
-export default function CourseCard({ id, dragHandleProps }: Props) {
+export default function CourseCard({ requirement, dragHandleProps }: Props) {
   const classNames = useCardStyles();
   const { title, assigneeId, description, courseType, units, completeStatus } =
-    hooks.useCourse(id) as Course;
+    requirement;
   const assignee = hooks.useUser(assigneeId as string);
   const deleteCourse = hooks.useDeleteCourse();
-  const handleClickDelete = () => {
-    if (deleteCourse) {
-      deleteCourse(id);
-    }
-  };
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const openDetails = () => setIsDetailsOpen(true);
   const closeDetails = () => setIsDetailsOpen(false);
+  const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: CourseType) => {
     switch (courseType) {
