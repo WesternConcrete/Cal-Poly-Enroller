@@ -12,12 +12,9 @@ import UsersMenu from "./UsersMenu";
 
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { Degree } from "~/server/api/root";
 import { FlowchartState } from "~/dashboard/Dashboard";
 
 import { api } from "~/utils/api";
-
-const noop = () => {};
 
 export interface MenubarProps {
   projectsUrlPath: string;
@@ -40,6 +37,8 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
   };
   const degreesQuery = api.degrees.useQuery();
 
+  const trpcClient = api.useContext();
+
   const [selectedDegreeDisplayName, setSelectedDegreeDisplayName] =
     React.useState<string>("Select a Degree");
   const updateDegree = (name: string) => {
@@ -49,6 +48,8 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
+        console.log("fetching degree requirements for:", degree)
+        trpcClient.degreeRequirements.fetch({ degree })
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;

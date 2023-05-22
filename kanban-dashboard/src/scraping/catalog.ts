@@ -105,6 +105,7 @@ export const RequirementTypeSchema = z.enum([
   "ge",
   "support",
 ]);
+export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 
 export const RequirementCourseCodeSchema = z.string();
 
@@ -118,7 +119,6 @@ export const RequirementAllOfSchema = z.object({
   kind: z.literal("allof"),
   allof: z.array(RequirementCourseCodeSchema.or(RequirementOneOfSchema)),
 });
-export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 export const RequirementSchema = z.object({
   kind: RequirementTypeSchema.or(z.string()),
   fulfilledBy: z.array(

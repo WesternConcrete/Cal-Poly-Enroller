@@ -10,13 +10,14 @@ import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { Status } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { api } from "~/utils/api"
 
 export interface Props {
-  id: string;
+  quarter: {title: string, id: number, current?: boolean}
 }
 
-export default function Quarter({ id }: Props) {
-  const { title } = hooks.useStatus(id) as Status;
+export default function Quarter({ quarter }: Props) {
+  const title = quarter.title
   const classNames = useLaneStyles();
   const { requirements } = useContext(FlowchartState);
 
@@ -27,7 +28,7 @@ export default function Quarter({ id }: Props) {
           {title}
         </Typography>
       </div>
-      <Droppable type="quarter" droppableId={id.toString()}>
+      <Droppable type="quarter" droppableId={quarter.id.toString()}>
         {(provided: DroppableProvided) => {
           return (
             <div
@@ -36,7 +37,7 @@ export default function Quarter({ id }: Props) {
               className={classNames.tasks}
             >
               {requirements
-                .filter((req) => req.quarterId === id)
+                .filter((req) => req.quarterId === quarter.id)
                 .map((requirement, index) => (
                   <CourseCard requirement={requirement} index={index} />
                 ))}

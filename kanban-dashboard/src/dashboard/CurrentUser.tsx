@@ -5,8 +5,6 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { hooks } from "./store";
-import { v4 as uuid } from "uuid";
 
 export interface CurrentUserContextValue {
   userId: string;
@@ -29,14 +27,12 @@ export default function CurrentUserProvider({
   const [userId, setUserId] = useState(initialUserId);
 
   // initialize a default user if given an empty userId
-  const createUser = hooks.useCreateUser();
   useEffect(() => {
     if (!userId) {
-      const id = uuid();
-      createUser({ id, username: "Wes Convery (wconvery@calpoly.edu)" });
+      const id = "wconvery"
       setUserId(id);
     }
-  }, [userId, setUserId, createUser]);
+  }, [userId, setUserId ]);
 
   const value = { userId, setUserId };
   return (
@@ -58,10 +54,8 @@ export function useSetCurrentUserId() {
 
 export function useCurrentUsername() {
   const userId = useCurrentUserId();
-  const user = hooks.useUser(userId);
-  if (!user) {
+  if (!userId) {
     return "";
   }
-
-  return user.username;
+  return userId;
 }

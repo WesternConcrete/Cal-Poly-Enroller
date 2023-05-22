@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
 import { Draggable, DraggableProvided } from "react-beautiful-dnd";
-import { hooks } from "./store";
 import { useCardStyles } from "./styles";
-import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
+import { api } from "~/utils/api";
 
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
@@ -20,37 +20,45 @@ export interface Props {
   index: number;
 }
 
+type CompleteStatus = "complete" | "incomplete" | "in-progress";
+
 export default function CourseCard({ requirement, index }: Props) {
   const classNames = useCardStyles();
-  const { title, description, courseType, units, completeStatus } = requirement;
+  const { title, description, courseType, units } = requirement;
+
+  let completeStatus: CompleteStatus, completeStatusClass: string;
+  api.currentQuarterId.useQuery(undefined, {
+    onSuccess: (data) => {
+      if (
+        !data ||
+        data < requirement.quarterId
+      ) {
+        completeStatus = "incomplete";
+        completeStatusClass = classNames.incomplete_status;
+      } else if (data === requirement.quarterId) {
+        completeStatus = "in-progress";
+        completeStatusClass = classNames.in_progress_status;
+      } else if (data > requirement.quarterId) {
+        completeStatus = "complete";
+        completeStatusClass = classNames.complete_status;
+      }
+    },
+  });
 
   const { setRequirements } = React.useContext(FlowchartState);
 
-  const courseTypeClass = (courseType: CourseType) => {
+  const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
-      case CourseType.SUPPORT:
+      case RequirementTypeSchema.enum.support:
         return classNames.support;
-      case CourseType.CONCENTRATION:
-        return classNames.concentration;
-      case CourseType.GWR:
-        return classNames.gwe;
-      case CourseType.GE:
+      // case CourseType.CONCENTRATION:
+      //   return classNames.concentration;
+      // case CourseType.GWR:
+      //   return classNames.gwe;
+      case RequirementTypeSchema.enum.ge:
         return classNames.ge;
       default:
         return classNames.major;
-    }
-  };
-
-  const completeStatusClass = (completeStatus: CompleteStatus) => {
-    switch (completeStatus) {
-      case CompleteStatus.COMPLETE:
-        return classNames.complete_status;
-      case CompleteStatus.INPROGRESS:
-        return classNames.in_progress_status;
-      case CompleteStatus.INCOMPLETE:
-        return classNames.incomplete_status;
-      default:
-        return classNames.incomplete_status;
     }
   };
 
@@ -70,7 +78,7 @@ export default function CourseCard({ requirement, index }: Props) {
             <Paper
               className={`${classNames.task} ${courseTypeClass(
                 courseType
-              )} ${completeStatusClass(completeStatus)}`}
+              )} ${completeStatusClass}`}
               {...provided.dragHandleProps}
             >
               <div className={classNames.taskHeader}>
@@ -93,13 +101,14 @@ interface CompleteStatusProps {
   completeStatus: CompleteStatus;
 }
 
+// TODO: assign this in the if statement in CourseCard
 function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
   switch (completeStatus) {
-    case CompleteStatus.COMPLETE:
+    case "complete":
       return <CompleteIcon />;
-    case CompleteStatus.INCOMPLETE:
+    case "incomplete":
       return <div></div>;
-    case CompleteStatus.INPROGRESS:
+    case "in-progress":
       return <InProgressIcon />;
     default:
       return <div>unset</div>;

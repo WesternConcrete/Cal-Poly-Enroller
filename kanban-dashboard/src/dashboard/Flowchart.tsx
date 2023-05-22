@@ -9,18 +9,17 @@ import {
   // @ts-ignore
 } from "react-beautiful-dnd";
 import AddIcon from "@material-ui/icons/Add";
-import { hooks, emptyArray } from "./store";
 import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
 import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
-import { Course, CourseType } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { api } from "~/utils/api"
 
 export default function Flowchart() {
-  const quarterIds = hooks.useStatusIds();
+  const quartersQuery = api.quarters.useQuery();
   const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
@@ -40,18 +39,18 @@ export default function Flowchart() {
       return;
     }
     if (source && destination) {
-      moveRequirement(parseInt(draggableId), destination.droppableId);
+      moveRequirement(parseInt(draggableId), parseInt(destination.droppableId));
     }
   };
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className={classNames.lanes}>
-          {(quarterIds || emptyArray).map((statusId, index) => (
-            <div className={classNames.laneContainer} key={index}>
-              <Quarter id={statusId} />
+          {quartersQuery.data ? (quartersQuery.data || []).map((quarter) => (
+            <div className={classNames.laneContainer} key={quarter.id}>
+              <Quarter quarter={quarter} />
             </div>
-          ))}
+          )) : null}
         </div>
       </DragDropContext>
       <div className={classNames.addButtonContainer}>
