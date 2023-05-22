@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
 import { Draggable, DraggableProvided } from "react-beautiful-dnd";
@@ -26,24 +26,39 @@ export default function CourseCard({ requirement, index }: Props) {
   const classNames = useCardStyles();
   const { title, description, courseType, units } = requirement;
 
-  let completeStatus: CompleteStatus, completeStatusClass: string;
-  api.currentQuarterId.useQuery(undefined, {
-    onSuccess: (data) => {
-      if (
-        !data ||
-        data < requirement.quarterId
-      ) {
-        completeStatus = "incomplete";
-        completeStatusClass = classNames.incomplete_status;
-      } else if (data === requirement.quarterId) {
-        completeStatus = "in-progress";
-        completeStatusClass = classNames.in_progress_status;
-      } else if (data > requirement.quarterId) {
-        completeStatus = "complete";
-        completeStatusClass = classNames.complete_status;
-      }
+  const COMPLETE_STATUS = {
+    complete: {
+      class: classNames.complete_status,
+      icon: () => <CompleteIcon />,
     },
+    incomplete: {
+      class: classNames.incomplete_status,
+      icon: () => <div></div>,
+    },
+    "in-progress": {
+      class: classNames.in_progress_status,
+      icon: () => <InProgressIcon />,
+    },
+  };
+  const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
+    staleTime: Infinity,
   });
+  const completeStatus: CompleteStatus = useMemo(() => {
+    if (typeof currentQuarter !== "number") {
+      console.error("currentQuarter is not a number", currentQuarter);
+      return "incomplete";
+    }
+    if (!currentQuarter || currentQuarter < requirement.quarterId) {
+      return "incomplete";
+    } else if (currentQuarter === requirement.quarterId) {
+      return "in-progress";
+    } else if (currentQuarter > requirement.quarterId) {
+      return "complete";
+    } else {
+      return "incomplete";
+    }
+    console.log(completeStatus);
+  }, [currentQuarter, requirement.quarterId]);
 
   const { setRequirements } = React.useContext(FlowchartState);
 
@@ -76,9 +91,9 @@ export default function CourseCard({ requirement, index }: Props) {
             {...provided.draggableProps}
           >
             <Paper
-              className={`${classNames.task} ${courseTypeClass(
-                courseType
-              )} ${completeStatusClass}`}
+              className={`${classNames.task} ${courseTypeClass(courseType)} ${
+                COMPLETE_STATUS[completeStatus].class
+              }`}
               {...provided.dragHandleProps}
             >
               <div className={classNames.taskHeader}>
@@ -87,7 +102,7 @@ export default function CourseCard({ requirement, index }: Props) {
 
                   <Typography variant="subtitle2">{description}</Typography>
                 </div>
-                <CompleteStatusIcon completeStatus={completeStatus} />
+                {COMPLETE_STATUS[completeStatus].icon()}
               </div>
             </Paper>
           </div>
@@ -95,22 +110,4 @@ export default function CourseCard({ requirement, index }: Props) {
       }}
     </Draggable>
   );
-}
-
-interface CompleteStatusProps {
-  completeStatus: CompleteStatus;
-}
-
-// TODO: assign this in the if statement in CourseCard
-function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
-  switch (completeStatus) {
-    case "complete":
-      return <CompleteIcon />;
-    case "incomplete":
-      return <div></div>;
-    case "in-progress":
-      return <InProgressIcon />;
-    default:
-      return <div>unset</div>;
-  }
 }
