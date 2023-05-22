@@ -9,12 +9,6 @@ import { FlowchartState } from "~/dashboard/Dashboard";
 import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
 import { api } from "~/utils/api";
 
-// // @ts-ignore
-// import InProgressIcon from '@/images/in-progress.svg';
-// @ts-ignore
-// import CompletedIcon from '@/images/complete.svg';
-// // @ts-ignore
-
 export interface Props {
   requirement: Course;
   index: number;
@@ -24,7 +18,6 @@ type CompleteStatus = "complete" | "incomplete" | "in-progress";
 
 export default function CourseCard({ requirement, index }: Props) {
   const classNames = useCardStyles();
-  const { title, description, courseType, units } = requirement;
 
   const COMPLETE_STATUS = {
     complete: {
@@ -41,7 +34,7 @@ export default function CourseCard({ requirement, index }: Props) {
     },
   };
   const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
-    staleTime: Infinity,
+    staleTime: Infinity, // don't refresh until the user refreshes
   });
   const completeStatus: CompleteStatus = useMemo(() => {
     if (typeof currentQuarter !== "number") {
@@ -79,7 +72,7 @@ export default function CourseCard({ requirement, index }: Props) {
 
   return (
     <Draggable
-      key={requirement.id}
+      key={requirement.code}
       draggableId={requirement.id.toString()}
       index={index}
     >
@@ -91,16 +84,16 @@ export default function CourseCard({ requirement, index }: Props) {
             {...provided.draggableProps}
           >
             <Paper
-              className={`${classNames.task} ${courseTypeClass(courseType)} ${
+              className={`${classNames.task} ${courseTypeClass(requirement.courseType)} ${
                 COMPLETE_STATUS[completeStatus].class
               }`}
               {...provided.dragHandleProps}
             >
               <div className={classNames.taskHeader}>
                 <div>
-                  <Typography className={classNames.title}>{title}</Typography>
+                  <Typography className={classNames.title}>{requirement.code}</Typography>
 
-                  <Typography variant="subtitle2">{description}</Typography>
+                  <Typography variant="subtitle2">{requirement.title}</Typography>
                 </div>
                 {COMPLETE_STATUS[completeStatus].icon()}
               </div>

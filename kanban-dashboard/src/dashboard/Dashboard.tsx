@@ -16,7 +16,7 @@ type FlowchartStateType = {
   setRequirements: Setter<Course[]>;
   degree: Degree | null;
   setDegree: Setter<Degree | null>;
-  moveRequirement: (requirementId: number, quarterId: string) => void;
+  moveRequirement: (requirementId: number, quarterId: number) => void;
 };
 
 export const FlowchartState = React.createContext<FlowchartStateType>(

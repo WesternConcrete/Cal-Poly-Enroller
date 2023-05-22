@@ -21,7 +21,7 @@ export interface MenubarProps {
 }
 
 export default function Menubar({ projectsUrlPath }: MenubarProps) {
-  const { setDegree }  = React.useContext(FlowchartState);
+  const { setDegree } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -35,7 +35,9 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const degreesQuery = api.degrees.useQuery();
+  const degreesQuery = api.degrees.useQuery(undefined, {
+    staleTime: Infinity, // don't refresh until the user refreshes
+  });
 
   const trpcClient = api.useContext();
 
@@ -48,8 +50,8 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
-        console.log("fetching degree requirements for:", degree)
-        trpcClient.degreeRequirements.fetch({ degree })
+        console.log("fetching degree requirements for:", degree);
+        trpcClient.degreeRequirements.fetch({ degree });
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;

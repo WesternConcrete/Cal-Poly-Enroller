@@ -7,7 +7,11 @@ import {
   DegreeSchema,
   RequirementTypeSchema,
 } from "~/scraping/catalog";
-export type { Degree, RequirementCourse, RequirementTypeSchema } from "~/scraping/catalog";
+export type {
+  Degree,
+  RequirementCourse,
+  RequirementTypeSchema,
+} from "~/scraping/catalog";
 import { z } from "zod";
 
 const quarters: { id: number; title: string }[] = [
@@ -77,6 +81,18 @@ export const appRouter = createTRPCRouter({
   }),
   degreeRequirements: publicProcedure
     .input(z.object({ degree: DegreeSchema.nullable() }))
+    .output(
+      z.array(
+        z.object({
+          code: z.string(),
+          title: z.string(),
+          units: z.number(),
+          courseType: RequirementTypeSchema,
+          quarterId: z.number(),
+          id: z.number(),
+        })
+      )
+    )
     .query(async ({ input }) => {
       if (input.degree === null) {
         return [];
@@ -85,9 +101,7 @@ export const appRouter = createTRPCRouter({
       // generate random info for the data that isn't being scraped yet
       return Array.from(courses.courses.values()).map(
         (course: RequirementCourse, i) => ({
-          title: course.code,
-          description: course.title, // TODO: gather this from the course catalog
-          units: course.units,
+          ...course,
           courseType:
             courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
           quarterId: quarters[Math.floor(Math.random() * quarters.length)].id,
