@@ -130,18 +130,18 @@ export const useLaneStyles = makeStyles((theme) => ({
   tasks: {
     padding: theme.spacing(1.5),
   },
-  taskContainer: {
-    marginBottom: theme.spacing(0.5),
-    display: "flex",
-    border: "1px solid #6B718B",
-    borderRadius: theme.spacing(0.5),
-  },
   dialog: {
     padding: theme.spacing(2),
   },
 }));
 
 export const useCardStyles = makeStyles((theme) => ({
+  taskContainer: {
+    marginBottom: theme.spacing(0.5),
+    display: "flex",
+    border: "1px solid #6B718B",
+    borderRadius: theme.spacing(0.5),
+  },
   task: {
     padding: theme.spacing(1),
     width: "100%",

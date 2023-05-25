@@ -1,9 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 
-import { Course, FlowchartData, UpdateFlowchartData } from "./store/types";
 import CurrentUser from "./CurrentUser";
-import { StoreProvider } from "./store";
 import Menubar from "./Menubar";
 import Flowchart from "./Flowchart";
 import { useDashboardStyles } from "./styles";
@@ -18,7 +16,7 @@ type FlowchartStateType = {
   setRequirements: Setter<Course[]>;
   degree: Degree | null;
   setDegree: Setter<Degree | null>;
-  moveRequirement: (requirementId: number, quarterId: string) => void;
+  moveRequirement: (requirementId: number, quarterId: number) => void;
 };
 
 export const FlowchartState = React.createContext<FlowchartStateType>(
@@ -30,25 +28,24 @@ export interface Props {
 }
 
 export default function Dashboard({ projectsUrlPath }: Props) {
+  // TODO: remove requirements state and replace with trpc query
+  // TODO: remove StoreProvider and replace with trpc quarters query in flowchart
+  // TODO: merge dashboard and flowhcart components
+  // TODO: make moveRequirement a backend mutation
   const classNames = useDashboardStyles();
   const [degree, setDegree] = useState<Degree | null>(null);
   const [requirements, setRequirements] = useState<Course[]>([]);
-  const [flowchart, setFlowchart] = useState<FlowchartData>();
-  const quartersQuery = api.quarters.useQuery();
+  const trpcClient = api.useContext();
   const requirementsQuery = api.degreeRequirements.useQuery(
     { degree },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
-  useEffect(() => {
-    requirementsQuery.refetch();
-  }, [degree]);
-  useEffect(() => {
-    // TODO: make quarters query return quarters not global state
-    setFlowchart(quartersQuery.data);
-  }, [quartersQuery.data]);
-
-  const moveRequirement = (requirementId: number, quarterId: string) => {
-    setRequirements((requirements) => {
+  const moveRequirement = (requirementId: number, quarterId: number) => {
+    trpcClient.degreeRequirements.setData({ degree }, (requirements) => {
+      if (!requirements) {
+        console.error("No requirements found for degree:", degree);
+        return [];
+      }
       let found = false;
       const newRequirements = requirements.map((r) => {
         if (r.id === requirementId) {
@@ -77,18 +74,14 @@ export default function Dashboard({ projectsUrlPath }: Props) {
 
   // TODO: move nested courses fetch here to avoid loading spinner waterfall
 
-  return flowchart ? (
-    <StoreProvider state={flowchart} updateFlowchartData={setFlowchart}>
-      <FlowchartState.Provider value={flowchartContext}>
-        <div className={classNames.root}>
-          <Menubar projectsUrlPath={projectsUrlPath} setDegree={setDegree} />
-          <div className={classNames.content}>
-            <Flowchart />
-          </div>
+  return (
+    <FlowchartState.Provider value={flowchartContext}>
+      <div className={classNames.root}>
+        <Menubar projectsUrlPath={projectsUrlPath} />
+        <div className={classNames.content}>
+          <Flowchart />
         </div>
-      </FlowchartState.Provider>
-    </StoreProvider>
-  ) : (
-    <div>loading...</div>
+      </div>
+    </FlowchartState.Provider>
   );
 }

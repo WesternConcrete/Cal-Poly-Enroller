@@ -1,29 +1,23 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
-import {
-  Draggable,
-  DraggableProvided,
-  DraggableProvidedDragHandleProps,
-  Droppable,
-  DroppableProvided,
-} from "react-beautiful-dnd";
+import { Droppable, DroppableProvided } from "react-beautiful-dnd";
 import { hooks } from "./store";
 import CourseCard from "./CourseCard";
-import { useCardStyles, useLaneStyles } from "./styles";
-import { useCurrentUserId } from "./CurrentUser";
-import { Course, Status } from "./store/types";
+import { useLaneStyles } from "./styles";
+import { Status } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { api } from "~/utils/api";
 
 export interface Props {
-  id: string;
+  quarter: { title: string; id: number; current?: boolean };
 }
 
-export default function StatusLane({ id }: Props) {
-  const { title } = hooks.useStatus(id) as Status;
+export default function Quarter({ quarter }: Props) {
+  const title = quarter.title;
   const classNames = useLaneStyles();
   const { requirements } = useContext(FlowchartState);
 
@@ -34,7 +28,7 @@ export default function StatusLane({ id }: Props) {
           {title}
         </Typography>
       </div>
-      <Droppable type="taskCard" droppableId={id.toString()}>
+      <Droppable type="quarter" droppableId={quarter.id.toString()}>
         {(provided: DroppableProvided) => {
           return (
             <div
@@ -43,28 +37,9 @@ export default function StatusLane({ id }: Props) {
               className={classNames.tasks}
             >
               {requirements
-                .filter((req) => req.quarterId === id)
+                .filter((req) => req.quarterId === quarter.id)
                 .map((requirement, index) => (
-                  <Draggable
-                    key={requirement.id}
-                    draggableId={requirement.id.toString()}
-                    index={index}
-                  >
-                    {(provided: DraggableProvided) => {
-                      return (
-                        <div
-                          className={classNames.taskContainer}
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                        >
-                          <CourseCard
-                            requirement={requirement}
-                            dragHandleProps={provided.dragHandleProps}
-                          />
-                        </div>
-                      );
-                    }}
-                  </Draggable>
+                  <CourseCard requirement={requirement} index={index} />
                 ))}
             </div>
           );

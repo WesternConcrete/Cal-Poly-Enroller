@@ -12,18 +12,16 @@ import UsersMenu from "./UsersMenu";
 
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { Degree } from "~/server/api/root";
+import { FlowchartState } from "~/dashboard/Dashboard";
 
 import { api } from "~/utils/api";
 
-const noop = () => {};
-
 export interface MenubarProps {
-  setDegree: React.Dispatch<React.SetStateAction<Degree>>;
   projectsUrlPath: string;
 }
 
-export default function Menubar({ setDegree, projectsUrlPath }: MenubarProps) {
+export default function Menubar({ projectsUrlPath }: MenubarProps) {
+  const { setDegree } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -37,7 +35,11 @@ export default function Menubar({ setDegree, projectsUrlPath }: MenubarProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const degreesQuery = api.degrees.useQuery();
+  const degreesQuery = api.degrees.useQuery(undefined, {
+    staleTime: Infinity, // don't refresh until the user refreshes
+  });
+
+  const trpcClient = api.useContext();
 
   const [selectedDegreeDisplayName, setSelectedDegreeDisplayName] =
     React.useState<string>("Select a Degree");
@@ -48,6 +50,8 @@ export default function Menubar({ setDegree, projectsUrlPath }: MenubarProps) {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
+        console.log("fetching degree requirements for:", degree);
+        trpcClient.degreeRequirements.fetch({ degree });
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;

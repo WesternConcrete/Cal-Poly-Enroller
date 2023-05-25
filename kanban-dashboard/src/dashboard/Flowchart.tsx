@@ -9,18 +9,17 @@ import {
   // @ts-ignore
 } from "react-beautiful-dnd";
 import AddIcon from "@material-ui/icons/Add";
-import { hooks, emptyArray } from "./store";
 import { useBoardStyles } from "./styles";
-import StatusLane from "./StatusLane";
+import Quarter from "./Quarter";
 import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
-import { Course, CourseType } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { api } from "~/utils/api";
 
 export default function Flowchart() {
-  const statusIds = hooks.useStatusIds();
+  const quartersQuery = api.quarters.useQuery();
   const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
@@ -35,39 +34,26 @@ export default function Flowchart() {
     destination,
     draggableId,
   }: DropResult) => {
-    if (type !== "taskCard") {
+    if (type !== "quarter") {
       console.warn("tried to drag unrecognized type:", type);
       return;
     }
     if (source && destination) {
-      moveRequirement(parseInt(draggableId), destination.droppableId);
+      moveRequirement(parseInt(draggableId), parseInt(destination.droppableId));
     }
   };
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable
-          type="statusLane"
-          droppableId="projectBoard"
-          direction="horizontal"
-        >
-          {(provided: DroppableProvided) => {
-            return (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={classNames.lanes}
-              >
-                {(statusIds || emptyArray).map((statusId, index) => (
-                  <div className={classNames.laneContainer} key={index}>
-                    <StatusLane id={statusId} />
-                  </div>
-                ))}
-                {provided.placeholder}
-              </div>
-            );
-          }}
-        </Droppable>
+        <div className={classNames.lanes}>
+          {quartersQuery.data
+            ? (quartersQuery.data || []).map((quarter) => (
+                <div className={classNames.laneContainer} key={quarter.id}>
+                  <Quarter quarter={quarter} />
+                </div>
+              ))
+            : null}
+        </div>
       </DragDropContext>
       <div className={classNames.addButtonContainer}>
         <Fab color="primary" aria-label="add" onClick={() => openCourseForm()}>
