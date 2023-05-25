@@ -16,7 +16,7 @@ import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
 import { FlowchartState } from "~/dashboard/Dashboard";
-import { api } from "~/utils/api"
+import { api } from "~/utils/api";
 
 export default function Flowchart() {
   const quartersQuery = api.quarters.useQuery();
@@ -46,11 +46,13 @@ export default function Flowchart() {
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className={classNames.lanes}>
-          {quartersQuery.data ? (quartersQuery.data || []).map((quarter) => (
-            <div className={classNames.laneContainer} key={quarter.id}>
-              <Quarter quarter={quarter} />
-            </div>
-          )) : null}
+          {quartersQuery.data
+            ? (quartersQuery.data || []).map((quarter) => (
+                <div className={classNames.laneContainer} key={quarter.id}>
+                  <Quarter quarter={quarter} />
+                </div>
+              ))
+            : null}
         </div>
       </DragDropContext>
       <div className={classNames.addButtonContainer}>

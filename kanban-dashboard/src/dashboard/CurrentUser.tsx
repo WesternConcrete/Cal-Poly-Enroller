@@ -29,10 +29,10 @@ export default function CurrentUserProvider({
   // initialize a default user if given an empty userId
   useEffect(() => {
     if (!userId) {
-      const id = "wconvery"
+      const id = "wconvery";
       setUserId(id);
     }
-  }, [userId, setUserId ]);
+  }, [userId, setUserId]);
 
   const value = { userId, setUserId };
   return (

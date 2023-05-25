@@ -10,14 +10,14 @@ import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { Status } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
-import { api } from "~/utils/api"
+import { api } from "~/utils/api";
 
 export interface Props {
-  quarter: {title: string, id: number, current?: boolean}
+  quarter: { title: string; id: number; current?: boolean };
 }
 
 export default function Quarter({ quarter }: Props) {
-  const title = quarter.title
+  const title = quarter.title;
   const classNames = useLaneStyles();
   const { requirements } = useContext(FlowchartState);
 
