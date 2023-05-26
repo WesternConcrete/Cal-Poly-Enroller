@@ -4,21 +4,23 @@ import { z } from "zod";
 
 export type Term = "winter" | "spring" | "summer" | "fall";
 
-const TERM_NUMBER = Object.freeze({
+export const TERM_NUMBER = Object.freeze({
   winter: 2,
   spring: 4,
   summer: 6,
   fall: 8,
 });
 
-const TERM_SEASON = Object.freeze({
+export const TERM_SEASON = Object.freeze({
   2: "winter",
   4: "spring",
   6: "summer",
   8: "fall",
 });
 
-const termCode = (year: number, term: Term) =>
+export const TERM = z.enum(["winter", "spring", "summer", "fall"]).enum;
+
+export const termCode = (year: number, term: Term) =>
   parseInt(`2${year > 2000 ? year - 2000 : year}${TERM_NUMBER[term]}`);
 
 export const scrapeCurrentQuarter = async () => {

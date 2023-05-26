@@ -13,59 +13,27 @@ export type {
   RequirementTypeSchema,
 } from "~/scraping/catalog";
 import { z } from "zod";
+import {
+  TERM_NUMBER,
+  Term,
+  scrapeCurrentQuarter,
+  termCode,
+} from "~/scraping/registrar";
 
-const quarters: { id: number; title: string }[] = [
-  {
-    id: 0,
-    title: "Fall 1",
-  },
-  {
-    id: 1,
-    title: "Winter 1",
-  },
-  {
-    id: 2,
-    title: "Spring 1",
-  },
-  {
-    id: 3,
-    title: "Fall 2",
-  },
-  {
-    id: 4,
-    title: "Winter 2",
-  },
-  {
-    id: 5,
-    title: "Spring 2",
-  },
-  {
-    id: 6,
-    title: "Fall 3",
-  },
-  {
-    id: 7,
-    title: "Winter 3",
-  },
-  {
-    id: 8,
-    title: "Spring 3",
-  },
-  {
-    id: 9,
-    title: "Fall 4",
-  },
-  {
-    id: 10,
-    title: "Winter 4",
-  },
-  {
-    id: 11,
-    title: "Spring 4",
-  },
-];
+type TermNum = 2 | 4 | 6 | 8;
 
 const courseType_arr = RequirementTypeSchema.options;
+
+const RequirementSchema = z.object({
+  code: z.string(), // TODO: validate course code
+  id: z.number(),
+  title: z.string(),
+  courseType: RequirementTypeSchema,
+  units: z.number().positive(),
+  year: z.number().gte(0).lt(4),
+  termNum: z.number()
+  // termNum: z.union([z.literal(2), z.literal(4), z.literal(6), z.literal(8)]),
+});
 
 /**
  * This is the primary router for your server.
@@ -73,26 +41,30 @@ const courseType_arr = RequirementTypeSchema.options;
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  currentQuarterId: publicProcedure.query(() => {
-    return quarters[Math.floor(Math.random() * quarters.length)].id;
+  currentQuarterId: publicProcedure.query(async () => {
+    return await scrapeCurrentQuarter();
   }),
-  quarters: publicProcedure.query(() => {
-    return quarters;
-  }),
+  quarters: publicProcedure
+    .input(z.object({ startYear: z.number().gte(2000) }))
+    .query(({ input: { startYear } }) => {
+      let year = startYear;
+      let termNum = TERM_NUMBER.fall;
+      let quarters = [];
+      const q = (year: number, term: Term) => ({
+        id: termCode(year, term),
+        title: `${term.toUpperCase()} '${year - 2000}`,
+      });
+      while (year < startYear + 4) {
+        quarters.push(q(year, "fall"));
+        year++;
+        quarters.push(q(year, "winter"));
+        quarters.push(q(year, "spring"));
+      }
+      return quarters;
+    }),
   degreeRequirements: publicProcedure
     .input(z.object({ degree: DegreeSchema.nullable() }))
-    .output(
-      z.array(
-        z.object({
-          code: z.string(),
-          title: z.string(),
-          units: z.number(),
-          courseType: RequirementTypeSchema,
-          quarterId: z.number(),
-          id: z.number(),
-        })
-      )
-    )
+    .output(z.array(RequirementSchema))
     .query(async ({ input }) => {
       if (input.degree === null) {
         return [];
@@ -104,12 +76,13 @@ export const appRouter = createTRPCRouter({
           ...course,
           courseType:
             courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-          quarterId: quarters[Math.floor(Math.random() * quarters.length)].id,
+          year: Math.floor(Math.random() * 4),
+          termNum: (Math.floor(Math.random() * 4) * 2) as TermNum,
           id: i,
         })
       );
     }),
-  degrees: publicProcedure.query(async (): Promise<Degree[]> => {
+  degrees: publicProcedure.query(async () => {
     return scrapeDegrees();
   }),
 });

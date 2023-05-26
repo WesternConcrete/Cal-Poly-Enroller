@@ -19,7 +19,7 @@ import { FlowchartState } from "~/dashboard/Dashboard";
 import { api } from "~/utils/api";
 
 export default function Flowchart() {
-  const quartersQuery = api.quarters.useQuery();
+  const quartersQuery = api.quarters.useQuery({startYear: 2021});
   const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
