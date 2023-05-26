@@ -9,7 +9,7 @@ export const useStyles = makeStyles((theme) => ({
     padding: 0,
     cursor: "pointer",
     color: theme.palette.primary.main,
-    fontSize: 11,
+    fontSize: 6,
     "&:focus": {
       outline: 0,
     },

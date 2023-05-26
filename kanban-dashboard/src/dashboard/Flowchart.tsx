@@ -55,11 +55,7 @@ export default function Flowchart() {
             : null}
         </div>
       </DragDropContext>
-      <div className={classNames.addButtonContainer}>
-        <Fab color="primary" aria-label="add" onClick={() => openCourseForm()}>
-          <AddIcon />
-        </Fab>
-      </div>
+      
     </div>
   );
 }

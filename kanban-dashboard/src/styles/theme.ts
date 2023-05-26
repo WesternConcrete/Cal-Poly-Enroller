@@ -1,7 +1,6 @@
-import { createMuiTheme } from "@material-ui/core/styles";
-import { blue, green, red } from "@material-ui/core/colors";
+import { createTheme } from "@material-ui/core/styles";
 
-export default createMuiTheme({
+export default createTheme({
   palette: {
     primary: {
       main: "#1a6b1e",
