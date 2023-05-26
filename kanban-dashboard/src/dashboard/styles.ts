@@ -1,6 +1,6 @@
 import { makeStyles } from "@material-ui/core/styles";
 
-export const useDashboardStyles = makeStyles((_theme) => ({
+export const useDashboardStyles = makeStyles((theme) => ({
   root: {
     height: "100vh",
     display: "flex",
@@ -10,18 +10,34 @@ export const useDashboardStyles = makeStyles((_theme) => ({
     flexGrow: 1,
     height: `calc(100vh - 65px)`, // 65 is height of appbar
   },
+
 }));
 
 export const useMenubarStyles = makeStyles((theme) => ({
   menuButton: {
     marginRight: theme.spacing(2),
   },
+  addButtonContainer: {
+    position: "absolute",
+    bottom: theme.spacing(2),
+    left: theme.spacing(2),
+    cursor: "pointer",
+  },
+  menuBar: {
+    minHeight: "50px",
+  },
   title: {
     flexGrow: 1,
+    fontSize: 15,
+    cursor: "pointer",
+    "&:hover": {
+      textDecoration: 'underline'
+    }
   },
   currentUser: {
     display: "flex",
     alignItems: "center",
+    fontSize: 13,
   },
   currentUsername: {
     marginRight: 4,
@@ -61,7 +77,7 @@ export const useBoardStyles = makeStyles((theme) => ({
   horzRow: {
     display: "flex",
     columnGap: 5,
-    fontSize: 17,
+    fontSize: 8,
   },
   lanes: {
     flexGrow: 1,
@@ -74,6 +90,7 @@ export const useBoardStyles = makeStyles((theme) => ({
     flexGrow: 0,
     overflowY: "scroll",
     display: "flex",
+    minWidth: 120,
     flexDirection: "column",
     position: "relative",
     border: "1px solid #e1e4e8",
@@ -90,12 +107,7 @@ export const useBoardStyles = makeStyles((theme) => ({
   dialog: {
     padding: theme.spacing(2),
   },
-  addButtonContainer: {
-    position: "fixed",
-    bottom: theme.spacing(2),
-    left: theme.spacing(2),
-    cursor: "pointer",
-  },
+ 
   addButton: {
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.common.white,
@@ -119,6 +131,7 @@ export const useLaneStyles = makeStyles((theme) => ({
   },
   laneTitle: {
     flexGrow: 1,
+    fontSize: 11,
     fontWeight: "bold",
     borderBottom: `1px solid ${theme.palette.divider}`,
   },
@@ -144,7 +157,14 @@ export const useCardStyles = makeStyles((theme) => ({
   task: {
     padding: theme.spacing(1),
     width: "100%",
-    minHeight: "120px",
+    minHeight: "70px",
+    position: "relative",
+  },
+  statusIcon: {
+    position: "absolute",
+    scale: .6,
+    top: theme.spacing(.1),
+    right: theme.spacing(.1),
   },
   support: {
     background: "#F5D2A4",
@@ -169,17 +189,31 @@ export const useCardStyles = makeStyles((theme) => ({
     opacity: 1,
   },
   incomplete_status: {
-    opacity: .85,
+    opacity: 1,
   },
   taskHeader: {
     display: "grid",
-    gridTemplateColumns: "1fr min-content",
+    gridTemplateRows: "min-content 1fr min-content",
     height: "100%",
+    rowGap: theme.spacing(.2),
     width: "100%",
-    justifyContent: "space-between",
+    textAlign: "center",
+    justifyContent: "center",
   },
   title: {
-    marginTop: 2,
+    marginTop: theme.spacing(.5),
+    fontWeight: "bold",
+    fontSize: 11,
+  },
+  courseName: {
+    fontWeight: "normal",
+    fontSize: 9,
+  },
+  unitCount: {
+    fontWeight: "bold",
+    marginTop: theme.spacing(.3),
+    marginBottom: theme.spacing(.3),
+    fontSize: 9,
   },
   dialog: {
     padding: theme.spacing(2),

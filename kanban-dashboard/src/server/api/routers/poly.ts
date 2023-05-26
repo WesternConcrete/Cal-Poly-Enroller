@@ -247,7 +247,7 @@ const courses = [
 ] as Partial<Course>[];
 
 const generateQuarterSchedules = () => {
-  return courses.map((course) => {
+  return [...courses, ...courses].map((course) => {
     const courseType = courseType_arr[Math.round(Math.random() * courseType_arr.length)]
     const completeStatus = completeStatus_arr[Math.round(Math.random() * completeStatus_arr.length)]
     const status = statuses[Math.round(Math.random() * statuses.length)]

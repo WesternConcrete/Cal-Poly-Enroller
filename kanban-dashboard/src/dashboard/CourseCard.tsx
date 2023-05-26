@@ -13,6 +13,7 @@ import { useCardStyles } from "./styles";
 import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
+import IncompleteIcon from "../components/icons/incomplete";
 
 // // @ts-ignore
 // import InProgressIcon from '@/images/in-progress.svg';
@@ -75,12 +76,10 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
       {...dragHandleProps}
     >
       <div className={classNames.taskHeader}>
-        <div>
-          <Typography className={classNames.title}>{title}</Typography>
+      <Typography className={classNames.title}>{title}</Typography>
 
-          <Typography variant="subtitle2">{description}</Typography>
-        </div>
-
+        <Typography variant="subtitle2" className={classNames.courseName}>{description}</Typography>
+        <Typography variant="subtitle2" className={classNames.unitCount}>{units} units</Typography>
         {/* <OptionsPopper>
           <List>
             <ListItem button onClick={openDetails}>
@@ -91,8 +90,12 @@ export default function CourseCard({ id, dragHandleProps }: Props) {
             </ListItem>
           </List>
         </OptionsPopper> */}
-        <CompleteStatusIcon completeStatus={completeStatus} />
+       
+        
       </div>
+      <div className={classNames.statusIcon}>
+          <CompleteStatusIcon completeStatus={completeStatus} />
+        </div>
 
       {isDetailsOpen && (
         <CourseDetails id={id} isOpen={isDetailsOpen} close={closeDetails} />
@@ -110,11 +113,11 @@ function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
     case CompleteStatus.COMPLETE:
       return (<CompleteIcon />);
     case CompleteStatus.INCOMPLETE:
-      return (<div></div>);
+      return (<IncompleteIcon />);
     case CompleteStatus.INPROGRESS:
       return (<InProgressIcon/>);
     default:
-      return (<div>unset</div>);
+      return (<div></div>);
   }
 }
 

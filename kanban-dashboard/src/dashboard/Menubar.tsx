@@ -8,9 +8,11 @@ import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
 
-import UsersMenu from "./UsersMenu";
+import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
+import { Fab } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
 
 const noop = () => {};
 
@@ -37,17 +39,8 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
   return (
     <Fragment>
       <MuiAppBar position="static">
-        <Toolbar>
-          {/* <Link href={projectsUrlPath}>
-            <IconButton
-              onClick={noop}
-              className={classes.menuButton}
-              edge="start"
-              color="inherit"
-            ><FlowchartsIcon/></IconButton>
-          </Link> */}
-
-          <Typography variant="h6" className={classes.title}>
+        <Toolbar variant="dense">
+          <Typography variant="subtitle2" className={classes.title} onClick={handleMenu}>
             {title}
           </Typography>
 
@@ -56,18 +49,25 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
               {currentUsername}
             </Typography>
 
-            <IconButton onClick={handleMenu} color="inherit">
+            <IconButton color="inherit">
               <AccountCircle />
             </IconButton>
           </div>
         </Toolbar>
+        <div className={classes.addButtonContainer} onClick={handleMenu}>
+        <Fab color="primary" aria-label="add">
+          <AddIcon />
+        </Fab>
+      </div>
       </MuiAppBar>
+      
 
-      {/* <Drawer open={open} anchor="right" onClose={handleClose}>
+      <Drawer open={open} anchor="left" onClose={handleClose}>
         <div style={{ width: 300 }}>
-          <UsersMenu/>
+          <FlowchartSelectingMenu/>
         </div>
-      </Drawer> */}
+      </Drawer>
+     
     </Fragment>
   );
 }

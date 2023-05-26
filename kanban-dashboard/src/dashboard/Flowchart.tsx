@@ -8,7 +8,6 @@ import {
   type DroppableProvided,
 // @ts-ignore
 } from "react-beautiful-dnd";
-import AddIcon from "@material-ui/icons/Add";
 import { hooks, emptyArray } from "./store";
 import { useBoardStyles } from "./styles";
 import StatusLane from "./StatusLane";
@@ -55,6 +54,7 @@ export default function Flowchart() {
       }
     }
   };
+
   const courseQuery = api.poly.courses.useQuery();
   useEffect(() => {
     if (courseQuery.isSuccess && courseQuery.data) {
@@ -99,11 +99,7 @@ export default function Flowchart() {
           }}
         </Droppable>
       </DragDropContext>
-      <div className={classNames.addButtonContainer}>
-        <Fab color="primary" aria-label="add" onClick={() => openCourseForm()}>
-          <AddIcon />
-        </Fab>
-      </div>
+      
     </div>
   );
 }
