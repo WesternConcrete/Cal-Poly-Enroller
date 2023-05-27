@@ -1,4 +1,5 @@
 import { makeStyles } from "@material-ui/core/styles";
+import { BorderBottom } from "@material-ui/icons";
 
 export const useDashboardStyles = makeStyles((theme) => ({
   root: {
@@ -142,18 +143,18 @@ export const useLaneStyles = makeStyles((theme) => ({
   tasks: {
     padding: theme.spacing(1.5),
   },
-  taskContainer: {
-    marginBottom: theme.spacing(0.5),
-    display: "flex",
-    border: "1px solid #6B718B",
-    borderRadius: theme.spacing(0.5),
-  },
   dialog: {
     padding: theme.spacing(2),
   },
 }));
 
 export const useCardStyles = makeStyles((theme) => ({
+  taskContainer: {
+    marginBottom: theme.spacing(0.5),
+    display: "flex",
+    border: "1px solid #6B718B",
+    borderRadius: theme.spacing(0.5),
+  },
   task: {
     padding: theme.spacing(1),
     width: "100%",
@@ -182,8 +183,8 @@ export const useCardStyles = makeStyles((theme) => ({
     background: "#D09895",
   },
   complete_status: {
-   opacity: .4,
-   cursor: "pointer",
+    opacity: 0.4,
+    cursor: "pointer",
   },
   in_progress_status: {
     opacity: 1,
@@ -239,7 +240,7 @@ export const useCourseDetailsStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useCommentStyles = makeStyles((_theme) => ({}));
+export const useCommentStyles = makeStyles((theme) => ({}));
 
 export const useCourseAssignmentStyles = makeStyles((theme) => ({
   container: {

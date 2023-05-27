@@ -6,25 +6,21 @@ import {
   type DropResult,
   Droppable,
   type DroppableProvided,
-// @ts-ignore
+  // @ts-ignore
 } from "react-beautiful-dnd";
-import { hooks, emptyArray } from "./store";
+import AddIcon from "@material-ui/icons/Add";
 import { useBoardStyles } from "./styles";
-import StatusLane from "./StatusLane";
+import Quarter from "./Quarter";
 import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
-import { Course, CourseType } from "./store/types";
-
+import { FlowchartState } from "~/dashboard/Dashboard";
 import { api } from "~/utils/api";
 
 export default function Flowchart() {
-  const currentUserId = useCurrentUserId();
-  const statusIds = hooks.useStatusIds();
-  const createCourse = hooks.useCreateCourse();
-  const moveStatus = hooks.useMoveStatus();
-  const moveCourse = hooks.useMoveStatusCourse();
+  const quartersQuery = api.quarters.useQuery();
+  const { moveRequirement } = React.useContext(FlowchartState);
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);
@@ -38,66 +34,27 @@ export default function Flowchart() {
     destination,
     draggableId,
   }: DropResult) => {
+    if (type !== "quarter") {
+      console.warn("tried to drag unrecognized type:", type);
+      return;
+    }
     if (source && destination) {
-      if (type === "statusLane" && moveStatus) {
-        moveStatus(source.index, destination.index);
-      }
-
-      if (type === "taskCard" && moveCourse) {
-        moveCourse(
-          draggableId,
-          source.droppableId,
-          source.index,
-          destination.droppableId,
-          destination.index
-        );
-      }
+      moveRequirement(parseInt(draggableId), parseInt(destination.droppableId));
     }
   };
-
-  const courseQuery = api.poly.courses.useQuery();
-  useEffect(() => {
-    if (courseQuery.isSuccess && courseQuery.data) {
-      courseQuery.data.forEach((course: Partial<Course>) => {
-        createCourse({
-          title: course.title,
-          statusId: (course as unknown as {status: string}).status!,
-          creatorId: currentUserId,
-          description: course.description,
-          units: course.units,
-          courseType: course.courseType,
-          completeStatus: course.completeStatus,
-        });
-      });
-    }
-  }, [courseQuery.isLoading]);
-
 
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable
-          type="statusLane"
-          droppableId="projectBoard"
-          direction="horizontal"
-        >
-          {(provided: DroppableProvided) => {
-            return (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={classNames.lanes}
-              >
-                {(statusIds || emptyArray).map((statusId, index) => (
-                  <div className={classNames.laneContainer} key={index}>
-                    <StatusLane id={statusId} />
-                  </div>
-                ))}
-                {provided.placeholder}
-              </div>
-            );
-          }}
-        </Droppable>
+        <div className={classNames.lanes}>
+          {quartersQuery.data
+            ? (quartersQuery.data || []).map((quarter) => (
+                <div className={classNames.laneContainer} key={quarter.id}>
+                  <Quarter quarter={quarter} />
+                </div>
+              ))
+            : null}
+        </div>
       </DragDropContext>
       
     </div>

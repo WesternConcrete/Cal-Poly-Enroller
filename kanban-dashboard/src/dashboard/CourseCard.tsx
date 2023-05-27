@@ -1,123 +1,113 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-// @ts-ignore
-import { type DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
-import { OptionsPopper } from "../components/options-popper";
-import { hooks } from "./store";
-import CourseDetails from "./CourseDetails";
+import { Draggable, DraggableProvided } from "react-beautiful-dnd";
 import { useCardStyles } from "./styles";
-import { CompleteStatus, Course, CourseType } from "./store/types";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
-
-// // @ts-ignore
-// import InProgressIcon from '@/images/in-progress.svg';
-// @ts-ignore
-// import CompletedIcon from '@/images/complete.svg';
-// // @ts-ignore
+import { FlowchartState } from "~/dashboard/Dashboard";
+import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
+import { api } from "~/utils/api";
 
 export interface Props {
-  id: string;
-  statusId: string;
-  dragHandleProps: DraggableProvidedDragHandleProps;
+  requirement: Course;
+  index: number;
 }
 
-export default function CourseCard({ id, dragHandleProps }: Props) {
+type CompleteStatus = "complete" | "incomplete" | "in-progress";
+
+export default function CourseCard({ requirement, index }: Props) {
   const classNames = useCardStyles();
-  const { title, assigneeId, description, courseType, units, completeStatus } = hooks.useCourse(id) as Course;
-  const assignee = hooks.useUser(assigneeId as string);
-  const deleteCourse = hooks.useDeleteCourse();
-  const handleClickDelete = () => {
-    if (deleteCourse) {
-      deleteCourse(id);
-    }
+
+  const COMPLETE_STATUS = {
+    complete: {
+      class: classNames.complete_status,
+      icon: () => <CompleteIcon />,
+    },
+    incomplete: {
+      class: classNames.incomplete_status,
+      icon: () => <div></div>,
+    },
+    "in-progress": {
+      class: classNames.in_progress_status,
+      icon: () => <InProgressIcon />,
+    },
   };
+  const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
+    staleTime: Infinity, // don't refresh until the user refreshes
+  });
+  const completeStatus: CompleteStatus = useMemo(() => {
+    if (typeof currentQuarter !== "number") {
+      console.error("currentQuarter is not a number", currentQuarter);
+      return "incomplete";
+    }
+    if (!currentQuarter || currentQuarter < requirement.quarterId) {
+      return "incomplete";
+    } else if (currentQuarter === requirement.quarterId) {
+      return "in-progress";
+    } else if (currentQuarter > requirement.quarterId) {
+      return "complete";
+    } else {
+      return "incomplete";
+    }
+    console.log(completeStatus);
+  }, [currentQuarter, requirement.quarterId]);
 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const openDetails = () => setIsDetailsOpen(true);
-  const closeDetails = () => setIsDetailsOpen(false);
+  const { setRequirements } = React.useContext(FlowchartState);
 
-  const courseTypeClass = (courseType: CourseType) => {
+  const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
-      case CourseType.SUPPORT:
+      case RequirementTypeSchema.enum.support:
         return classNames.support;
-      case CourseType.CONCENTRATION:
-        return classNames.concentration;
-      case CourseType.GWR:
-        return classNames.gwe;
-      case CourseType.GE:
+      // case CourseType.CONCENTRATION:
+      //   return classNames.concentration;
+      // case CourseType.GWR:
+      //   return classNames.gwe;
+      case RequirementTypeSchema.enum.ge:
         return classNames.ge;
       default:
         return classNames.major;
     }
   };
 
-  const completeStatusClass = (completeStatus: CompleteStatus) => {
-    switch (completeStatus) {
-      case CompleteStatus.COMPLETE:
-        return classNames.complete_status;
-      case CompleteStatus.INPROGRESS:
-        return classNames.in_progress_status;
-      case CompleteStatus.INCOMPLETE:
-        return classNames.incomplete_status;
-      default:
-        return classNames.incomplete_status;
-    }
-  };
-
   return (
-    <Paper
-      className={`${classNames.task} ${courseTypeClass(courseType)} ${completeStatusClass(completeStatus)}`}
-      {...dragHandleProps}
+    <Draggable
+      key={requirement.code}
+      draggableId={requirement.id.toString()}
+      index={index}
     >
-      <div className={classNames.taskHeader}>
-      <Typography className={classNames.title}>{title}</Typography>
+      {(provided: DraggableProvided) => {
+        return (
+          <div
+            className={classNames.taskContainer}
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+          >
+            <Paper
+              className={`${classNames.task} ${courseTypeClass(
+                requirement.courseType
+              )} ${COMPLETE_STATUS[completeStatus].class}`}
+              {...provided.dragHandleProps}
+            >
 
-        <Typography variant="subtitle2" className={classNames.courseName}>{description}</Typography>
-        <Typography variant="subtitle2" className={classNames.unitCount}>{units} units</Typography>
-        {/* <OptionsPopper>
-          <List>
-            <ListItem button onClick={openDetails}>
-              <ListItemText primary="View & Edit"/>
-            </ListItem>
-            <ListItem button onClick={handleClickDelete}>
-              <ListItemText primary="Delete"/>
-            </ListItem>
-          </List>
-        </OptionsPopper> */}
-       
-        
-      </div>
-      <div className={classNames.statusIcon}>
-          <CompleteStatusIcon completeStatus={completeStatus} />
-        </div>
+              <div className={classNames.taskHeader}>
+                <div>
+                  <Typography className={classNames.title}>
+                    {requirement.code}
+                  </Typography>
 
-      {isDetailsOpen && (
-        <CourseDetails id={id} isOpen={isDetailsOpen} close={closeDetails} />
-      )}
-    </Paper>
+                  <Typography variant="subtitle2" className={classNames.courseName}>
+                    {requirement.title}
+                  </Typography>
+        <Typography variant="subtitle2" className={classNames.unitCount}>{requirement.units} units</Typography>
+                </div>
+                {COMPLETE_STATUS[completeStatus].icon()}
+              </div>
+            </Paper>
+          </div>
+        );
+      }}
+    </Draggable>
   );
 }
-
-interface CompleteStatusProps {
-  completeStatus: CompleteStatus;
-}
-
-function CompleteStatusIcon({ completeStatus }: CompleteStatusProps) {
-  switch (completeStatus) {
-    case CompleteStatus.COMPLETE:
-      return (<CompleteIcon />);
-    case CompleteStatus.INCOMPLETE:
-      return (<IncompleteIcon />);
-    case CompleteStatus.INPROGRESS:
-      return (<InProgressIcon/>);
-    default:
-      return (<div></div>);
-  }
-}
-

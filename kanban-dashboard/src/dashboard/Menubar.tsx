@@ -7,21 +7,23 @@ import IconButton from "@material-ui/core/IconButton";
 import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
-
+import { Select, MenuItem, InputLabel } from "@material-ui/core";
 import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
+
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
+import { FlowchartState } from "~/dashboard/Dashboard";
 import { Fab } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 
-const noop = () => {};
+import { api } from "~/utils/api";
 
 export interface MenubarProps {
-  title: string;
   projectsUrlPath: string;
 }
 
-export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
+export default function Menubar({ projectsUrlPath }: MenubarProps) {
+  const { setDegree } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -35,14 +37,55 @@ export default function Menubar({ title, projectsUrlPath }: MenubarProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const degreesQuery = api.degrees.useQuery(undefined, {
+    staleTime: Infinity, // don't refresh until the user refreshes
+  });
+
+  const trpcClient = api.useContext();
+
+  const [selectedDegreeDisplayName, setSelectedDegreeDisplayName] =
+    React.useState<string>("Select a Degree");
+  const updateDegree = (name: string) => {
+    if (!degreesQuery.data) {
+      return;
+    }
+    for (const degree of degreesQuery.data) {
+      // TODO: create record of string id: Degree for faster lookup
+      if (degree.name === name) {
+        console.log("fetching degree requirements for:", degree);
+        trpcClient.degreeRequirements.fetch({ degree });
+        setDegree(degree);
+        setSelectedDegreeDisplayName(degree.name);
+        break;
+      }
+    }
+  };
 
   return (
     <Fragment>
       <MuiAppBar position="static">
-        <Toolbar variant="dense">
-          <Typography variant="subtitle2" className={classes.title} onClick={handleMenu}>
-            {title}
-          </Typography>
+        <Toolbar>
+          <InputLabel id="select-degree">
+            <Typography variant="h6">Degree</Typography>
+          </InputLabel>
+          <Select
+            value={selectedDegreeDisplayName}
+            onChange={({ target: { value } }) => updateDegree(value as string)}
+            labelId="select-degree"
+          >
+            <MenuItem value="Select a Degree" key={-1}>
+              Select a Degree
+            </MenuItem>
+            {degreesQuery.data &&
+              degreesQuery.data.map((degree, idx) => {
+                return (
+                  <MenuItem value={degree.name} key={idx}>
+                    {degree.name}, {degree.kind}
+                  </MenuItem>
+                );
+              })}
+          </Select>
+          <div className={classes.title}>{/* spacer with flax grow */}</div>
 
           <div className={classes.currentUser}>
             <Typography variant="subtitle2" className={classes.currentUsername}>
