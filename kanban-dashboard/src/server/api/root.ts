@@ -29,7 +29,7 @@ const RequirementSchema = z.object({
   id: z.number(),
   title: z.string(),
   courseType: RequirementTypeSchema,
-  units: z.number().positive(),
+  units: z.number().nonnegative(),
   year: z.number().gte(0).lt(4),
   termNum: z.number(),
   // termNum: z.union([z.literal(2), z.literal(4), z.literal(6), z.literal(8)]),
