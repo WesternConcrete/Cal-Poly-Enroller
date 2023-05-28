@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, FC } from "react";
 
 import CurrentUser from "./CurrentUser";
 import Menubar from "./Menubar";
@@ -25,16 +24,13 @@ export const FlowchartState = React.createContext<FlowchartStateType>(
   {} as FlowchartStateType
 );
 
-export interface Props {
-  projectsUrlPath: string;
-}
-
-export default function Dashboard({ projectsUrlPath }: Props) {
+const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   // TODO: remove requirements state and replace with trpc query
   // TODO: remove StoreProvider and replace with trpc quarters query in flowchart
   // TODO: merge dashboard and flowhcart components
   // TODO: make moveRequirement a backend mutation
-  const classNames = useDashboardStyles();
   const [degree, setDegree] = useState<Degree | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   // default to current year
@@ -89,12 +85,25 @@ export default function Dashboard({ projectsUrlPath }: Props) {
 
   return (
     <FlowchartState.Provider value={flowchartContext}>
+      {children}
+    </FlowchartState.Provider>
+  );
+};
+
+export interface Props {
+  projectsUrlPath: string;
+}
+
+export default function Dashboard({ projectsUrlPath }: Props) {
+  const classNames = useDashboardStyles();
+  return (
+    <FlowchartStateProvider>
       <div className={classNames.root}>
         <Menubar projectsUrlPath={projectsUrlPath} />
         <div className={classNames.content}>
           <Flowchart />
         </div>
       </div>
-    </FlowchartState.Provider>
+    </FlowchartStateProvider>
   );
 }
