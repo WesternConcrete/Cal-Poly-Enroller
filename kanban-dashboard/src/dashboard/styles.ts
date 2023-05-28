@@ -11,7 +11,6 @@ export const useDashboardStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: `calc(100vh - 65px)`, // 65 is height of appbar
   },
-
 }));
 
 export const useMenubarStyles = makeStyles((theme) => ({
@@ -32,8 +31,8 @@ export const useMenubarStyles = makeStyles((theme) => ({
     fontSize: 15,
     cursor: "pointer",
     "&:hover": {
-      textDecoration: 'underline'
-    }
+      textDecoration: "underline",
+    },
   },
   currentUser: {
     display: "flex",
@@ -108,7 +107,7 @@ export const useBoardStyles = makeStyles((theme) => ({
   dialog: {
     padding: theme.spacing(2),
   },
- 
+
   addButton: {
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.common.white,
@@ -163,9 +162,9 @@ export const useCardStyles = makeStyles((theme) => ({
   },
   statusIcon: {
     position: "absolute",
-    scale: .6,
-    top: theme.spacing(.1),
-    right: theme.spacing(.1),
+    scale: 0.6,
+    top: theme.spacing(0.1),
+    right: theme.spacing(0.1),
   },
   support: {
     background: "#F5D2A4",
@@ -196,13 +195,13 @@ export const useCardStyles = makeStyles((theme) => ({
     display: "grid",
     gridTemplateRows: "min-content 1fr min-content",
     height: "100%",
-    rowGap: theme.spacing(.2),
+    rowGap: theme.spacing(0.2),
     width: "100%",
     textAlign: "center",
     justifyContent: "center",
   },
   title: {
-    marginTop: theme.spacing(.5),
+    marginTop: theme.spacing(0.5),
     fontWeight: "bold",
     fontSize: 11,
   },
@@ -212,8 +211,8 @@ export const useCardStyles = makeStyles((theme) => ({
   },
   unitCount: {
     fontWeight: "bold",
-    marginTop: theme.spacing(.3),
-    marginBottom: theme.spacing(.3),
+    marginTop: theme.spacing(0.3),
+    marginBottom: theme.spacing(0.3),
     fontSize: 9,
   },
   dialog: {

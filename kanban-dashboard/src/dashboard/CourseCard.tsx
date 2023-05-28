@@ -96,10 +96,18 @@ export default function CourseCard({ requirement, index }: Props) {
                     {requirement.code}
                   </Typography>
 
-                  <Typography variant="subtitle2" className={classNames.courseName}>
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.courseName}
+                  >
                     {requirement.title}
                   </Typography>
-        <Typography variant="subtitle2" className={classNames.unitCount}>{requirement.units} units</Typography>
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.unitCount}
+                  >
+                    {requirement.units} units
+                  </Typography>
                 </div>
                 {COMPLETE_STATUS[completeStatus].icon()}
               </div>

@@ -98,19 +98,17 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
           </div>
         </Toolbar>
         <div className={classes.addButtonContainer} onClick={handleMenu}>
-        <Fab color="primary" aria-label="add">
-          <AddIcon />
-        </Fab>
-      </div>
+          <Fab color="primary" aria-label="add">
+            <AddIcon />
+          </Fab>
+        </div>
       </MuiAppBar>
-      
 
       <Drawer open={open} anchor="left" onClose={handleClose}>
         <div style={{ width: 300 }}>
-          <FlowchartSelectingMenu/>
+          <FlowchartSelectingMenu />
         </div>
       </Drawer>
-     
     </Fragment>
   );
 }

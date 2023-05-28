@@ -1,39 +1,39 @@
 import React, { MouseEventHandler, useState } from "react";
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import IconButton from "@material-ui/core/IconButton";
-import DeleteIcon from '@material-ui/icons/Delete';
-import AddIcon from '@material-ui/icons/Add';
-import StarIcon from '@material-ui/icons/Star';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
-import DuplicateIcon from '@material-ui/icons/FileCopy';
-import FavoriteIcon from '@material-ui/icons/Favorite';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import TextField from '@material-ui/core/TextField';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Menu from '@material-ui/core/Menu';
-import Fade from '@material-ui/core/Fade';
-import { yellow } from '@material-ui/core/colors';
+import DeleteIcon from "@material-ui/icons/Delete";
+import AddIcon from "@material-ui/icons/Add";
+import StarIcon from "@material-ui/icons/Star";
+import StarBorderIcon from "@material-ui/icons/StarBorder";
+import DuplicateIcon from "@material-ui/icons/FileCopy";
+import FavoriteIcon from "@material-ui/icons/Favorite";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
+import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import TextField from "@material-ui/core/TextField";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import FormControl from "@material-ui/core/FormControl";
+import Menu from "@material-ui/core/Menu";
+import Fade from "@material-ui/core/Fade";
+import { yellow } from "@material-ui/core/colors";
 import { DialogContentText, OutlinedInput } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    width: '300px',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
+    width: "300px",
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
   },
   title: {
     margin: theme.spacing(2),
@@ -43,13 +43,13 @@ const useStyles = makeStyles((theme) => ({
   },
   createButton: {
     margin: theme.spacing(2),
-    marginTop: 'auto',
+    marginTop: "auto",
   },
   selectedItem: {
-    border: '2px solid',
+    border: "2px solid",
     borderColor: theme.palette.primary.main,
-    transition: 'border-color 0.3s ease',
-    '&:hover': {
+    transition: "border-color 0.3s ease",
+    "&:hover": {
       borderColor: theme.palette.secondary.main,
     },
   },
@@ -64,40 +64,51 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: theme.spacing(2),
   },
   itemText: {
-    flex: "initial"
+    flex: "initial",
   },
 }));
 
 export default function FlowchartSelectingMenu() {
   const classes = useStyles();
   // Replace this with your own state management logic
-  const [flowcharts, setFlowcharts] = useState(['Flowchart 1', 'Flowchart 2', 'Flowchart 3']); 
+  const [flowcharts, setFlowcharts] = useState([
+    "Flowchart 1",
+    "Flowchart 2",
+    "Flowchart 3",
+  ]);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [newFlowchartName, setNewFlowchartName] = useState('');
-  const [newFlowchartConcentration, setNewFlowchartConcentration] = useState('');
-  const [selectedFlowchart, setSelectedFlowchart] = useState('');
-  const [favoritedFlowcharts, setFavoritedFlowcharts] = useState([] as string[]);
+  const [newFlowchartName, setNewFlowchartName] = useState("");
+  const [newFlowchartConcentration, setNewFlowchartConcentration] =
+    useState("");
+  const [selectedFlowchart, setSelectedFlowchart] = useState("");
+  const [favoritedFlowcharts, setFavoritedFlowcharts] = useState(
+    [] as string[]
+  );
   const [anchorEl, setAnchorEl] = useState(null as HTMLAnchorElement | null);
-  
+
   // @ts-ignore
   const handleClick: MouseEventHandler<HTMLAnchorElement> = (event: Event) => {
     setAnchorEl(event.currentTarget as HTMLAnchorElement);
-  } 
+  };
 
   const handleClose = () => {
     setAnchorEl(null);
   };
   const createFlowchart = () => {
     // Add flowchart creation logic here
-    console.log('Create flowchart: ', newFlowchartName, newFlowchartConcentration);
+    console.log(
+      "Create flowchart: ",
+      newFlowchartName,
+      newFlowchartConcentration
+    );
     setFlowcharts([...flowcharts, newFlowchartName]);
     setOpenCreateModal(false);
   };
 
   const deleteFlowchart = () => {
     // Add flowchart deletion logic here
-    console.log('Delete flowchart: ', selectedFlowchart);
+    console.log("Delete flowchart: ", selectedFlowchart);
     setFlowcharts(flowcharts.filter((f) => f !== selectedFlowchart));
     setOpenDeleteModal(false);
   };
@@ -113,7 +124,9 @@ export default function FlowchartSelectingMenu() {
     if (!favoritedFlowcharts.includes(flowchart)) {
       setFavoritedFlowcharts([...favoritedFlowcharts, flowchart]);
     } else {
-      setFavoritedFlowcharts(favoritedFlowcharts.filter(fav => fav !== flowchart));
+      setFavoritedFlowcharts(
+        favoritedFlowcharts.filter((fav) => fav !== flowchart)
+      );
     }
   };
 
@@ -124,13 +137,25 @@ export default function FlowchartSelectingMenu() {
       </Typography>
       <List>
         {flowcharts.map((flowchart, index) => (
-          <ListItem key={index} button className={`${classes.listItem} ${flowchart === selectedFlowchart ? classes.selectedItem : ''}`}
+          <ListItem
+            key={index}
+            button
+            className={`${classes.listItem} ${
+              flowchart === selectedFlowchart ? classes.selectedItem : ""
+            }`}
             onClick={() => setSelectedFlowchart(flowchart)}
           >
             <ListItemText className={classes.itemText} primary={flowchart} />
-            {favoritedFlowcharts.includes(flowchart) && <StarIcon className={classes.starIcon}/>}
+            {favoritedFlowcharts.includes(flowchart) && (
+              <StarIcon className={classes.starIcon} />
+            )}
             <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="more" href="" onClick={handleClick}>
+              <IconButton
+                edge="end"
+                aria-label="more"
+                href=""
+                onClick={handleClick}
+              >
                 <MoreVertIcon />
               </IconButton>
               <Menu
@@ -142,19 +167,35 @@ export default function FlowchartSelectingMenu() {
                 TransitionComponent={Fade}
                 className={classes.actionMenu}
               >
-                <MenuItem onClick={() => {favoriteFlowchart(flowchart); handleClose();}}>
+                <MenuItem
+                  onClick={() => {
+                    favoriteFlowchart(flowchart);
+                    handleClose();
+                  }}
+                >
                   <IconButton edge="end" aria-label="favorite">
                     <FavoriteIcon />
                   </IconButton>
                   Favorite
                 </MenuItem>
-                <MenuItem onClick={() => {duplicateFlowchart(flowchart); handleClose();}}>
+                <MenuItem
+                  onClick={() => {
+                    duplicateFlowchart(flowchart);
+                    handleClose();
+                  }}
+                >
                   <IconButton edge="end" aria-label="duplicate">
                     <DuplicateIcon />
                   </IconButton>
                   Duplicate
                 </MenuItem>
-                <MenuItem onClick={() => {setOpenDeleteModal(true); setSelectedFlowchart(flowchart); handleClose();}}>
+                <MenuItem
+                  onClick={() => {
+                    setOpenDeleteModal(true);
+                    setSelectedFlowchart(flowchart);
+                    handleClose();
+                  }}
+                >
                   <IconButton edge="end" aria-label="delete">
                     <DeleteIcon />
                   </IconButton>
@@ -165,35 +206,43 @@ export default function FlowchartSelectingMenu() {
           </ListItem>
         ))}
       </List>
-      <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setOpenCreateModal(true)} className={classes.createButton}>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon />}
+        onClick={() => setOpenCreateModal(true)}
+        className={classes.createButton}
+      >
         Create New Flowchart
       </Button>
 
       <Dialog open={openCreateModal} onClose={() => setOpenCreateModal(false)}>
-      <DialogTitle>Create New Flowchart</DialogTitle>
-      <DialogContent>
-  <TextField
-    variant="outlined"
-    margin="dense"
-    id="flowchart-name"
-    label="Flowchart Name"
-    fullWidth
-    onChange={e => setNewFlowchartName(e.target.value)}
-  />
-  <TextField
-    variant="outlined"
-    id="concentration"
-    label="Concentration"
-    fullWidth
-    select
-    value={newFlowchartConcentration}
-    onChange={e => setNewFlowchartConcentration(e.target.value as string)}
-  >
-    {/* Add your concentration options here */}
-    <MenuItem value={'Concentration 1'}>Concentration 1</MenuItem>
-    <MenuItem value={'Concentration 2'}>Concentration 2</MenuItem>
-  </TextField>
-</DialogContent>
+        <DialogTitle>Create New Flowchart</DialogTitle>
+        <DialogContent>
+          <TextField
+            variant="outlined"
+            margin="dense"
+            id="flowchart-name"
+            label="Flowchart Name"
+            fullWidth
+            onChange={(e) => setNewFlowchartName(e.target.value)}
+          />
+          <TextField
+            variant="outlined"
+            id="concentration"
+            label="Concentration"
+            fullWidth
+            select
+            value={newFlowchartConcentration}
+            onChange={(e) =>
+              setNewFlowchartConcentration(e.target.value as string)
+            }
+          >
+            {/* Add your concentration options here */}
+            <MenuItem value={"Concentration 1"}>Concentration 1</MenuItem>
+            <MenuItem value={"Concentration 2"}>Concentration 2</MenuItem>
+          </TextField>
+        </DialogContent>
 
         <DialogActions>
           <Button onClick={() => setOpenCreateModal(false)}>Cancel</Button>
