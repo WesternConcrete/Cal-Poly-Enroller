@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
 import { Draggable, DraggableProvided } from "react-beautiful-dnd";
@@ -34,27 +34,23 @@ export default function CourseCard({ requirement, index }: Props) {
       icon: () => <InProgressIcon />,
     },
   };
+  let [completeStatus, setCompleteStatus] =
+    useState<CompleteStatus>("incomplete");
   const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
-  const completeStatus: CompleteStatus = useMemo(() => {
-    if (currentQuarter === undefined) {
-      return "incomplete";
-    } else if (typeof currentQuarter !== "number") {
-      console.error("currentQuarter is not a number", currentQuarter);
-      return "incomplete";
-    } else if (!currentQuarter || currentQuarter < requirement.quarterId) {
-      return "incomplete";
+
+  useEffect(() => {
+    if (!currentQuarter || currentQuarter < requirement.quarterId) {
+      setCompleteStatus("incomplete");
     } else if (currentQuarter === requirement.quarterId) {
-      return "in-progress";
+      setCompleteStatus("in-progress");
     } else if (currentQuarter > requirement.quarterId) {
-      return "complete";
+      setCompleteStatus("complete");
     } else {
       throw new Error("unreachable");
     }
-    console.log(completeStatus);
   }, [currentQuarter, requirement.quarterId]);
-
   const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: RequirementType) => {
