@@ -3,6 +3,7 @@ import * as cheerio from "cheerio/lib/slim";
 import { z } from "zod";
 
 export type Term = "winter" | "spring" | "summer" | "fall";
+export type TermNum = 2 | 4 | 6 | 8;
 
 export const TERM_NUMBER = Object.freeze({
   winter: 2,
@@ -20,8 +21,8 @@ export const TERM_SEASON = Object.freeze({
 
 export const TERM = z.enum(["winter", "spring", "summer", "fall"]).enum;
 
-export const termCode = (year: number, term: Term) =>
-  parseInt(`2${year > 2000 ? year - 2000 : year}${TERM_NUMBER[term]}`);
+export const termCode = (year: number, term: Term | TermNum) =>
+  parseInt(`2${year > 2000 ? year - 2000 : year}${typeof term === "string" ? TERM_NUMBER[term] : term}`);
 
 export const scrapeCurrentQuarter = async () => {
   const url = "https://registrar.calpoly.edu/academic-calendar";

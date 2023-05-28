@@ -5,21 +5,29 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Droppable, DroppableProvided } from "react-beautiful-dnd";
-import { hooks } from "./store";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
-import { Status } from "./store/types";
 import { FlowchartState } from "~/dashboard/Dashboard";
 import { api } from "~/utils/api";
+import { Quarter } from "~/server/api/root";
+import { TERM_SEASON } from "~/scraping/registrar";
 
 export interface Props {
-  quarter: { title: string; id: number; current?: boolean };
+  quarter: Quarter;
 }
 
 export default function Quarter({ quarter }: Props) {
-  const title = quarter.title;
   const classNames = useLaneStyles();
-  const { requirements } = useContext(FlowchartState);
+  const { requirements, startYear } = useContext(FlowchartState);
+  const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
+    startYear - 2000 + quarter.year
+  }`;
+  console.log(quarter);
+
+  const quarterRequirements = requirements.filter(
+    (req) => req.quarterId === quarter.id
+  );
+console.log(quarter.id, "has", quarterRequirements.length, "requirements")
 
   return (
     <Paper className={`${classNames.lane} board-status`} elevation={0}>
@@ -36,11 +44,9 @@ export default function Quarter({ quarter }: Props) {
               {...provided.droppableProps}
               className={classNames.tasks}
             >
-              {requirements
-                .filter((req) => req.quarterId === quarter.id)
-                .map((requirement, index) => (
-                  <CourseCard requirement={requirement} index={index} />
-                ))}
+              {quarterRequirements.map((requirement, index) => (
+                <CourseCard requirement={requirement} index={index} />
+              ))}
             </div>
           );
         }}

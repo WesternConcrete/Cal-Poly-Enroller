@@ -23,7 +23,7 @@ export interface MenubarProps {
 }
 
 export default function Menubar({ projectsUrlPath }: MenubarProps) {
-  const { setDegree } = React.useContext(FlowchartState);
+  const { setDegree, startYear } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -53,7 +53,7 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
         console.log("fetching degree requirements for:", degree);
-        trpcClient.degreeRequirements.fetch({ degree });
+        trpcClient.degreeRequirements.prefetch({ degree, startYear });
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;
