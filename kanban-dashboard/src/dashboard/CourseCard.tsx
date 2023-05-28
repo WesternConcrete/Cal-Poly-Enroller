@@ -27,7 +27,7 @@ export default function CourseCard({ requirement, index }: Props) {
     },
     incomplete: {
       class: classNames.incomplete_status,
-      icon: () => <div></div>,
+      icon: () => <IncompleteIcon />,
     },
     "in-progress": {
       class: classNames.in_progress_status,
@@ -102,7 +102,10 @@ export default function CourseCard({ requirement, index }: Props) {
                   </Typography>
         <Typography variant="subtitle2" className={classNames.unitCount}>{requirement.units} units</Typography>
                 </div>
-                {COMPLETE_STATUS[completeStatus].icon()}
+                <div className={classNames.statusIcon}>
+                  {COMPLETE_STATUS[completeStatus].icon()}
+                </div>
+                
               </div>
             </Paper>
           </div>
