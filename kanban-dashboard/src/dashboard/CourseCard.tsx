@@ -51,10 +51,7 @@ export default function CourseCard({ requirement, index }: Props) {
     } else {
       return "incomplete";
     }
-    console.log(completeStatus);
   }, [currentQuarter, requirement.quarterId]);
-
-  const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
@@ -90,22 +87,28 @@ export default function CourseCard({ requirement, index }: Props) {
               )} ${COMPLETE_STATUS[completeStatus].class}`}
               {...provided.dragHandleProps}
             >
-
               <div className={classNames.taskHeader}>
                 <div>
                   <Typography className={classNames.title}>
                     {requirement.code}
                   </Typography>
 
-                  <Typography variant="subtitle2" className={classNames.courseName}>
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.courseName}
+                  >
                     {requirement.title}
                   </Typography>
-        <Typography variant="subtitle2" className={classNames.unitCount}>{requirement.units} units</Typography>
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.unitCount}
+                  >
+                    {requirement.units} units
+                  </Typography>
                 </div>
                 <div className={classNames.statusIcon}>
                   {COMPLETE_STATUS[completeStatus].icon()}
                 </div>
-                
               </div>
             </Paper>
           </div>
