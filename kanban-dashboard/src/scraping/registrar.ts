@@ -22,7 +22,11 @@ export const TERM_SEASON = Object.freeze({
 export const TERM = z.enum(["winter", "spring", "summer", "fall"]).enum;
 
 export const termCode = (year: number, term: Term | TermNum) =>
-  parseInt(`2${year > 2000 ? year - 2000 : year}${typeof term === "string" ? TERM_NUMBER[term] : term}`);
+  parseInt(
+    `2${year > 2000 ? year - 2000 : year}${
+      typeof term === "string" ? TERM_NUMBER[term] : term
+    }`
+  );
 
 export const scrapeCurrentQuarter = async () => {
   const url = "https://registrar.calpoly.edu/academic-calendar";

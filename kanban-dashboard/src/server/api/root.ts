@@ -61,9 +61,11 @@ export type Quarter = z.infer<typeof QuarterSchema>;
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  currentQuarterId: publicProcedure.output(z.number().gt(2000)).query(async () => {
-    return await scrapeCurrentQuarter();
-  }),
+  currentQuarterId: publicProcedure
+    .output(z.number().gt(2000))
+    .query(async () => {
+      return await scrapeCurrentQuarter();
+    }),
   quarters: publicProcedure
     .input(z.object({ startYear: z.number().gte(2000) }))
     .output(z.array(QuarterSchema))
