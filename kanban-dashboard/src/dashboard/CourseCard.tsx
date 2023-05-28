@@ -38,18 +38,19 @@ export default function CourseCard({ requirement, index }: Props) {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
   const completeStatus: CompleteStatus = useMemo(() => {
-    if (typeof currentQuarter !== "number") {
+    if (currentQuarter === undefined) {
+      return "incomplete";
+    } else if (typeof currentQuarter !== "number") {
       console.error("currentQuarter is not a number", currentQuarter);
       return "incomplete";
-    }
-    if (!currentQuarter || currentQuarter < requirement.quarterId) {
+    } else if (!currentQuarter || currentQuarter < requirement.quarterId) {
       return "incomplete";
     } else if (currentQuarter === requirement.quarterId) {
       return "in-progress";
     } else if (currentQuarter > requirement.quarterId) {
       return "complete";
     } else {
-      return "incomplete";
+      throw new Error("unreachable");
     }
     console.log(completeStatus);
   }, [currentQuarter, requirement.quarterId]);
