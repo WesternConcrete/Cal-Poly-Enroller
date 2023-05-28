@@ -22,12 +22,10 @@ export default function Quarter({ quarter }: Props) {
   const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
     startYear - 2000 + quarter.year
   }`;
-  console.log(quarter);
 
   const quarterRequirements = requirements.filter(
     (req) => req.quarterId === quarter.id
   );
-console.log(quarter.id, "has", quarterRequirements.length, "requirements")
 
   return (
     <Paper className={`${classNames.lane} board-status`} elevation={0}>
