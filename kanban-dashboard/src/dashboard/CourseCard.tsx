@@ -7,12 +7,15 @@ import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
 import { FlowchartState } from "~/dashboard/state";
-import { RequirementTypeSchema, type RequirementType } from "~/scraping/catalog";
+import {
+  RequirementTypeSchema,
+  type RequirementType,
+} from "~/scraping/catalog";
 import { type Requirement } from "~/server/api/root";
 import { api } from "~/utils/api";
 
 export interface Props {
-requirement: Requirement;
+  requirement: Requirement;
   index: number;
 }
 
@@ -52,7 +55,6 @@ export default function CourseCard({ requirement, index }: Props) {
       throw new Error("unreachable");
     }
   }, [currentQuarter, requirement.quarterId]);
-  const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
