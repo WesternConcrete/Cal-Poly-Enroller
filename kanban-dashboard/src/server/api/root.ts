@@ -13,86 +13,93 @@ export type {
   RequirementTypeSchema,
 } from "~/scraping/catalog";
 import { z } from "zod";
-
-const quarters: { id: number; title: string }[] = [
-  {
-    id: 0,
-    title: "Fall 1",
-  },
-  {
-    id: 1,
-    title: "Winter 1",
-  },
-  {
-    id: 2,
-    title: "Spring 1",
-  },
-  {
-    id: 3,
-    title: "Fall 2",
-  },
-  {
-    id: 4,
-    title: "Winter 2",
-  },
-  {
-    id: 5,
-    title: "Spring 2",
-  },
-  {
-    id: 6,
-    title: "Fall 3",
-  },
-  {
-    id: 7,
-    title: "Winter 3",
-  },
-  {
-    id: 8,
-    title: "Spring 3",
-  },
-  {
-    id: 9,
-    title: "Fall 4",
-  },
-  {
-    id: 10,
-    title: "Winter 4",
-  },
-  {
-    id: 11,
-    title: "Spring 4",
-  },
-];
+import {
+  TERM_NUMBER,
+  Term,
+  TermNum,
+  scrapeCurrentQuarter,
+  termCode,
+} from "~/scraping/registrar";
 
 const courseType_arr = RequirementTypeSchema.options;
 
+const YearSchema = z
+  .number()
+  .gte(0, { message: "year < 0" })
+  .lt(4, { message: "year >= 4" });
+const TermNumSchema = z.union([
+  z.literal(2),
+  z.literal(4),
+  z.literal(6),
+  z.literal(8),
+]);
+const SchoolYearTermSchema = z.union([
+  z.literal(2),
+  z.literal(4),
+  z.literal(8),
+]);
+
+const RequirementSchema = z.object({
+  code: z.string(), // TODO: validate course code
+  id: z.number(),
+  title: z.string(),
+  courseType: RequirementTypeSchema,
+  units: z.number().nonnegative(),
+  quarterId: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
+});
+export type Requirement = z.infer<typeof RequirementSchema>;
+
+const QuarterSchema = z.object({
+  id: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
+  year: YearSchema,
+  termNum: SchoolYearTermSchema,
+});
+export type Quarter = z.infer<typeof QuarterSchema>;
 /**
  * This is the primary router for your server.
  *
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  currentQuarterId: publicProcedure.query(() => {
-    return quarters[Math.floor(Math.random() * quarters.length)].id;
-  }),
-  quarters: publicProcedure.query(() => {
-    return quarters;
-  }),
+  currentQuarterId: publicProcedure
+    .output(z.number().gt(2000))
+    .query(async () => {
+      return await scrapeCurrentQuarter();
+    }),
+  quarters: publicProcedure
+    .input(z.object({ startYear: z.number().gte(2000) }))
+    .output(z.array(QuarterSchema))
+    .query(({ input: { startYear } }) => {
+      let termNum = TERM_NUMBER.fall;
+      let quarters = [];
+
+      let calYear = startYear;
+      let schoolYear = 0;
+
+      const q = (termSeason: Term) => ({
+        id: termCode(calYear, termSeason),
+        termNum: TERM_NUMBER[termSeason],
+        year: schoolYear,
+      });
+      while (schoolYear < 4) {
+        // winter/spring quarter will be in yeear 5 senior year but this is still 4th year
+
+        quarters.push(q("fall"));
+        calYear++;
+        quarters.push(q("winter"));
+        quarters.push(q("spring"));
+        schoolYear++;
+      }
+      return quarters;
+    }),
   degreeRequirements: publicProcedure
-    .input(z.object({ degree: DegreeSchema.nullable() }))
-    .output(
-      z.array(
-        z.object({
-          code: z.string(),
-          title: z.string(),
-          units: z.number(),
-          courseType: RequirementTypeSchema,
-          quarterId: z.number(),
-          id: z.number(),
-        })
-      )
+    .input(
+      z.object({
+        degree: DegreeSchema.nullable(),
+        startYear: z.number().gte(2000),
+      })
     )
+    .output(z.array(RequirementSchema))
     .query(async ({ input }) => {
       if (input.degree === null) {
         return [];
@@ -104,12 +111,15 @@ export const appRouter = createTRPCRouter({
           ...course,
           courseType:
             courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-          quarterId: quarters[Math.floor(Math.random() * quarters.length)].id,
+          quarterId: termCode(
+            Math.floor(Math.random() * 4) + input.startYear,
+            SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
+          ),
           id: i,
         })
       );
     }),
-  degrees: publicProcedure.query(async (): Promise<Degree[]> => {
+  degrees: publicProcedure.query(async () => {
     return scrapeDegrees();
   }),
 });

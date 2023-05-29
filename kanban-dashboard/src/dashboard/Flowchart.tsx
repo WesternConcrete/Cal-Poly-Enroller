@@ -19,8 +19,8 @@ import { FlowchartState } from "~/dashboard/Dashboard";
 import { api } from "~/utils/api";
 
 export default function Flowchart() {
-  const quartersQuery = api.quarters.useQuery();
-  const { moveRequirement } = React.useContext(FlowchartState);
+  const { moveRequirement, startYear } = React.useContext(FlowchartState);
+  const quartersQuery = api.quarters.useQuery({ startYear });
 
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
   const openCourseForm = () => setIsCourseFormOpen(true);
@@ -39,7 +39,10 @@ export default function Flowchart() {
       return;
     }
     if (source && destination) {
-      moveRequirement(parseInt(draggableId), parseInt(destination.droppableId));
+      // moveRequirement: (requirementId: number, quarterId: number) => void;
+      const requirementId = parseInt(draggableId);
+      const quarterId = parseInt(destination.droppableId);
+      moveRequirement(requirementId, quarterId);
     }
   };
 

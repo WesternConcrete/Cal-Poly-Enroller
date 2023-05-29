@@ -10,12 +10,14 @@ import Drawer from "@material-ui/core/Drawer";
 import { Select, MenuItem, InputLabel } from "@material-ui/core";
 import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 
+import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { FlowchartState } from "~/dashboard/Dashboard";
 import { Fab } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 
+import { Select, MenuItem, InputLabel } from "@material-ui/core";
+import { FlowchartState } from "~/dashboard/Dashboard";
 import { api } from "~/utils/api";
 
 export interface MenubarProps {
@@ -23,7 +25,7 @@ export interface MenubarProps {
 }
 
 export default function Menubar({ projectsUrlPath }: MenubarProps) {
-  const { setDegree } = React.useContext(FlowchartState);
+  const { setDegree, startYear } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -53,7 +55,7 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
         console.log("fetching degree requirements for:", degree);
-        trpcClient.degreeRequirements.fetch({ degree });
+        trpcClient.degreeRequirements.prefetch({ degree, startYear });
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;

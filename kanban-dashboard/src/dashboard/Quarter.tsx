@@ -5,15 +5,24 @@ import { Droppable, DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { api } from "~/utils/api";
+import { Quarter } from "~/server/api/root";
+import { TERM_SEASON } from "~/scraping/registrar";
 
 export interface Props {
-  quarter: { title: string; id: number; current?: boolean };
+  quarter: Quarter;
 }
 
 export default function Quarter({ quarter }: Props) {
-  const title = quarter.title;
   const classNames = useLaneStyles();
-  const { requirements } = useContext(FlowchartState);
+  const { requirements, startYear } = useContext(FlowchartState);
+  const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
+    startYear - 2000 + quarter.year
+  }`;
+
+  const quarterRequirements = requirements.filter(
+    (req) => req.quarterId === quarter.id
+  );
 
   return (
     <Paper className={`${classNames.lane} board-status`} elevation={0}>
@@ -30,11 +39,9 @@ export default function Quarter({ quarter }: Props) {
               {...provided.droppableProps}
               className={classNames.tasks}
             >
-              {requirements
-                .filter((req) => req.quarterId === quarter.id)
-                .map((requirement, index) => (
-                  <CourseCard requirement={requirement} index={index} />
-                ))}
+              {quarterRequirements.map((requirement, index) => (
+                <CourseCard requirement={requirement} index={index} />
+              ))}
             </div>
           );
         }}
