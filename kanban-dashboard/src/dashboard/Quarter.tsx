@@ -39,7 +39,7 @@ export default function Quarter({ quarter }: Props) {
               className={classNames.tasks}
             >
               {quarterRequirements.map((requirement, index) => (
-                <CourseCard requirement={requirement} index={index} />
+                <CourseCard requirement={requirement} index={index} key={index} />
               ))}
             </div>
           );
