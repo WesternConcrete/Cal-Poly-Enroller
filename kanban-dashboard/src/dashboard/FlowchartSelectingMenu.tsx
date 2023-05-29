@@ -229,9 +229,7 @@ export default function FlowchartSelectingMenu() {
             fullWidth
             select
             value={newFlowchartConcentration}
-            onChange={(e) =>
-              setNewFlowchartConcentration(e.target.value )
-            }
+            onChange={(e) => setNewFlowchartConcentration(e.target.value)}
           >
             {/* Add your concentration options here */}
             <MenuItem value={"Concentration 1"}>Concentration 1</MenuItem>

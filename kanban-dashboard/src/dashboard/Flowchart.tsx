@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  DragDropContext,
-  type DropResult,
-} from "react-beautiful-dnd";
+import { DragDropContext, type DropResult } from "react-beautiful-dnd";
 import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
 import { FlowchartState, useMoveRequirement } from "~/dashboard/state";
