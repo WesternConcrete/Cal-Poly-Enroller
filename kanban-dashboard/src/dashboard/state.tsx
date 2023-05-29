@@ -18,7 +18,6 @@ type FlowchartStateType = {
   setDegree: Setter<Degree | null>;
   startYear: number;
   setStartYear: Setter<number>;
-  moveRequirement: (requirementId: number, quarterId: number) => void;
 };
 
 export const FlowchartState = createContext<FlowchartStateType>(
@@ -45,6 +44,27 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
     { degree, startYear },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
+  const flowchartContext = {
+    degree,
+    setDegree,
+    requirements,
+    setRequirements,
+    startYear,
+    setStartYear,
+  };
+
+  // TODO: move nested courses fetch here to avoid loading spinner waterfall
+
+  return (
+    <FlowchartState.Provider value={flowchartContext}>
+      {children}
+    </FlowchartState.Provider>
+  );
+};
+
+export const useMoveRequirement = () => {
+  const { degree, startYear } = useContext(FlowchartState);
+  const trpcClient = api.useContext();
   const moveRequirement = (requirementId: number, quarterId: number) => {
     trpcClient.degreeRequirements.setData(
       { degree, startYear },
@@ -71,22 +91,5 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
       }
     );
   };
-
-  const flowchartContext = {
-    degree,
-    setDegree,
-    requirements,
-    setRequirements,
-    startYear,
-    setStartYear,
-    moveRequirement,
-  };
-
-  // TODO: move nested courses fetch here to avoid loading spinner waterfall
-
-  return (<FlowchartState.Provider value={flowchartContext} >
-      {children}
-    </FlowchartState.Provider>
-  );
+  return moveRequirement;
 };
-
