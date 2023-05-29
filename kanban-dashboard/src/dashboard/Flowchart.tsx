@@ -56,7 +56,6 @@ export default function Flowchart() {
             : null}
         </div>
       </DragDropContext>
-      
     </div>
   );
 }
