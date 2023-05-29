@@ -5,6 +5,7 @@ import { Draggable, DraggableProvided } from "react-beautiful-dnd";
 import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
+import IncompleteIcon from "../components/icons/incomplete";
 import { FlowchartState } from "~/dashboard/Dashboard";
 import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
 import { api } from "~/utils/api";
@@ -26,7 +27,7 @@ export default function CourseCard({ requirement, index }: Props) {
     },
     incomplete: {
       class: classNames.incomplete_status,
-      icon: () => <div></div>,
+      icon: () => <IncompleteIcon />,
     },
     "in-progress": {
       class: classNames.in_progress_status,
@@ -50,10 +51,7 @@ export default function CourseCard({ requirement, index }: Props) {
     } else {
       return "incomplete";
     }
-    console.log(completeStatus);
   }, [currentQuarter, requirement.quarterId]);
-
-  const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
@@ -95,11 +93,22 @@ export default function CourseCard({ requirement, index }: Props) {
                     {requirement.code}
                   </Typography>
 
-                  <Typography variant="subtitle2">
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.courseName}
+                  >
                     {requirement.title}
                   </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    className={classNames.unitCount}
+                  >
+                    {requirement.units} units
+                  </Typography>
                 </div>
-                {COMPLETE_STATUS[completeStatus].icon()}
+                <div className={classNames.statusIcon}>
+                  {COMPLETE_STATUS[completeStatus].icon()}
+                </div>
               </div>
             </Paper>
           </div>

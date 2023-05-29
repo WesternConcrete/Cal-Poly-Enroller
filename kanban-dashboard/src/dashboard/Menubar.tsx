@@ -8,11 +8,13 @@ import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
 import { Select, MenuItem, InputLabel } from "@material-ui/core";
-import UsersMenu from "./UsersMenu";
+import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/Dashboard";
+import { Fab } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
 
 import { api } from "~/utils/api";
 
@@ -90,12 +92,23 @@ export default function Menubar({ projectsUrlPath }: MenubarProps) {
               {currentUsername}
             </Typography>
 
-            <IconButton onClick={handleMenu} color="inherit">
+            <IconButton color="inherit">
               <AccountCircle />
             </IconButton>
           </div>
         </Toolbar>
+        <div className={classes.addButtonContainer} onClick={handleMenu}>
+          <Fab color="primary" aria-label="add">
+            <AddIcon />
+          </Fab>
+        </div>
       </MuiAppBar>
+
+      <Drawer open={open} anchor="left" onClose={handleClose}>
+        <div style={{ width: 300 }}>
+          <FlowchartSelectingMenu />
+        </div>
+      </Drawer>
     </Fragment>
   );
 }

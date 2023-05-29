@@ -42,6 +42,7 @@ export default function Flowchart() {
       moveRequirement(parseInt(draggableId), parseInt(destination.droppableId));
     }
   };
+
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -55,11 +56,6 @@ export default function Flowchart() {
             : null}
         </div>
       </DragDropContext>
-      <div className={classNames.addButtonContainer}>
-        <Fab color="primary" aria-label="add" onClick={() => openCourseForm()}>
-          <AddIcon />
-        </Fab>
-      </div>
     </div>
   );
 }
