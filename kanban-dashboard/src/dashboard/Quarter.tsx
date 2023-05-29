@@ -41,6 +41,7 @@ export default function Quarter({ quarter }: Props) {
               {quarterRequirements.map((requirement, index) => (
                 <CourseCard requirement={requirement} index={index} key={index} />
               ))}
+            {provided.placeholder}
             </div>
           );
         }}
