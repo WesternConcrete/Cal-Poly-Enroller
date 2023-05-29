@@ -2,7 +2,6 @@ import React from "react";
 import {
   DragDropContext,
   type DropResult,
-  // @ts-ignore
 } from "react-beautiful-dnd";
 import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
