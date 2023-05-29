@@ -8,10 +8,11 @@ import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
 import { FlowchartState } from "~/dashboard/state";
 import { RequirementTypeSchema, type RequirementType } from "~/scraping/catalog";
+import { type Requirement } from "~/server/api/root";
 import { api } from "~/utils/api";
 
 export interface Props {
-  requirement: Course;
+requirement: Requirement;
   index: number;
 }
 
