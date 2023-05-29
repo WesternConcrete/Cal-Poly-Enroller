@@ -1,6 +1,6 @@
-import React, { ReactNode, HTMLAttributes } from "react";
+import React, { type ReactNode, type HTMLAttributes } from "react";
 import IconButton, {
-  IconButtonProps as MuiIconButtonProps,
+  type IconButtonProps as MuiIconButtonProps,
 } from "@material-ui/core/IconButton";
 import AddIcon from "@material-ui/icons/Add";
 import MoreHorizIcon from "@material-ui/icons/MoreHoriz";
@@ -8,8 +8,8 @@ import DeleteIcon from "@material-ui/icons/DeleteForever";
 import EditIcon from "@material-ui/icons/Edit";
 import CloseIcon from "@material-ui/icons/Close";
 import CheckIcon from "@material-ui/icons/Check";
-import { OverridableComponent } from "@material-ui/core/OverridableComponent";
-import { SvgIconTypeMap } from "@material-ui/core/SvgIcon/SvgIcon";
+import { type OverridableComponent } from "@material-ui/core/OverridableComponent";
+import { type SvgIconTypeMap } from "@material-ui/core/SvgIcon/SvgIcon";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 

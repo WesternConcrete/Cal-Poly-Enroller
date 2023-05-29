@@ -3,10 +3,10 @@ import React, {
   useEffect,
   createContext,
   useContext,
-  FC,
+  type FC,
 } from "react";
 
-import { Requirement, type Degree } from "~/server/api/root";
+import { type Requirement, type Degree } from "~/server/api/root";
 import { api } from "~/utils/api";
 
 type Setter<S> = React.Dispatch<React.SetStateAction<S>>;

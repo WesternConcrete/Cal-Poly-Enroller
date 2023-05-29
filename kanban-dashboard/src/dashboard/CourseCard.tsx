@@ -1,13 +1,13 @@
 import React, { useMemo, useEffect, useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
-import { Draggable, DraggableProvided } from "react-beautiful-dnd";
+import { Draggable, type DraggableProvided } from "react-beautiful-dnd";
 import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
 import { FlowchartState } from "~/dashboard/state";
-import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
+import { RequirementTypeSchema, type RequirementType } from "~/scraping/catalog";
 import { api } from "~/utils/api";
 
 export interface Props {
@@ -34,7 +34,7 @@ export default function CourseCard({ requirement, index }: Props) {
       icon: () => <InProgressIcon />,
     },
   };
-  let [completeStatus, setCompleteStatus] =
+  const [completeStatus, setCompleteStatus] =
     useState<CompleteStatus>("incomplete");
   const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes

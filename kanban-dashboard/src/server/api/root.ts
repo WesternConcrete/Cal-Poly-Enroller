@@ -15,7 +15,7 @@ export type {
 import { z } from "zod";
 import {
   TERM_NUMBER,
-  Term,
+  type Term,
   TermNum,
   scrapeCurrentQuarter,
   termCode,
@@ -70,8 +70,8 @@ export const appRouter = createTRPCRouter({
     .input(z.object({ startYear: z.number().gte(2000) }))
     .output(z.array(QuarterSchema))
     .query(({ input: { startYear } }) => {
-      let termNum = TERM_NUMBER.fall;
-      let quarters = [];
+      const termNum = TERM_NUMBER.fall;
+      const quarters = [];
 
       let calYear = startYear;
       let schoolYear = 0;

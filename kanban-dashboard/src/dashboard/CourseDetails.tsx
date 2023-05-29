@@ -13,7 +13,7 @@ import CourseAssignment from "./CourseAssignment";
 import { useCourseDetailsStyles } from "./styles";
 import { useCurrentUserId } from "./CurrentUser";
 import { useUser } from "./store/hooks";
-import { Course, User } from "./store/types";
+import { type Course, type User } from "./store/types";
 
 export interface Props {
   id: string;

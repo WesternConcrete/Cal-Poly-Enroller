@@ -81,7 +81,7 @@ export const scrapeCurrentQuarter = async () => {
   if (!currentQuarterCode) {
     let timeUntilClosestStartDate = Infinity;
     for (let i = 1; i < quarters.length; i++) {
-      let timeUntilStartDate = Math.abs(quarters[i].startDate - today);
+      const timeUntilStartDate = Math.abs(quarters[i].startDate - today);
       const startsAfterToday = quarters[i].startDate > today;
       if (timeUntilStartDate < timeUntilClosestStartDate && startsAfterToday) {
         timeUntilClosestStartDate = timeUntilStartDate;

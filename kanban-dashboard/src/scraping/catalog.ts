@@ -204,12 +204,12 @@ export const scrapeDegreeRequirements = async (
       console.warn("Parsing table of unrecognized kind:", table_desc);
     }
 
-    var cur_section: string | null = null;
+    let cur_section: string | null = null;
     // within a select from the following block
     // see comment at top of file which explains these flags
-    var in_sftf = false;
-    var sftf_sep = null;
-    var prev_was_or = false;
+    let in_sftf = false;
+    let sftf_sep = null;
+    let prev_was_or = false;
     const rows = $(table).find("tr");
     for (let i = 0; i < rows.length; i++) {
       const tr = rows[i];
@@ -263,7 +263,7 @@ export const scrapeDegreeRequirements = async (
           console.error("unrecognized comment:", comment);
         }
       } else {
-        let course_elem = $(tr).find("td.codecol a[title]");
+        const course_elem = $(tr).find("td.codecol a[title]");
         let course: any; // TODO: type this
         const is_and = course_elem.length > 1;
         if (is_and) {
@@ -275,12 +275,12 @@ export const scrapeDegreeRequirements = async (
               $(tr)
             );
           }
-          let course_codes: string[] = [];
+          const course_codes: string[] = [];
           $(course_elem).each((_i, c) => {
             course_codes.push($(c).text().trim());
           });
-          let course_titles = [];
-          let titles = $(tr).find("td:not([class])");
+          const course_titles = [];
+          const titles = $(tr).find("td:not([class])");
           $(titles)
             .contents()
             .each((i, t) => {
@@ -357,7 +357,7 @@ export const scrapeDegreeRequirements = async (
           const title = $(tr).find("td:not([class])").text().trim();
           // TODO: more accurate units when in or/and block
           const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
-          let units = parseInt(unitsStr);
+          const units = parseInt(unitsStr);
           const code = course;
           const courseObj = RequirementCourseSchema.parse({
             title,

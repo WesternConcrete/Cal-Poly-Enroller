@@ -1,12 +1,12 @@
 import React, { useContext } from "react";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
-import { Droppable, DroppableProvided } from "react-beautiful-dnd";
+import { Droppable, type DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
-import { Quarter } from "~/server/api/root";
+import { type Quarter } from "~/server/api/root";
 import { TERM_SEASON } from "~/scraping/registrar";
 
 export interface Props {

@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useState } from "react";
+import React, { type MouseEventHandler, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -235,7 +235,7 @@ export default function FlowchartSelectingMenu() {
             select
             value={newFlowchartConcentration}
             onChange={(e) =>
-              setNewFlowchartConcentration(e.target.value as string)
+              setNewFlowchartConcentration(e.target.value )
             }
           >
             {/* Add your concentration options here */}

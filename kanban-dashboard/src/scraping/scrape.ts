@@ -2,7 +2,7 @@ import cheerio from "cheerio";
 
 const COURSE_INFO_RE = /([A-Z]+)\s+(\d+)\. (.*)$/;
 const URL = "https://catalog.calpoly.edu/coursesaz/csc/";
-let page = await fetch(URL).then((res) => res.text());
+const page = await fetch(URL).then((res) => res.text());
 const $ = cheerio.load(page);
 
 const courses = $(".courseblock");

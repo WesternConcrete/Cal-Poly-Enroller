@@ -1,4 +1,4 @@
-import React, { ChangeEvent, forwardRef } from "react";
+import React, { type ChangeEvent, forwardRef } from "react";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 
@@ -6,7 +6,7 @@ import { TextButton } from "../components/buttons";
 
 import { hooks } from "./store";
 import { useCourseAssignmentStyles } from "./styles";
-import { Course } from "./store/types";
+import { type Course } from "./store/types";
 
 export interface Props {
   id: string;
