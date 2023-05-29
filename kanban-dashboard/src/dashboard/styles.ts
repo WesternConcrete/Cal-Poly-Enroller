@@ -1,5 +1,4 @@
 import { makeStyles } from "@material-ui/core/styles";
-import { BorderBottom } from "@material-ui/icons";
 
 export const useDashboardStyles = makeStyles((theme) => ({
   root: {

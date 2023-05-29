@@ -1,20 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
-import Paper from "@material-ui/core/Paper";
-import Dialog from "@material-ui/core/Dialog";
+import React from "react";
 import {
   DragDropContext,
   type DropResult,
-  Droppable,
-  type DroppableProvided,
   // @ts-ignore
 } from "react-beautiful-dnd";
-import AddIcon from "@material-ui/icons/Add";
 import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
-import { Fab } from "@material-ui/core";
-import CourseEditorForm from "./CourseEditorForm";
-import { useCurrentUserId } from "./CurrentUser";
-import { handleCloseModal } from "../helpers/shared";
 import { FlowchartState, useMoveRequirement } from "~/dashboard/state";
 import { api } from "~/utils/api";
 

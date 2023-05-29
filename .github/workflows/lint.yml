@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install eslint
-        run: npm install eslint eslint-plugin-react@latest @typescript-eslint/eslint-plugin eslint-config-next
+        run: npm install eslint eslint-plugin-react@latest @typescript-eslint/eslint-plugin eslint-config-next eslint-plugin-unused-imports
       - name: Install tsc
         run: npm install typescript
       - name: Install prettier

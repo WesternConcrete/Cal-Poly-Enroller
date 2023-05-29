@@ -3,7 +3,6 @@ import {
   scrapeDegrees,
   scrapeDegreeRequirements,
   type RequirementCourse,
-  type Degree,
   DegreeSchema,
   RequirementTypeSchema,
 } from "~/scraping/catalog";
@@ -16,7 +15,6 @@ import { z } from "zod";
 import {
   TERM_NUMBER,
   type Term,
-  TermNum,
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";

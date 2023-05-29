@@ -5,7 +5,6 @@ import { Droppable, type DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/state";
-import { api } from "~/utils/api";
 import { type Quarter } from "~/server/api/root";
 import { TERM_SEASON } from "~/scraping/registrar";
 
