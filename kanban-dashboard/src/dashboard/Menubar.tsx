@@ -16,11 +16,9 @@ import { Select, MenuItem, InputLabel } from "@material-ui/core";
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 
-export interface MenubarProps {
-  projectsUrlPath: string;
-}
+export interface MenubarProps {}
 
-export default function Menubar({ projectsUrlPath }: MenubarProps) {
+export default function Menubar({}: MenubarProps) {
   const { setDegree, startYear } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);

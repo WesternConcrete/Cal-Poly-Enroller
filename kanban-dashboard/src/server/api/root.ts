@@ -25,12 +25,6 @@ const YearSchema = z
   .number()
   .gte(0, { message: "year < 0" })
   .lt(4, { message: "year >= 4" });
-const TermNumSchema = z.union([
-  z.literal(2),
-  z.literal(4),
-  z.literal(6),
-  z.literal(8),
-]);
 const SchoolYearTermSchema = z.union([
   z.literal(2),
   z.literal(4),
@@ -68,7 +62,6 @@ export const appRouter = createTRPCRouter({
     .input(z.object({ startYear: z.number().gte(2000) }))
     .output(z.array(QuarterSchema))
     .query(({ input: { startYear } }) => {
-      const termNum = TERM_NUMBER.fall;
       const quarters = [];
 
       let calYear = startYear;
@@ -76,7 +69,9 @@ export const appRouter = createTRPCRouter({
 
       const q = (termSeason: Term) => ({
         id: termCode(calYear, termSeason),
-        termNum: TERM_NUMBER[termSeason],
+        termNum: TERM_NUMBER[termSeason] as z.infer<
+          typeof SchoolYearTermSchema
+        >,
         year: schoolYear,
       });
       while (schoolYear < 4) {

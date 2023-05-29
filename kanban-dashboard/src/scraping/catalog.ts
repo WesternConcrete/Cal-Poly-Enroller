@@ -24,7 +24,7 @@ export const scrapeCollegesAndDepartments = async () => {
 
   const list = $("#textcontainer.page_content");
   const colleges: College[] = [];
-  list.find("p").each((i, elem) => {
+  list.find("p").each((_i, elem) => {
     const collegeName = $(elem).text().trim();
     const collegePath = $(elem).find("a").attr("href");
     assert(collegePath, "collegePath is null");
@@ -33,7 +33,7 @@ export const scrapeCollegesAndDepartments = async () => {
     $(elem)
       .next("ul")
       .find("li>a")
-      .each((i, elem) => {
+      .each((_i, elem) => {
         departmentList.push(
           DepartmentSchema.parse({
             name: $(elem).text().trim(),
@@ -65,23 +65,13 @@ export const scrapeSubjects = async () => {
   const URL = "https://catalog.calpoly.edu/coursesaz/";
   const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
   const subjects: Subject[] = [];
-  $("a.sitemaplink").each((i, elem) => {
+  $("a.sitemaplink").each((_i, elem) => {
     const txt = $(elem).text();
-    const [matched, subject, code] = txt.match(subjectRE) ?? [];
+    const [_matched, subject, code] = txt.match(subjectRE) ?? [];
     subjects.push(SubjectSchema.parse({ subject, code }));
   });
   return subjects;
 };
-
-function toTitleCase(str) {
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-}
 
 export const BACHELOR_DEGREE_KINDS = [
   "BA",
@@ -109,7 +99,7 @@ export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 
 export const RequirementCourseCodeSchema = z.string();
 
-export const RequirementOneOfSchema = z.object({
+export const RequirementOneOfSchema: z.ZodType = z.object({
   kind: z.literal("oneof"),
   oneof: z.array(
     RequirementCourseCodeSchema.or(z.lazy(() => RequirementAllOfSchema))

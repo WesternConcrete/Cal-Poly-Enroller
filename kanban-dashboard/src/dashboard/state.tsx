@@ -36,11 +36,10 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
-  const trpcClient = api.useContext();
   useEffect(() => {
     console.log("updating requirements!");
   }, [requirements]);
-  const requirementsQuery = api.degreeRequirements.useQuery(
+  const _requirementsQuery = api.degreeRequirements.useQuery(
     { degree, startYear },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
