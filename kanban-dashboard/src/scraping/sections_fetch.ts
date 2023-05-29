@@ -1,10 +1,12 @@
+/* eslint-disable */
+// TODO: remove eslint-disable once this code is being used
 import assert from "assert";
 import * as cheerio from "cheerio/lib/slim";
 
 const URL =
   "https://cmsweb.pscs.calpoly.edu/psc/CSLOPRD/EMPLOYEE/SA/c/COMMUNITY_ACCESS.CLASS_SEARCH.GBL";
 
-const assertNotPageNoLongerAvailable = async (body) => {
+const assertNotPageNoLongerAvailable = async (body: string) => {
   assert(!body.includes("This page is no longer available."));
   return body;
 };
