@@ -42,6 +42,7 @@ export default function Flowchart() {
       moveRequirement(requirementId, quarterId);
     }
   };
+
   return (
     <div className={classNames.board}>
       <DragDropContext onDragEnd={handleDragEnd}>

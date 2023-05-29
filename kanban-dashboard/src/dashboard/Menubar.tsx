@@ -7,6 +7,8 @@ import IconButton from "@material-ui/core/IconButton";
 import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
+import { Select, MenuItem, InputLabel } from "@material-ui/core";
+import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 
 import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
