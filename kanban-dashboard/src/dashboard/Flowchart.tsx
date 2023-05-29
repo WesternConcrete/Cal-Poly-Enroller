@@ -15,16 +15,12 @@ import { Fab } from "@material-ui/core";
 import CourseEditorForm from "./CourseEditorForm";
 import { useCurrentUserId } from "./CurrentUser";
 import { handleCloseModal } from "../helpers/shared";
-import { FlowchartState } from "~/dashboard/Dashboard";
+import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 
 export default function Flowchart() {
   const { moveRequirement, startYear } = React.useContext(FlowchartState);
   const quartersQuery = api.quarters.useQuery({ startYear });
-
-  const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
-  const openCourseForm = () => setIsCourseFormOpen(true);
-  const closeCourseForm = () => setIsCourseFormOpen(false);
 
   const classNames = useBoardStyles();
 

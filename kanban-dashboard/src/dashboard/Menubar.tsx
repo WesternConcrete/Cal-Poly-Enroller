@@ -15,7 +15,7 @@ import { Fab } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 
 import { Select, MenuItem, InputLabel } from "@material-ui/core";
-import { FlowchartState } from "~/dashboard/Dashboard";
+import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 
 export interface MenubarProps {
