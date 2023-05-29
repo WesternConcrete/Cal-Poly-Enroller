@@ -4,7 +4,7 @@ import Typography from "@material-ui/core/Typography";
 import { Droppable, DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
-import { FlowchartState } from "~/dashboard/Dashboard";
+import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 import { Quarter } from "~/server/api/root";
 import { TERM_SEASON } from "~/scraping/registrar";
