@@ -106,7 +106,9 @@ export default function CourseCard({ requirement, index }: Props) {
                     {requirement.units} units
                   </Typography>
                 </div>
-                {COMPLETE_STATUS[completeStatus].icon()}
+                <div className={classNames.statusIcon}>
+                  {COMPLETE_STATUS[completeStatus].icon()}
+                </div>
               </div>
             </Paper>
           </div>
