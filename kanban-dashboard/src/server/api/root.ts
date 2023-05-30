@@ -54,35 +54,37 @@ export type Quarter = z.infer<typeof QuarterSchema>;
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = t.router({
-  currentQuarterId: t.procedure.output(z.number().gt(2000)).query(async () => {
-    return await scrapeCurrentQuarter();
-  }),
-  quarters: t.procedure
-    .input(z.object({ startYear: z.number().gte(2000) }))
-    .query(({ input: { startYear } }) => {
-      const quarters = [];
-
-      let calYear = startYear;
-      let schoolYear = 0;
-
-      const q = (termSeason: Term) => ({
-        id: termCode(calYear, termSeason),
-        termNum: TERM_NUMBER[termSeason] as z.infer<
-          typeof SchoolYearTermSchema
-        >,
-        year: schoolYear,
-      });
-      while (schoolYear < 4) {
-        // winter/spring quarter will be in yeear 5 senior year but this is still 4th year
-
-        quarters.push(q("fall"));
-        calYear++;
-        quarters.push(q("winter"));
-        quarters.push(q("spring"));
-        schoolYear++;
-      }
-      return quarters;
+  quarters: t.router({
+    current: t.procedure.output(z.number().gt(2000)).query(async () => {
+      return await scrapeCurrentQuarter();
     }),
+    all: t.procedure
+      .input(z.object({ startYear: z.number().gte(2000) }))
+      .query(({ input: { startYear } }) => {
+        const quarters = [];
+
+        let calYear = startYear;
+        let schoolYear = 0;
+
+        const q = (termSeason: Term) => ({
+          id: termCode(calYear, termSeason),
+          termNum: TERM_NUMBER[termSeason] as z.infer<
+            typeof SchoolYearTermSchema
+          >,
+          year: schoolYear,
+        });
+        while (schoolYear < 4) {
+          // winter/spring quarter will be in yeear 5 senior year but this is still 4th year
+
+          quarters.push(q("fall"));
+          calYear++;
+          quarters.push(q("winter"));
+          quarters.push(q("spring"));
+          schoolYear++;
+        }
+        return quarters;
+      }),
+  }),
   degreeRequirements: t.procedure
     .input(
       z.object({

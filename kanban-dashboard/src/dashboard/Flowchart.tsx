@@ -8,7 +8,7 @@ import { api } from "~/utils/api";
 export default function Flowchart() {
   const { startYear } = React.useContext(FlowchartState);
   const moveRequirement = useMoveRequirement();
-  const quartersQuery = api.quarters.useQuery({ startYear });
+  const quartersQuery = api.quarters.all.useQuery({ startYear });
 
   const classNames = useBoardStyles();
 
