@@ -57,11 +57,11 @@ model Requirement {
   kind   String
 
   courseCode String
-  degreeId   Int
+  degreeId   String
 }
 
 model Degree {
-  id           Int           @id @default(autoincrement())
+  id           String           @id
   name         String
   link         String
   // BS, BA, etc.
