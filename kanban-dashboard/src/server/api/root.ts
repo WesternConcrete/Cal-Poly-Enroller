@@ -18,6 +18,7 @@ import {
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";
+import { prisma } from "~/server/db";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -113,7 +114,13 @@ export const appRouter = createTRPCRouter({
       );
     }),
   degrees: publicProcedure.query(async () => {
-    return scrapeDegrees();
+    let degrees = await prisma.degree.findMany();
+    if (degrees.length === 0) {
+      // TODO: invalidation of db data
+      degrees = await scrapeDegrees();
+      await prisma.degree.createMany({ data: degrees });
+    }
+    return degrees;
   }),
 });
 
