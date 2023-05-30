@@ -85,41 +85,45 @@ export const appRouter = t.router({
         return quarters;
       }),
   }),
-  degreeRequirements: t.procedure
-    .input(
-      z.object({
-        degree: DegreeSchema.nullable(),
-        startYear: z.number().gte(2000),
-      })
-    )
-    .output(z.array(RequirementSchema))
-    .query(async ({ input }) => {
-      if (input.degree === null) {
-        return [];
-      }
-      const courses = await scrapeDegreeRequirements(input.degree);
-      // generate random info for the data that isn't being scraped yet
-      return Array.from(courses.courses.values()).map(
-        (course: RequirementCourse, i) => ({
-          ...course,
-          courseType:
-            courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-          quarterId: termCode(
-            Math.floor(Math.random() * 4) + input.startYear,
-            SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
-          ),
-          id: i,
+  degrees: t.router({
+    requirements: t.procedure
+      .input(
+        z.object({
+          degree: DegreeSchema.nullable(),
+          startYear: z.number().gte(2000),
         })
-      );
+      )
+      .output(z.array(RequirementSchema))
+      .query(async ({ input }) => {
+        if (input.degree === null) {
+          return [];
+        }
+        const courses = await scrapeDegreeRequirements(input.degree);
+        // generate random info for the data that isn't being scraped yet
+        return Array.from(courses.courses.values()).map(
+          (course: RequirementCourse, i) => ({
+            ...course,
+            courseType:
+              courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
+            quarterId: termCode(
+              Math.floor(Math.random() * 4) + input.startYear,
+              SchoolYearTermSchema.parse(
+                [2, 4, 8][Math.floor(Math.random() * 3)]
+              )
+            ),
+            id: i,
+          })
+        );
+      }),
+    all: t.procedure.query(async () => {
+      let degrees = await prisma.degree.findMany();
+      if (degrees.length === 0) {
+        // TODO: invalidation of db data
+        degrees = await scrapeDegrees();
+        await prisma.degree.createMany({ data: degrees });
+      }
+      return degrees;
     }),
-  degrees: t.procedure.query(async () => {
-    let degrees = await prisma.degree.findMany();
-    if (degrees.length === 0) {
-      // TODO: invalidation of db data
-      degrees = await scrapeDegrees();
-      await prisma.degree.createMany({ data: degrees });
-    }
-    return degrees;
   }),
 });
 

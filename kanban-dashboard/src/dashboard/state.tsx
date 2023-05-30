@@ -39,7 +39,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     console.log("updating requirements!");
   }, [requirements]);
-  const _requirementsQuery = api.degreeRequirements.useQuery(
+  const _requirementsQuery = api.degrees.requirements.useQuery(
     { degree, startYear },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
@@ -65,7 +65,7 @@ export const useMoveRequirement = () => {
   const { degree, startYear } = useContext(FlowchartState);
   const trpcClient = api.useContext();
   const moveRequirement = (requirementId: number, quarterId: number) => {
-    trpcClient.degreeRequirements.setData(
+    trpcClient.degrees.requirements.setData(
       { degree, startYear },
       (requirements) => {
         if (!requirements) {
