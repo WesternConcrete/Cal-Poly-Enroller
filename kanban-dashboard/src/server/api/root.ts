@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { t } from "~/server/api/trpc";
 import {
   scrapeDegrees,
   scrapeDegreeRequirements,
@@ -53,15 +53,12 @@ export type Quarter = z.infer<typeof QuarterSchema>;
  *
  * All routers added in /api/routers should be manually added here.
  */
-export const appRouter = createTRPCRouter({
-  currentQuarterId: publicProcedure
-    .output(z.number().gt(2000))
-    .query(async () => {
-      return await scrapeCurrentQuarter();
-    }),
-  quarters: publicProcedure
+export const appRouter = t.router({
+  currentQuarterId: t.procedure.output(z.number().gt(2000)).query(async () => {
+    return await scrapeCurrentQuarter();
+  }),
+  quarters: t.procedure
     .input(z.object({ startYear: z.number().gte(2000) }))
-    .output(z.array(QuarterSchema))
     .query(({ input: { startYear } }) => {
       const quarters = [];
 
@@ -86,7 +83,7 @@ export const appRouter = createTRPCRouter({
       }
       return quarters;
     }),
-  degreeRequirements: publicProcedure
+  degreeRequirements: t.procedure
     .input(
       z.object({
         degree: DegreeSchema.nullable(),
@@ -113,7 +110,7 @@ export const appRouter = createTRPCRouter({
         })
       );
     }),
-  degrees: publicProcedure.query(async () => {
+  degrees: t.procedure.query(async () => {
     let degrees = await prisma.degree.findMany();
     if (degrees.length === 0) {
       // TODO: invalidation of db data
