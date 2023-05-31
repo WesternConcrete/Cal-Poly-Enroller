@@ -366,8 +366,21 @@ export const scrapeDegreeRequirements = async (
       }
     }
     // TODO: Parse GE table
-    // (returning false prevents it from being parsed by ending the iteration)
+    // (returning false prevents it from being parsed by ending the iteration after the first table)
     return false;
+  });
+  // NOTE: it is expected that information from crosslistings can be parsed in subject course lists and handled properly when using degree course requirements
+  // const crossListedCourses = new Map();
+  // TODO: use non-crosslisted code when inserting course into courses, requirements instead of having postProcess loop
+  const crossListedCourses = new Map();
+  courses.forEach((req, code) => {
+    const codeWOCrosslist = code.replace(/\/[A-Z]+/, "");
+    req.code = codeWOCrosslist;
+    crossListedCourses.set(code, req);
+  });
+  crossListedCourses.forEach((req, crossListedCourseCode) => {
+    courses.delete(crossListedCourseCode);
+    courses.set(req.code, req);
   });
 
   // TODO: check for correctness by counting the units and comparing to the degree's unit count
