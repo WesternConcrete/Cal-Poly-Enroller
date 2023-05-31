@@ -1,3 +1,4 @@
+// vim: nnoremap <leader>= <cmd>!npx prisma format<cr>
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -12,148 +13,68 @@ datasource db {
 }
 
 model Department {
-  id         Int          @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   long_name  String
-  short_name String       @unique
+  short_name String   @unique
   Degree     Degree[]
-  Instructor Instructor[]
 }
 
 model Course {
   code                  String @id
-  subject               String
-  description         String @db.MediumText 
+  subjectCode           String
+  number                Int
+  description           String @db.LongText
   // string because it can be range or single number and we only need
   // to display it either way
-  units                 String
+  minUnits              Int
+  maxUnits              Int
   // string of comma separated terms
+  // TODO: make this a bitmask
   termsTypicallyOffered String
 
-  fulfillsRequirements Requirement[]
-
-  prerequisites   Prerequisite[] @relation("Prereq")
-  prerequisiteFor Prerequisite[] @relation("PrereqFor")
-  sections        Section[]
+  fulfillsRequirements CourseRequirement[]
 }
 
-model Prerequisite {
-  id                 Int    @id @default(autoincrement())
-  requiredCourse     Course @relation(name: "Prereq", fields: [requiredCourseCode], references: [code])
-  forCourse          Course @relation(name: "PrereqFor", fields: [forCourseCode], references: [code])
-  forCourseCode      String
-  requiredCourseCode String
-
-  @@unique([requiredCourseCode, forCourseCode])
-}
-
-model Requirement {
-  // TODO: figure out how to make unique ids based on the requirement
-  id     Int    @id @default(autoincrement())
-  course Course @relation(fields: [courseCode], references: [code])
-  degree Degree @relation(fields: [degreeId], references: [id])
+model CourseRequirement {
+  // TODO: figure out how to make unique ids based on the CourseRequirement
+  id                  Int    @id @default(autoincrement())
+  course              Course @relation(fields: [courseCode], references: [code])
+  degree              Degree @relation(fields: [degreeId], references: [id])
   // Ge, major, tech elective, etc.
   // TODO: make this an enum
-  kind   String
+  kind                String
+  // 0,1,2,3
+  recommendedYear     Int
+  recommendedTermCode Int
 
   courseCode String
   degreeId   String
+
+  @@unique([courseCode, degreeId])
 }
 
 model Degree {
-  id           String           @id
-  name         String
-  link         String
+  id                 String              @id
+  name               String
+  link               String
   // BS, BA, etc.
-  kind         String
-  requirements Requirement[]
-  Department   Department?   @relation(fields: [departmentId], references: [id])
-  departmentId Int?
+  kind               String
+  courseRequirements CourseRequirement[]
+  Department         Department?         @relation(fields: [departmentId], references: [id])
+  departmentId       Int?
 
   @@unique([name, kind])
-}
-
-model Catolog {
-  id        Int @id @default(autoincrement())
-  startYear Int
-  endYear   Int
-}
-
-model Instructor {
-  id           Int        @id @default(autoincrement())
-  name         String     @unique
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId Int
-  officeHours  String
-  Section      Section[]
-}
-
-// TODO: make sure this is the best way we could store this
-model Meeting {
-  id                 Int      @id @default(autoincrement())
-  startTime          DateTime
-  endTime            DateTime
-  section            Section? @relation(fields: [sectionClassNumber], references: [classNumber])
-  sectionClassNumber Int?
-  location           String
-}
-
-model Availability {
-  id                 Int      @id @default(autoincrement())
-  seats              Int
-  capacity           Int
-  waitlist           Int
-  waitlistCapacity   Int
-  time               DateTime @default(now())
-  section            Section  @relation(fields: [sectionClassNumber], references: [classNumber])
-  sectionClassNumber Int
-}
-
-model Section {
-  classNumber      Int            @id
-  course           Course         @relation(fields: [courseCode], references: [code])
-  courseCode       String
-  quarter          Quarter        @relation(fields: [quarterId], references: [id])
-  quarterId        Int
-  status           String
-  session          String
-  intstructionMode String
-  career           String
-  // TODO: make sure this aligns with a quarters start and end
-  // dates      MeetingTime
-  instructor       Instructor     @relation(fields: [instructorId], references: [id])
-  instructorId     Int
-  meetings         Meeting[]
-  grading          String
-  location         String
-  campus           String
-  classComponents  String
-  availability     Availability[]
-}
-
-model Quarter {
-  id                  Int            @id @default(autoincrement())
-  term                String
-  year                Int
-  classes             Section[]
-  user                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
-  userCalPolyUsername String?
-  UserFlowchart       UserFlowchart? @relation(fields: [userFlowchartId], references: [id])
-  userFlowchartId     Int?
-  startDate           DateTime
-  endDate             DateTime
 }
 
 model User {
   calPolyUsername String          @id
   year            Int
   flowcharts      UserFlowchart[]
-  Quarter         Quarter[]
 }
 
 model UserFlowchart {
-  id                  Int       @id @default(autoincrement())
-  user                User      @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
-  quarters            Quarter[]
+  id                  Int    @id @default(autoincrement())
+  user                User   @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
   startYear           Int
   userCalPolyUsername String
 }
