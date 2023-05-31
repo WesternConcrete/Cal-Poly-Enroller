@@ -379,8 +379,86 @@ export const scrapeDegrees = async () => {
     .each((i, elem) => {
       const [_matched, name, kind] = $(elem).text().match(majorRE) ?? [];
       const link = DOMAIN + $(elem).find("a").attr("href");
-      const id = link.split("/").findLast((s) => s.length > 0 && !s.startsWith('#')) ?? "";
+      const id =
+        link.split("/").findLast((s) => s.length > 0 && !s.startsWith("#")) ??
+        "";
       degrees.push(DegreeSchema.parse({ name, kind, link, id }));
     });
   return degrees;
+};
+
+const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
+
+const CourseSchema = z.object({
+  code: z.string(),
+  title: z.string(),
+  subject: z.string(),
+  num: z.number(),
+  description: z.string(),
+  termsTypicallyOffered: z.array(TermSchema),
+  // if not range minUnits is maxUnits
+  minUnits: z.number(),
+  maxUnits: z.number(),
+});
+
+type Course = z.infer<typeof CourseSchema>;
+
+export const scrapeSubjectCourses = async (subjectCode: string) => {
+  const COURSE_INFO_RE = /(([A-Z]+)\s+(\d+))\. (.*?)\.?$/;
+  const URL = `https://catalog.calpoly.edu/coursesaz/${subjectCode.toLowerCase()}/`;
+  const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
+
+  const courses = $(".courseblock");
+  const scrapedCourses: Course[] = [];
+  courses.each((i, course) => {
+    const title_block = $(course).find(".courseblocktitle");
+    const units_str = $(title_block).find("strong span").text().trim();
+    let minUnits = 0,
+      maxUnits = 0;
+    const units_num = units_str.replace(" units", "");
+    if (units_num.includes("-")) {
+      const [minUnits, maxUnits] = units_num.split("-").map(Number);
+    } else {
+      let units = parseInt(units_num);
+      minUnits = units;
+      maxUnits = units;
+    }
+    const [_, code, subject, numStr, title] =
+      $(title_block)
+        .find("strong")
+        .text()
+        .replace(units_str, "")
+        .trim()
+        .match(COURSE_INFO_RE) ?? [];
+    const num = parseInt(numStr);
+    const info_block = $(course).find(".courseextendedwrap");
+    let termsTypicallyOffered = null;
+    $(info_block)
+      .find("p")
+      .each((i, info_field) => {
+        const field_text = $(info_field).text().trim();
+        if (field_text.startsWith("Term Typically Offered:")) {
+          const terms_offered = field_text
+            .replace("Term Typically Offered: ", "")
+            .split(/, ?/);
+          termsTypicallyOffered = terms_offered;
+        }
+        // TODO: "catolog:" field specifying the requirements it fulfills
+        // TODO: "CR/NC" field
+      });
+    const description = $(course).find(".courseblockdesc").text().trim()
+    scrapedCourses.push(
+      CourseSchema.parse({
+        subject,
+        num,
+        code,
+        title,
+        termsTypicallyOffered,
+        minUnits,
+        maxUnits,
+        description,
+      })
+    );
+  });
+  return scrapedCourses;
 };

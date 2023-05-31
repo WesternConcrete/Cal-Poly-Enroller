@@ -21,9 +21,8 @@ model Department {
 
 model Course {
   code                  String @id
-  // TODO: make department table and convert this to a foreign key
   subject               String
-  number                Int
+  description         String @db.MediumText 
   // string because it can be range or single number and we only need
   // to display it either way
   units                 String

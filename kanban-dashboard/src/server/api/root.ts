@@ -98,9 +98,17 @@ export const appRouter = t.router({
         if (input.degree === null) {
           return [];
         }
-        const courses = await scrapeDegreeRequirements(input.degree);
-        // generate random info for the data that isn't being scraped yet
-        return Array.from(courses.courses.values()).map(
+        let { requirements } = await prisma.degree.findUnique({
+          where: {
+            id: input.degree.id,
+          },
+          select: {
+            requirements: true,
+          },
+        }) ?? {};
+    if (!requirements || requirements.length === 0) {
+        const { courses } = await scrapeDegreeRequirements(input.degree);
+        requirements = Array.from(courses.values()).map(
           (course: RequirementCourse, i) => ({
             ...course,
             courseType:
@@ -114,6 +122,8 @@ export const appRouter = t.router({
             id: i,
           })
         );
+
+            }
       }),
     all: t.procedure.query(async () => {
       let degrees = await prisma.degree.findMany();
