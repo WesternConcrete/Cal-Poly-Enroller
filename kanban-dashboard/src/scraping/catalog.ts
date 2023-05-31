@@ -5,6 +5,7 @@ import { z } from "zod";
 const DOMAIN = "https://catalog.calpoly.edu";
 
 export const DepartmentSchema = z.object({
+  id: z.string(),
   name: z.string(),
   link: z.string().url(),
 });
@@ -34,10 +35,15 @@ export const scrapeCollegesAndDepartments = async () => {
       .next("ul")
       .find("li>a")
       .each((_i, elem) => {
+        const link = DOMAIN + $(elem).attr("href");
+        const id = link
+          .split("/")
+          .findLast((s) => s.length > 0 && !s.startsWith("#"));
         departmentList.push(
           DepartmentSchema.parse({
             name: $(elem).text().trim(),
-            link: DOMAIN + $(elem).attr("href"),
+            link,
+            id,
           })
         );
       });
@@ -131,6 +137,7 @@ export const DegreeSchema = z.object({
   kind: z.enum(BACHELOR_DEGREE_KINDS),
   link: z.string().url(),
   id: z.string(),
+  departmentId: z.string(),
 });
 
 export type Degree = z.infer<typeof DegreeSchema>;
@@ -383,6 +390,12 @@ export const scrapeDegrees = async () => {
         link.split("/").findLast((s) => s.length > 0 && !s.startsWith("#")) ??
         "";
       degrees.push(DegreeSchema.parse({ name, kind, link, id }));
+      const linkSegments = link
+        .split("/")
+        .filter((s) => s.length > 0 && !s.startsWith("#"));
+      const id = linkSegments.at(-1);
+      const departmentId = linkSegments.at(-2);
+      degrees.push(DegreeSchema.parse({ name, kind, link, id, departmentId }));
     });
   return degrees;
 };
