@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import assert from "assert";
 import * as cheerio from "cheerio/lib/slim";
 import { z } from "zod";
@@ -56,27 +57,6 @@ export const scrapeCollegesAndDepartments = async () => {
     );
   });
   return colleges;
-};
-
-export const SubjectCodeSchema = z.string().regex(/[A-Z]+/);
-export const SubjectSchema = z.object({
-  subject: z.string(),
-  code: SubjectCodeSchema,
-});
-export type Subject = z.infer<typeof SubjectSchema>;
-
-export const scrapeSubjects = async () => {
-  const subjectRE = /(.+)\s+\(([A-Z ]+)\)/;
-
-  const URL = "https://catalog.calpoly.edu/coursesaz/";
-  const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
-  const subjects: Subject[] = [];
-  $("a.sitemaplink").each((_i, elem) => {
-    const txt = $(elem).text();
-    const [_matched, subject, code] = txt.match(subjectRE) ?? [];
-    subjects.push(SubjectSchema.parse({ subject, code }));
-  });
-  return subjects;
 };
 
 export const BACHELOR_DEGREE_KINDS = [
@@ -399,10 +379,6 @@ export const scrapeDegrees = async () => {
     .each((i, elem) => {
       const [_matched, name, kind] = $(elem).text().match(majorRE) ?? [];
       const link = DOMAIN + $(elem).find("a").attr("href");
-      const id =
-        link.split("/").findLast((s) => s.length > 0 && !s.startsWith("#")) ??
-        "";
-      degrees.push(DegreeSchema.parse({ name, kind, link, id }));
       const linkSegments = link
         .split("/")
         .filter((s) => s.length > 0 && !s.startsWith("#"));
@@ -418,10 +394,11 @@ const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
 const CourseSchema = z.object({
   code: z.string(),
   title: z.string(),
-  subject: z.string(),
-  num: z.number(),
+  // subjectCode: z.string(),
+  number: z.number(),
   description: z.string(),
-  termsTypicallyOffered: z.array(TermSchema),
+  // TODO: turn termsTypicallyOffered into bitmask based on 2,4,6,8 term codes
+  termsTypicallyOffered: z.string(), // z.array(TermSchema),
   // if not range minUnits is maxUnits
   minUnits: z.number(),
   maxUnits: z.number(),
@@ -449,14 +426,14 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
       minUnits = units;
       maxUnits = units;
     }
-    const [_, code, subject, numStr, title] =
+    let [_, code, subjectCode, numStr, title] =
       $(title_block)
         .find("strong")
         .text()
         .replace(units_str, "")
         .trim()
         .match(COURSE_INFO_RE) ?? [];
-    const num = parseInt(numStr);
+    const number = parseInt(numStr);
     const info_block = $(course).find(".courseextendedwrap");
     let termsTypicallyOffered = null;
     $(info_block)
@@ -464,19 +441,21 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
       .each((i, info_field) => {
         const field_text = $(info_field).text().trim();
         if (field_text.startsWith("Term Typically Offered:")) {
-          const terms_offered = field_text
+          // normalize terms offered list so it is in csv format without extra spaces
+          termsTypicallyOffered = field_text
             .replace("Term Typically Offered: ", "")
-            .split(/, ?/);
-          termsTypicallyOffered = terms_offered;
+            .split(/, ?/)
+            .join(",");
         }
         // TODO: "catolog:" field specifying the requirements it fulfills
+        // TODO: prerequisite field
         // TODO: "CR/NC" field
+        // TODO: crosslisted as (+ field in db schema)
       });
-    const description = $(course).find(".courseblockdesc").text().trim()
+    const description = $(course).find(".courseblockdesc").text().trim();
     scrapedCourses.push(
       CourseSchema.parse({
-        subject,
-        num,
+        number,
         code,
         title,
         termsTypicallyOffered,
@@ -487,4 +466,104 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
     );
   });
   return scrapedCourses;
+};
+
+export const SubjectSchema = z.object({
+  name: z.string(),
+  code: z.string(),
+});
+
+export type Subject = z.infer<typeof SubjectSchema>;
+
+export const scrapeSubjects = async () => {
+  // TODO: scrape ge areas, gwr, uscp, etc from same page
+  const subjectRE = /(.+)\s+\(([A-Z ]+)\)/;
+
+  const URL = "https://catalog.calpoly.edu/coursesaz/";
+  const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
+  const subjects: Subject[] = [];
+  $("a.sitemaplink").each((_i, elem) => {
+    const txt = $(elem).text();
+    const [_matched, name, code] = txt.match(subjectRE) ?? [];
+    subjects.push(SubjectSchema.parse({ name, code }));
+  });
+  return subjects;
+};
+
+// TODO: function that takes prisma schema and updates all catalog data in db
+
+export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
+  const [departments, subjects, degrees] = await Promise.all([
+    scrapeCollegesAndDepartments().then((colleges) =>
+      colleges
+        .map((col) => col.departments.map(({ name, id }) => ({ name, id })))
+        .flat()
+    ),
+    scrapeSubjects(),
+    scrapeDegrees(),
+  ]);
+  const skipDuplicates = true;
+  // TODO: figure out how to join these into a (single?) Promise.all
+  await prisma.department.createMany({ data: departments, skipDuplicates });
+  await prisma.subject.createMany({ data: subjects, skipDuplicates });
+  const foundCourses = new Set();
+  await Promise.all(
+    subjects.map(async (subject) => {
+      const courses = await scrapeSubjectCourses(subject.code);
+      console.log(
+        "found",
+        courses.length,
+        "courses for subject:",
+        subject.code
+      );
+      for (const course of courses) {
+        foundCourses.add(course.code);
+      }
+      await prisma.subject.update({
+        where: { code: subject.code },
+        data: {
+          courses: {
+            createMany: {
+              data: courses,
+              skipDuplicates,
+            },
+          },
+        },
+      });
+    })
+  );
+
+  await prisma.degree.createMany({ data: degrees, skipDuplicates });
+  await prisma.courseRequirement.deleteMany();
+  degrees.forEach(async (degree) => {
+    const courseCodes = await scrapeDegreeRequirements(degree).then((reqs) =>
+      Array.from(reqs.courses.keys())
+    );
+    courseCodes.forEach(async (courseCode) => {
+      console.log(
+        "creating course requirement",
+        courseCode,
+        "for degree",
+        degree.name
+      );
+      await prisma.courseRequirement
+        .create({
+          data: {
+            course: { connect: { code: courseCode } },
+            degree: { connect: { id: degree.id } },
+          },
+        })
+        .catch((_e) =>
+          console.error(
+            "failed creating course requirement",
+            courseCode,
+            "for degree",
+            degree.name,
+            _e
+          )
+        );
+    });
+  });
+  // FIXME: create separate script (+bash script to call it) for updating db with above function and creation of prisma client without timeout
+  // FIXME: use CourseCodeSchema for ALL course codes to catch weird edge cases and prevent the "not found" errors when connecting
 };

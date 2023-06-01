@@ -1,6 +1,10 @@
-// vim: nnoremap <leader>= <cmd>!npx prisma format<cr>
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// NOTE: models have either id or code fields
+// Models whose primary key is not explicitly used by cal poly have an id field although it may be something aquired from cal poly such as 
+// the degree id which is determined from the degree page url path on the catalog site
+// Models (such as subject) whose primary key is used by cal poly have a code field
 
 generator client {
   provider = "prisma-client-js"
@@ -13,17 +17,18 @@ datasource db {
 }
 
 model Department {
-  id         Int      @id @default(autoincrement())
-  long_name  String
-  short_name String   @unique
-  Degree     Degree[]
+  id     String   @id
+  name   String   @unique
+  Degree Degree[]
 }
 
 model Course {
-  code                  String @id
+  code                  String  @id
   subjectCode           String
+  subject               Subject @relation(fields: [subjectCode], references: [code])
+  title                 String
   number                Int
-  description           String @db.LongText
+  description           String  @db.LongText
   // string because it can be range or single number and we only need
   // to display it either way
   minUnits              Int
@@ -35,33 +40,38 @@ model Course {
   fulfillsRequirements CourseRequirement[]
 }
 
+model Subject {
+  code    String   @id
+  name    String
+  courses Course[]
+}
+
 model CourseRequirement {
   // TODO: figure out how to make unique ids based on the CourseRequirement
-  id                  Int    @id @default(autoincrement())
-  course              Course @relation(fields: [courseCode], references: [code])
-  degree              Degree @relation(fields: [degreeId], references: [id])
+  course              Course  @relation(fields: [courseCode], references: [code])
+  degree              Degree  @relation(fields: [degreeId], references: [id])
   // Ge, major, tech elective, etc.
   // TODO: make this an enum
-  kind                String
+  kind                String?
   // 0,1,2,3
-  recommendedYear     Int
-  recommendedTermCode Int
+  recommendedYear     Int?
+  recommendedTermCode Int?
 
   courseCode String
   degreeId   String
 
-  @@unique([courseCode, degreeId])
+  @@id([courseCode, degreeId])
 }
 
 model Degree {
   id                 String              @id
   name               String
   link               String
-  // BS, BA, etc.
+  // TODO: make this an enum of BS, BA, etc.
   kind               String
   courseRequirements CourseRequirement[]
   Department         Department?         @relation(fields: [departmentId], references: [id])
-  departmentId       Int?
+  departmentId       String?
 
   @@unique([name, kind])
 }
