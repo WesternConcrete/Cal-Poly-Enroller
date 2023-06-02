@@ -1,6 +1,6 @@
-import { makeStyles } from "@material-ui/core/styles";
+const theme = {spacing: (num: number) => num}
 
-export const useDashboardStyles = makeStyles((_theme) => ({
+export const useDashboardStyles = (() => ({
   root: {
     height: "100vh",
     display: "flex",
@@ -12,7 +12,7 @@ export const useDashboardStyles = makeStyles((_theme) => ({
   },
 }));
 
-export const useMenubarStyles = makeStyles((theme) => ({
+export const useMenubarStyles = (() => ({
   menuButton: {
     marginRight: theme.spacing(2),
   },
@@ -43,13 +43,13 @@ export const useMenubarStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useUserItemStyles = makeStyles(() => ({
+export const useUserItemStyles = (() => ({
   editBtn: {
     marginLeft: 4,
   },
 }));
 
-export const useUserEditorStyles = makeStyles(() => ({
+export const useUserEditorStyles = (() => ({
   root: {
     width: "100%",
   },
@@ -58,7 +58,7 @@ export const useUserEditorStyles = makeStyles(() => ({
   },
 }));
 
-export const useCommonStyles = makeStyles(() => ({
+export const useCommonStyles = (() => ({
   dragHandle: {
     position: "absolute",
     left: 4,
@@ -67,7 +67,7 @@ export const useCommonStyles = makeStyles(() => ({
   },
 }));
 
-export const useBoardStyles = makeStyles((theme) => ({
+export const useBoardStyles = (() => ({
   board: {
     height: "100%",
     display: "flex",
@@ -108,15 +108,15 @@ export const useBoardStyles = makeStyles((theme) => ({
   },
 
   addButton: {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.common.white,
+    backgroundColor: 'dark-green',
+    color: 'white',
     "&:hover": {
-      backgroundColor: theme.palette.primary.dark,
+      backgroundColor: 'dark-gray',
     },
   },
 }));
 
-export const useLaneStyles = makeStyles((theme) => ({
+export const useLaneStyles = (() => ({
   lane: {
     display: "flex",
     flexDirection: "column",
@@ -132,7 +132,7 @@ export const useLaneStyles = makeStyles((theme) => ({
     flexGrow: 1,
     fontSize: 11,
     fontWeight: "bold",
-    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderBottom: `1px solid gray`,
   },
   buttons: {},
   form: {
@@ -146,7 +146,7 @@ export const useLaneStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useCardStyles = makeStyles((theme) => ({
+export const useCardStyles = (() => ({
   taskContainer: {
     marginBottom: theme.spacing(0.5),
     display: "flex",
@@ -219,7 +219,7 @@ export const useCardStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useCourseDetailsStyles = makeStyles((theme) => ({
+export const useCourseDetailsStyles = (() => ({
   root: {
     padding: theme.spacing(1.5),
   },
@@ -238,7 +238,7 @@ export const useCourseDetailsStyles = makeStyles((theme) => ({
   },
 }));
 
-export const useCourseAssignmentStyles = makeStyles((theme) => ({
+export const useCourseAssignmentStyles = (() => ({
   container: {
     display: "flex",
   },

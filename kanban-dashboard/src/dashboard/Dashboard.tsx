@@ -10,7 +10,7 @@ export default function Dashboard({}: Props) {
   return (
     <FlowchartStateProvider>
       <div className={classNames.root}>
-        <Menubar />
+        <div />
         <div className={classNames.content}>
           <Flowchart />
         </div>
