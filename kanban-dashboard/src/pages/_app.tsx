@@ -6,7 +6,7 @@ import "~/styles/globals.css"
 // import CssBaseline from "@material-ui/core/CssBaseline";
 // import "../dashboard/overrides.css";
 // import theme from "../styles/theme";
-// import { api } from "~/utils/api";
+import { api } from "~/utils/api";
 
 const App: AppType = ({ Component, pageProps }) => {
 
@@ -24,5 +24,4 @@ const App: AppType = ({ Component, pageProps }) => {
   );
 };
 
-// export default api.withTRPC(App);
-export default App;
+export default api.withTRPC(App);
