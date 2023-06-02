@@ -390,9 +390,10 @@ export const scrapeDegrees = async () => {
 };
 
 const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
+const CourseCodeSchema = z.string().regex(/^[A-Z]+\s\d+$/)
 
 const CourseSchema = z.object({
-  code: z.string(),
+  code: CourseCodeSchema,
   title: z.string(),
   // subjectCode: z.string(),
   number: z.number(),
