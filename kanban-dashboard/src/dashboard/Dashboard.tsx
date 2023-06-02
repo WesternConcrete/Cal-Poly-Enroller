@@ -7,12 +7,16 @@ export interface Props {}
 export default function Dashboard({}: Props) {
   return (
     <FlowchartStateProvider>
-      <div className="h-[100vh] flex flex-col">
-        <div />
-        <div className="flex-grow-1 h-[calc(100vh - 65px)]">
-          <Flowchart />
-        </div>
-      </div>
+     <div className="grid grid-rows-[auto,1fr] h-screen overflow-x-hidden">
+  <div>
+    <Menubar />
+  </div>
+  
+  <div className="flex-grow h-full overflow-x-hidden">
+    <Flowchart />
+  </div>
+</div>
+
     </FlowchartStateProvider>
   );
 }
