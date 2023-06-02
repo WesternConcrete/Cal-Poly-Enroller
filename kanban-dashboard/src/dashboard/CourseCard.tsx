@@ -80,7 +80,7 @@ export default function CourseCard({ requirement, index }: Props) {
             {...provided.draggableProps}
           >
             <div
-              className={`p-[1rem] w-full min-h-[70px] relative ${courseTypeClass(
+              className={`p-[.4rem] w-full min-h-[70px] rounded-[0.5rem] relative ${courseTypeClass(
                 requirement.courseType
               )} ${COMPLETE_STATUS[completeStatus].class}`}
               {...provided.dragHandleProps}

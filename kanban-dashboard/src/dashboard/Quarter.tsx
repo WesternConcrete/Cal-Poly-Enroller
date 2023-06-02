@@ -34,7 +34,7 @@ export default function Quarter({ quarter }: Props) {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="p-[1.5rem]"
+              className="p-[.5rem] h-full"
             >
               {quarterRequirements.map((requirement, index) => (
                 <CourseCard

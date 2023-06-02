@@ -16,11 +16,8 @@
     "@radix-ui/react-menubar": "^1.0.3",
     "@radix-ui/react-navigation-menu": "^1.1.3",
     "@radix-ui/react-progress": "^1.0.3",
-<<<<<<< HEAD
     "@radix-ui/react-select": "^1.2.2",
-=======
     "@radix-ui/react-slot": "^1.0.2",
->>>>>>> 0987943 (auth page)
     "@t3-oss/env-nextjs": "^0.2.1",
     "@tanstack/react-query": "^4.28.0",
     "@trpc/client": "^10.18.0",

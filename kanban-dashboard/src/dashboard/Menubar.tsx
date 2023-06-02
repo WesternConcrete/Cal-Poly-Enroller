@@ -56,7 +56,7 @@ export default function Menubar({}: MenubarProps) {
   };
 
   return (
-      <div className="static">
+      <div>
         <Select
           value={selectedDegreeDisplayName}
           onValueChange={(value) => updateDegree(value)}
