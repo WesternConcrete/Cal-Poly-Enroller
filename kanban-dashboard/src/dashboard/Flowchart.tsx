@@ -31,12 +31,12 @@ export default function Flowchart() {
   };
 
   return (
-    <div className={classNames.board}>
+    <div className="h-full flex flex-col">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className={classNames.lanes}>
+        <div className="flex-grow-1 flex overflow-x-scroll scroll-behavior-smooth">
           {quartersQuery.data
             ? (quartersQuery.data || []).map((quarter) => (
-                <div className={classNames.laneContainer} key={quarter.id}>
+                <div className="flex-basis-[100%] flex-grow-0 overflow-y-scroll flex min-w-[120px] flex-col relative border-[1px] border-solid border-[#e1e4e8]" key={quarter.id}>
                   <Quarter quarter={quarter} />
                 </div>
               ))

@@ -22,9 +22,9 @@ export default function Quarter({ quarter }: Props) {
   );
 
   return (
-    <div className={`${classNames.lane} board-status`} >
-      <div className={classNames.laneHeader}>
-        <div  className={classNames.laneTitle}>
+    <div className={`flex flex-col h-full bg-[#eff1f3] board-status`} >
+      <div className="p-[1rem] flex w-full">
+        <div  className="flex-grow-1 text-[11px] font-bold border-b-[1px] border-solid border-gray">
           {title}
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function Quarter({ quarter }: Props) {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={classNames.tasks}
+              className="p-[1.5rem]"
             >
               {quarterRequirements.map((requirement, index) => (
                 <CourseCard

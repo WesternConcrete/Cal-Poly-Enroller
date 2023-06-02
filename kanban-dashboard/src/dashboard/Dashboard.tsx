@@ -1,17 +1,15 @@
 import Menubar from "./Menubar";
 import Flowchart from "./Flowchart";
-import { useDashboardStyles } from "./styles";
 import { FlowchartStateProvider } from "~/dashboard/state";
 
 export interface Props {}
 
 export default function Dashboard({}: Props) {
-  const classNames = useDashboardStyles();
   return (
     <FlowchartStateProvider>
-      <div className={classNames.root}>
+      <div className="h-[100vh] flex flex-col">
         <div />
-        <div className={classNames.content}>
+        <div className="flex-grow-1 h-[calc(100vh - 65px)]">
           <Flowchart />
         </div>
       </div>
