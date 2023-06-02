@@ -1,18 +1,17 @@
 import React, { Fragment } from "react";
-import MuiAppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
-import IconButton from "@material-ui/core/IconButton";
-import AccountCircle from "@material-ui/icons/AccountCircle";
-import Drawer from "@material-ui/core/Drawer";
 
 import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { Fab } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
 
-import { Select, MenuItem, InputLabel } from "@material-ui/core";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 
@@ -57,53 +56,26 @@ export default function Menubar({}: MenubarProps) {
   };
 
   return (
-    <Fragment>
-      <MuiAppBar position="static">
-        <Toolbar>
-          <InputLabel id="select-degree">
-            <Typography variant="h6">Degree</Typography>
-          </InputLabel>
-          <Select
-            value={selectedDegreeDisplayName}
-            onChange={({ target: { value } }) => updateDegree(value as string)}
-            labelId="select-degree"
-          >
-            <MenuItem value="Select a Degree" key={-1}>
-              Select a Degree
-            </MenuItem>
+      <div className="static">
+        <Select
+          value={selectedDegreeDisplayName}
+          onValueChange={(value) => updateDegree(value)}
+        >
+          <SelectTrigger value="Select a Degree" key={-1}>
+            <SelectValue placeholder="Select a Degree">Select a Degree</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
             {degreesQuery.data &&
               degreesQuery.data.map((degree, idx) => {
                 return (
-                  <MenuItem value={degree.name} key={idx}>
+                  <SelectItem value={degree.name} key={idx}>
                     {degree.name}, {degree.kind}
-                  </MenuItem>
+                  </SelectItem>
                 );
               })}
-          </Select>
-          <div className={classes.title}>{/* spacer with flax grow */}</div>
-
-          <div className={classes.currentUser}>
-            <Typography variant="subtitle2" className={classes.currentUsername}>
-              {currentUsername}
-            </Typography>
-
-            <IconButton color="inherit">
-              <AccountCircle />
-            </IconButton>
-          </div>
-        </Toolbar>
-        <div className={classes.addButtonContainer} onClick={handleMenu}>
-          <Fab color="primary" aria-label="add">
-            <AddIcon />
-          </Fab>
-        </div>
-      </MuiAppBar>
-
-      <Drawer open={open} anchor="left" onClose={handleClose}>
-        <div style={{ width: 300 }}>
-          <FlowchartSelectingMenu />
-        </div>
-      </Drawer>
-    </Fragment>
+          </SelectContent>
+        </Select>
+        <div className="flex flex-grow"></div>
+      </div>
   );
 }
