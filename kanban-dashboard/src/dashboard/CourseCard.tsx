@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Typography from "@material-ui/core/Typography";
-import Paper from "@material-ui/core/Paper";
 import { Draggable, type DraggableProvided } from "react-beautiful-dnd";
 import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
@@ -83,7 +81,7 @@ export default function CourseCard({ requirement, index }: Props) {
             ref={provided.innerRef}
             {...provided.draggableProps}
           >
-            <Paper
+            <div
               className={`${classNames.task} ${courseTypeClass(
                 requirement.courseType
               )} ${COMPLETE_STATUS[completeStatus].class}`}
@@ -91,28 +89,26 @@ export default function CourseCard({ requirement, index }: Props) {
             >
               <div className={classNames.taskHeader}>
                 <div>
-                  <Typography className={classNames.title}>
+                  <div className={classNames.title}>
                     {requirement.code}
-                  </Typography>
+                  </div>
 
-                  <Typography
-                    variant="subtitle2"
+                  <div
                     className={classNames.courseName}
                   >
                     {requirement.title}
-                  </Typography>
-                  <Typography
-                    variant="subtitle2"
+                  </div>
+                  <div
                     className={classNames.unitCount}
                   >
                     {requirement.units} units
-                  </Typography>
+                  </div>
                 </div>
                 <div className={classNames.statusIcon}>
                   {COMPLETE_STATUS[completeStatus].icon()}
                 </div>
               </div>
-            </Paper>
+            </div>
           </div>
         );
       }}

@@ -1,6 +1,4 @@
 import React, { useContext } from "react";
-import Paper from "@material-ui/core/Paper";
-import Typography from "@material-ui/core/Typography";
 import { Droppable, type DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
@@ -24,11 +22,11 @@ export default function Quarter({ quarter }: Props) {
   );
 
   return (
-    <Paper className={`${classNames.lane} board-status`} elevation={0}>
+    <div className={`${classNames.lane} board-status`} >
       <div className={classNames.laneHeader}>
-        <Typography align="center" className={classNames.laneTitle}>
+        <div  className={classNames.laneTitle}>
           {title}
-        </Typography>
+        </div>
       </div>
       <Droppable type="quarter" droppableId={quarter.id.toString()}>
         {(provided: DroppableProvided) => {
@@ -50,6 +48,6 @@ export default function Quarter({ quarter }: Props) {
           );
         }}
       </Droppable>
-    </Paper>
+    </div>
   );
 }
