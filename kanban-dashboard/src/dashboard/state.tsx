@@ -3,10 +3,10 @@ import React, {
   useEffect,
   createContext,
   useContext,
-  FC,
+  type FC,
 } from "react";
 
-import { Requirement, type Degree } from "~/server/api/root";
+import { type Requirement, type Degree } from "~/server/api/root";
 import { api } from "~/utils/api";
 
 type Setter<S> = React.Dispatch<React.SetStateAction<S>>;
@@ -36,11 +36,10 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
-  const trpcClient = api.useContext();
   useEffect(() => {
     console.log("updating requirements!");
   }, [requirements]);
-  const requirementsQuery = api.degreeRequirements.useQuery(
+  const _requirementsQuery = api.degreeRequirements.useQuery(
     { degree, startYear },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );

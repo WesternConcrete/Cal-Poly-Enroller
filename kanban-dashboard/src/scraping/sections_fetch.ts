@@ -1,10 +1,12 @@
+/* eslint-disable */
+// TODO: remove eslint-disable once this code is being used
 import assert from "assert";
 import * as cheerio from "cheerio/lib/slim";
 
 const URL =
   "https://cmsweb.pscs.calpoly.edu/psc/CSLOPRD/EMPLOYEE/SA/c/COMMUNITY_ACCESS.CLASS_SEARCH.GBL";
 
-const assertNotPageNoLongerAvailable = async (body) => {
+const assertNotPageNoLongerAvailable = async (body: string) => {
   assert(!body.includes("This page is no longer available."));
   return body;
 };
@@ -24,10 +26,10 @@ const initialFetch = await fetch(URL, {
   .then((res) => {
     if (res.status === 302) {
       console.log("redirected");
-      let cookies = res.headers.get("set-cookie");
+      const cookies = res.headers.get("set-cookie");
       // NOTE: actually going to newURL is not necessary.
       // The only thing stopping us from getting another 302 is the cookies
-      let newURL = res.headers.get("location");
+      const newURL = res.headers.get("location");
       return fetch(newURL, {
         method: "GET",
         headers: { Cookie: cookies },
@@ -40,8 +42,8 @@ const initialFetch = await fetch(URL, {
 const cookies = initialFetch.headers.get("set-cookie");
 let ICHiddens = await initialFetch.text().then((page) => {
   const $ = cheerio.load(page);
-  let hiddens = $("#win0divPSHIDDENFIELDS").find("input");
-  let ics = new Map();
+  const hiddens = $("#win0divPSHIDDENFIELDS").find("input");
+  const ics = new Map();
   hiddens.each((i, elem) => {
     ics.set($(elem).attr("name"), $(elem).attr("value"));
   });
@@ -146,12 +148,12 @@ const searchResultsPage = await fetch(URL, {
     const $ = cheerio.load(page);
     const courses = $("div[id*=win0divSSR_CLSRSLT_WRK_GROUPBOX2\\$]");
     courses.each((i, elem) => {
-      let name = $(elem).find(".PAGROUPBOXLABELLEVEL1").text().trim();
+      const name = $(elem).find(".PAGROUPBOXLABELLEVEL1").text().trim();
       console.log(name);
-      let sections = $(elem).find("span[title=Class\\ Nbr]");
+      const sections = $(elem).find("span[title=Class\\ Nbr]");
       sections.each((i, elem) => {
-        let action = $(elem).find("a").attr("id");
-        let num = $(elem).text();
+        const action = $(elem).find("a").attr("id");
+        const num = $(elem).text();
         console.log(num);
       });
     });

@@ -1,14 +1,10 @@
 import React, { Fragment } from "react";
-import Link from "next/link";
 import MuiAppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
-import FlowchartsIcon from "@material-ui/icons/Apps";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Drawer from "@material-ui/core/Drawer";
-import { Select, MenuItem, InputLabel } from "@material-ui/core";
-import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 
 import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
@@ -20,18 +16,15 @@ import { Select, MenuItem, InputLabel } from "@material-ui/core";
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 
-export interface MenubarProps {
-  projectsUrlPath: string;
-}
+export interface MenubarProps {}
 
-export default function Menubar({ projectsUrlPath }: MenubarProps) {
+export default function Menubar({}: MenubarProps) {
   const { setDegree, startYear } = React.useContext(FlowchartState);
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const currentUsername = useCurrentUsername();
 
-  // @ts-ignore
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };

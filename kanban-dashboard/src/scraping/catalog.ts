@@ -24,7 +24,7 @@ export const scrapeCollegesAndDepartments = async () => {
 
   const list = $("#textcontainer.page_content");
   const colleges: College[] = [];
-  list.find("p").each((i, elem) => {
+  list.find("p").each((_i, elem) => {
     const collegeName = $(elem).text().trim();
     const collegePath = $(elem).find("a").attr("href");
     assert(collegePath, "collegePath is null");
@@ -33,7 +33,7 @@ export const scrapeCollegesAndDepartments = async () => {
     $(elem)
       .next("ul")
       .find("li>a")
-      .each((i, elem) => {
+      .each((_i, elem) => {
         departmentList.push(
           DepartmentSchema.parse({
             name: $(elem).text().trim(),
@@ -65,23 +65,13 @@ export const scrapeSubjects = async () => {
   const URL = "https://catalog.calpoly.edu/coursesaz/";
   const $ = cheerio.load(await fetch(URL).then((res) => res.text()));
   const subjects: Subject[] = [];
-  $("a.sitemaplink").each((i, elem) => {
+  $("a.sitemaplink").each((_i, elem) => {
     const txt = $(elem).text();
-    const [matched, subject, code] = txt.match(subjectRE) ?? [];
+    const [_matched, subject, code] = txt.match(subjectRE) ?? [];
     subjects.push(SubjectSchema.parse({ subject, code }));
   });
   return subjects;
 };
-
-function toTitleCase(str) {
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-}
 
 export const BACHELOR_DEGREE_KINDS = [
   "BA",
@@ -109,7 +99,7 @@ export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 
 export const RequirementCourseCodeSchema = z.string();
 
-export const RequirementOneOfSchema = z.object({
+export const RequirementOneOfSchema: z.ZodType = z.object({
   kind: z.literal("oneof"),
   oneof: z.array(
     RequirementCourseCodeSchema.or(z.lazy(() => RequirementAllOfSchema))
@@ -204,12 +194,12 @@ export const scrapeDegreeRequirements = async (
       console.warn("Parsing table of unrecognized kind:", table_desc);
     }
 
-    var cur_section: string | null = null;
+    let cur_section: string | null = null;
     // within a select from the following block
     // see comment at top of file which explains these flags
-    var in_sftf = false;
-    var sftf_sep = null;
-    var prev_was_or = false;
+    let in_sftf = false;
+    let sftf_sep = null;
+    let prev_was_or = false;
     const rows = $(table).find("tr");
     for (let i = 0; i < rows.length; i++) {
       const tr = rows[i];
@@ -263,7 +253,7 @@ export const scrapeDegreeRequirements = async (
           console.error("unrecognized comment:", comment);
         }
       } else {
-        let course_elem = $(tr).find("td.codecol a[title]");
+        const course_elem = $(tr).find("td.codecol a[title]");
         let course: any; // TODO: type this
         const is_and = course_elem.length > 1;
         if (is_and) {
@@ -275,12 +265,12 @@ export const scrapeDegreeRequirements = async (
               $(tr)
             );
           }
-          let course_codes: string[] = [];
+          const course_codes: string[] = [];
           $(course_elem).each((_i, c) => {
             course_codes.push($(c).text().trim());
           });
-          let course_titles = [];
-          let titles = $(tr).find("td:not([class])");
+          const course_titles = [];
+          const titles = $(tr).find("td:not([class])");
           $(titles)
             .contents()
             .each((i, t) => {
@@ -357,7 +347,7 @@ export const scrapeDegreeRequirements = async (
           const title = $(tr).find("td:not([class])").text().trim();
           // TODO: more accurate units when in or/and block
           const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
-          let units = parseInt(unitsStr);
+          const units = parseInt(unitsStr);
           const code = course;
           const courseObj = RequirementCourseSchema.parse({
             title,

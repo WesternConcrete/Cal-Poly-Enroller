@@ -1,17 +1,21 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
-import { Draggable, DraggableProvided } from "react-beautiful-dnd";
+import { Draggable, type DraggableProvided } from "react-beautiful-dnd";
 import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
 import { FlowchartState } from "~/dashboard/state";
-import { RequirementTypeSchema, RequirementType } from "~/scraping/catalog";
+import {
+  RequirementTypeSchema,
+  type RequirementType,
+} from "~/scraping/catalog";
+import { type Requirement } from "~/server/api/root";
 import { api } from "~/utils/api";
 
 export interface Props {
-  requirement: Course;
+  requirement: Requirement;
   index: number;
 }
 
@@ -34,7 +38,7 @@ export default function CourseCard({ requirement, index }: Props) {
       icon: () => <InProgressIcon />,
     },
   };
-  let [completeStatus, setCompleteStatus] =
+  const [completeStatus, setCompleteStatus] =
     useState<CompleteStatus>("incomplete");
   const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
@@ -51,7 +55,6 @@ export default function CourseCard({ requirement, index }: Props) {
       throw new Error("unreachable");
     }
   }, [currentQuarter, requirement.quarterId]);
-  const { setRequirements } = React.useContext(FlowchartState);
 
   const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {

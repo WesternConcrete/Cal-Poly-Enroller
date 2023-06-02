@@ -1,8 +1,10 @@
+/* eslint-disable */
+// TODO: remove eslint-disable once this code is being used
 import cheerio from "cheerio";
 
 const COURSE_INFO_RE = /([A-Z]+)\s+(\d+)\. (.*)$/;
 const URL = "https://catalog.calpoly.edu/coursesaz/csc/";
-let page = await fetch(URL).then((res) => res.text());
+const page = await fetch(URL).then((res) => res.text());
 const $ = cheerio.load(page);
 
 const courses = $(".courseblock");
@@ -14,7 +16,7 @@ courses.each((i, course) => {
     .text()
     .replace(units_str, "")
     .trim();
-  const [_, major, num, name] = title_str.match(COURSE_INFO_RE);
+  const [_matched, major, num, name] = title_str.match(COURSE_INFO_RE) ?? [];
   let units = null;
   const units_num = units_str.replace(" units", "");
   if (units_num.includes("-")) {

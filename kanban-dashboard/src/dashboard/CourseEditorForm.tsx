@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import TextField from "@material-ui/core/TextField";
 
 import { ConfirmationButtons } from "../components/buttons";
-import { TextareaAutosize } from "@material-ui/core";
 
 export interface Props {
   title?: string;

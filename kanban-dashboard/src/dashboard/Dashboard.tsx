@@ -3,16 +3,14 @@ import Flowchart from "./Flowchart";
 import { useDashboardStyles } from "./styles";
 import { FlowchartStateProvider } from "~/dashboard/state";
 
-export interface Props {
-  projectsUrlPath: string;
-}
+export interface Props {}
 
-export default function Dashboard({ projectsUrlPath }: Props) {
+export default function Dashboard({}: Props) {
   const classNames = useDashboardStyles();
   return (
     <FlowchartStateProvider>
       <div className={classNames.root}>
-        <Menubar projectsUrlPath={projectsUrlPath} />
+        <Menubar />
         <div className={classNames.content}>
           <Flowchart />
         </div>

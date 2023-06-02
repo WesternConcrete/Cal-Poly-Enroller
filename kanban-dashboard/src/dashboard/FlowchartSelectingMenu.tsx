@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useState } from "react";
+import React, { type MouseEventHandler, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -8,7 +8,6 @@ import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import AddIcon from "@material-ui/icons/Add";
 import StarIcon from "@material-ui/icons/Star";
-import StarBorderIcon from "@material-ui/icons/StarBorder";
 import DuplicateIcon from "@material-ui/icons/FileCopy";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
@@ -19,14 +18,11 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import TextField from "@material-ui/core/TextField";
-import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
-import InputLabel from "@material-ui/core/InputLabel";
-import FormControl from "@material-ui/core/FormControl";
 import Menu from "@material-ui/core/Menu";
 import Fade from "@material-ui/core/Fade";
 import { yellow } from "@material-ui/core/colors";
-import { DialogContentText, OutlinedInput } from "@material-ui/core";
+import { DialogContentText } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -87,7 +83,6 @@ export default function FlowchartSelectingMenu() {
   );
   const [anchorEl, setAnchorEl] = useState(null as HTMLAnchorElement | null);
 
-  // @ts-ignore
   const handleClick: MouseEventHandler<HTMLAnchorElement> = (event: Event) => {
     setAnchorEl(event.currentTarget as HTMLAnchorElement);
   };
@@ -234,9 +229,7 @@ export default function FlowchartSelectingMenu() {
             fullWidth
             select
             value={newFlowchartConcentration}
-            onChange={(e) =>
-              setNewFlowchartConcentration(e.target.value as string)
-            }
+            onChange={(e) => setNewFlowchartConcentration(e.target.value)}
           >
             {/* Add your concentration options here */}
             <MenuItem value={"Concentration 1"}>Concentration 1</MenuItem>
