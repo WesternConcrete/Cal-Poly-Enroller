@@ -83,7 +83,7 @@ export default function FlowchartSelectingMenu() {
   );
   const [anchorEl, setAnchorEl] = useState(null as HTMLAnchorElement | null);
 
-  const handleClick: MouseEventHandler<HTMLAnchorElement> = (event: Event) => {
+  const handleClick: any = (event: Event) => {
     setAnchorEl(event.currentTarget as HTMLAnchorElement);
   };
 

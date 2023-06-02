@@ -6,7 +6,6 @@ import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
-import { FlowchartState } from "~/dashboard/state";
 import {
   RequirementTypeSchema,
   type RequirementType,
