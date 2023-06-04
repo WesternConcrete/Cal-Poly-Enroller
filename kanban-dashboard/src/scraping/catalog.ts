@@ -123,10 +123,31 @@ export const DegreeSchema = z.object({
 
 export type Degree = z.infer<typeof DegreeSchema>;
 
+const GeAreaCodeRE = /[ABCDEF][1234]/;
+const GeDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
+const GeAreaRE = /Area [ABCDEF]( Elective)?/;
+
+const GeRequirementSchema = z.object({
+  code: z
+    .string()
+    .regex(GeAreaCodeRE)
+    .or(z.string().regex(GeDivisionCodeRE))
+    .or(z.string().regex(GeAreaRE))
+    .or(z.null()),
+  units: z.number().nonnegative(),
+  // TODO: constraints (C1 or C2) / fullfilled by (B3 = lab w/ B1 or B2 course)
+});
+
+type GeRequirement = z.infer<typeof GeRequirementSchema>;
+
 export const DegreeRequirementsSchema = z.object({
+  degreeId: DegreeSchema.shape.id,
   requirements: z.array(RequirementSchema),
   courses: z.map(z.string(), RequirementCourseSchema),
+  ge: z.array(GeRequirementSchema),
 });
+
+export type DegreeRequirements = z.infer<typeof DegreeRequirementsSchema>;
 
 const parseMajorCourseRequirementsTable = (
   $: cheerio.CheerioAPI,
@@ -334,23 +355,6 @@ const parseMajorCourseRequirementsTable = (
   return { courses, groups };
 };
 
-const GeAreaCodeRE = /[ABCDEF][1234]/;
-const GeDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
-const GeAreaRE = /Area [ABCDEF]( Elective)?/;
-
-const GeRequirementSchema = z.object({
-  code: z
-    .string()
-    .regex(GeAreaCodeRE)
-    .or(z.string().regex(GeDivisionCodeRE))
-    .or(z.string().regex(GeAreaRE))
-    .or(z.undefined()),
-  // TODO: unitsOf
-  // TODO: constraints (C1 or C2) / fullfilled by (B3 = lab w/ B1 or B2 course)
-});
-
-type GeRequirement = z.infer<typeof GeRequirementSchema>;
-
 const parseGeCourseRequirementsTable = (
   $: cheerio.CheerioAPI,
   table: cheerio.Element
@@ -360,19 +364,53 @@ const parseGeCourseRequirementsTable = (
     .filter(":not(:is(.areaheader,.listsum))")
     .map((_i, tr) => {
       const label = $(tr).find("td").first().text();
-      let [code] = label.match(GeAreaCodeRE) ?? label.match(GeAreaRE) ?? label.match(GeDivisionCodeRE) ?? label.match(/^[ABCDEF]/) ?? [];
-      if (!code) console.error("unrecognized ge:", label);
-      return { code }
+      let units = parseInt($(tr).find("td.hourscol").text().trim());
+      if (isNaN(units)) {
+        let cSubjectPrefixesWarningStr =
+          "Lower-division courses in Area C must come from three different subject prefixes.";
+        if (label.includes(cSubjectPrefixesWarningStr)) {
+          return null;
+        }
+      }
+      let [code] = label.match(GeAreaCodeRE) ??
+        label.match(GeAreaRE) ??
+        label.match(GeDivisionCodeRE) ??
+        label.match(/^[ABCDEF]/) ?? [null];
+      if (code === undefined) {
+        if (label.includes("Select courses from two different areas")) {
+            return null;
+        } else if (label.includes("GE Electives")) {
+          code = null;
+          console.log(label);
+          console.assert(isNaN(units), "electives does not have NaN units");
+        } else {
+          console.error("unrecognized ge:", label);
+          return null;
+        }
+      }
+      if (isNaN(units)) {
+        units = 0;
+        const rowText = $(tr).text();
+        const b3OneLabWarningStr =
+          "One lab taken with either a B1 or B2 course";
+        const twoAreasWarning = "Select courses from two different areas";
+        if (
+          !rowText.includes(twoAreasWarning) &&
+          code !== "B3"
+        ) {
+          console.error("could not determine why units for:", label, "was NaN");
+        }
+      }
+      return { code, units };
     })
     .get()
-    .filter(({code}) => !!code)
-  console.log(requirements);
+    .filter((req) => !!req);
   return requirements;
 };
 
 export const scrapeDegreeRequirements = async (degree: Degree) => {
   const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
-  let requirements = {};
+  let requirements: DegreeRequirements = {};
 
   // TODO: Parse footers (sc_footnotes)
   const tables = $("table.sc_courselist");
