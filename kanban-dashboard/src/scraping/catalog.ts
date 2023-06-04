@@ -121,17 +121,13 @@ export const DegreeSchema = z.object({
 });
 
 export type Degree = z.infer<typeof DegreeSchema>;
-export const DegreeWithRequirementsSchema = DegreeSchema.extend({
+
+export const DegreeRequirementsSchema = z.object({
   requirements: z.array(RequirementSchema),
   courses: z.map(z.string(), RequirementCourseSchema),
 });
-export type DegreeWithRequirements = z.infer<
-  typeof DegreeWithRequirementsSchema
->;
 
-export const scrapeDegreeRequirements = async (
-  degreeWOReqs: Degree
-): Promise<DegreeWithRequirements> => {
+const parseMajorCourseRequirementsTable = ($, table) => {
   // select from the following
   // If we're in a sftf block the courses are in one of the following formats:
   // a)
@@ -161,211 +157,212 @@ export const scrapeDegreeRequirements = async (
   // d)
   // [course]
   // or [course]
+  const courses = new Map();
+  const requirements = [];
   const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 
-  const degree: DegreeWithRequirements = {
-    ...degreeWOReqs,
-    requirements: [],
-    courses: new Map(),
-  };
-  const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
+  let cur_section: string | null = null;
+  // within a select from the following block
+  // see comment at top of file which explains these flags
+  let in_sftf = false;
+  let sftf_sep = null;
+  let prev_was_or = false;
+  const rows = $(table).find("tr");
+  for (let i = 0; i < rows.length; i++) {
+    const tr = rows[i];
+    // TODO: extracting <sup>1</sup> footnote tags
 
-  const tables = $("table.sc_courselist");
-
-  const requirements = degree.requirements;
-  const courses = degree.courses;
-
-  tables.each((_ti, table) => {
-    const table_desc = $(table).prevAll().filter("h2").first().text();
-    if (table_desc !== "Degree Requirements and Curriculum") {
-      console.warn("Parsing table of unrecognized kind:", table_desc);
-    }
-
-    let cur_section: string | null = null;
-    // within a select from the following block
-    // see comment at top of file which explains these flags
-    let in_sftf = false;
-    let sftf_sep = null;
-    let prev_was_or = false;
-    const rows = $(table).find("tr");
-    for (let i = 0; i < rows.length; i++) {
-      const tr = rows[i];
-      // TODO: extracting <sup>1</sup> footnote tags
-
-      if ($(tr).hasClass("areaheader")) {
-        in_sftf = false;
-        prev_was_or = false;
+    if ($(tr).hasClass("areaheader")) {
+      in_sftf = false;
+      prev_was_or = false;
+      sftf_sep = null;
+      // new section
+      const cur_section_title = $(tr).text().trim();
+      if (cur_section_title.includes("MAJOR COURSES")) {
+        cur_section = "major";
+      } else if (cur_section_title.includes("Electives")) {
+        // FIXME: include the type of elective
+        cur_section = "elective";
+      } else if (cur_section_title.includes("GENERAL EDUCATION")) {
+        cur_section = "ge";
+      } else if (cur_section_title.includes("SUPPORT COURSES")) {
+        cur_section = "support";
+      } else {
+        cur_section = cur_section_title as RequirementType;
+        // console.log("Unrecognized section kind for", cur_section_title);
+      }
+      if (!cur_section) {
+        console.error("no text in header:", $(tr));
+        break;
+      }
+    } else if ($(tr).find("span.courselistcomment").length > 0) {
+      const comment = $(tr).find("span.courselistcomment").text().trim();
+      if (comment.match(SFTF_RE)) {
+        in_sftf = true;
+        requirements.push({ or: [] });
         sftf_sep = null;
-        // new section
-        const cur_section_title = $(tr).text().trim();
-        if (cur_section_title.includes("MAJOR COURSES")) {
-          cur_section = "major";
-        } else if (cur_section_title.includes("Electives")) {
-          // FIXME: include the type of elective
-          cur_section = "elective";
-        } else if (cur_section_title.includes("GENERAL EDUCATION")) {
-          cur_section = "ge";
-        } else if (cur_section_title.includes("SUPPORT COURSES")) {
-          cur_section = "support";
-        } else {
-          cur_section = cur_section_title as RequirementType;
-          // console.log("Unrecognized section kind for", cur_section_title);
-        }
-        if (!cur_section) {
-          console.error("no text in header:", $(tr));
+      } else if (comment === "or") {
+        if (!in_sftf) {
+          console.warn(
+            "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
+            "in",
+            degree.name,
+            "(",
+            degree.link,
+            ")",
+            comment
+          );
           break;
         }
-      } else if ($(tr).find("span.courselistcomment").length > 0) {
-        const comment = $(tr).find("span.courselistcomment").text().trim();
-        if (comment.match(SFTF_RE)) {
-          in_sftf = true;
-          requirements.push({ or: [] });
-          sftf_sep = null;
-        } else if (comment === "or") {
-          if (!in_sftf) {
-            console.warn(
-              "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
-              "in",
-              degree.name,
-              "(",
-              degree.link,
-              ")",
-              comment
-            );
-            break;
-          }
-          sftf_sep = "or";
-          prev_was_or = true;
-        } else {
-          console.error("unrecognized comment:", comment);
-        }
+        sftf_sep = "or";
+        prev_was_or = true;
       } else {
-        const course_elem = $(tr).find("td.codecol a[title]");
-        let course: any; // TODO: type this
-        const is_and = course_elem.length > 1;
-        if (is_and) {
-          // course is actually courses plural
-          // make sure it's actually an '&' of the courses
-          if (!$(tr).find("span.blockindent").text().includes("&")) {
-            console.error(
-              "multiple elements found but no & to be found in:",
-              $(tr)
-            );
-          }
-          const course_codes: string[] = [];
-          $(course_elem).each((_i, c) => {
-            course_codes.push($(c).text().trim());
+        console.error("unrecognized comment:", comment);
+      }
+    } else {
+      const course_elem = $(tr).find("td.codecol a[title]");
+      let course: any; // TODO: type this
+      const is_and = course_elem.length > 1;
+      if (is_and) {
+        // course is actually courses plural
+        // make sure it's actually an '&' of the courses
+        if (!$(tr).find("span.blockindent").text().includes("&")) {
+          console.error(
+            "multiple elements found but no & to be found in:",
+            $(tr)
+          );
+        }
+        const course_codes: string[] = [];
+        $(course_elem).each((_i, c) => {
+          course_codes.push($(c).text().trim());
+        });
+        const course_titles = [];
+        const titles = $(tr).find("td:not([class])");
+        $(titles)
+          .contents()
+          .each((i, t) => {
+            if (t.type === "text" && i === 0) {
+              course_titles.push($(t).text().trim());
+            } else if (t.type === "tag" && t.name === "span") {
+              course_titles.push($(t).text().trim().replace(/^and /, ""));
+            }
           });
-          const course_titles = [];
-          const titles = $(tr).find("td:not([class])");
-          $(titles)
-            .contents()
-            .each((i, t) => {
-              if (t.type === "text" && i === 0) {
-                course_titles.push($(t).text().trim());
-              } else if (t.type === "tag" && t.name === "span") {
-                course_titles.push($(t).text().trim().replace(/^and /, ""));
-              }
+        if (course_codes.length !== course_titles.length) {
+          console.warn(
+            "found different length code,title lists in and block:",
+            { course_titles, course_codes },
+            "in",
+            degree.name
+          );
+        } else if (course_titles.length === 0) {
+          console.warn("didnt find any titles for course list:", course_codes);
+        } else {
+          course_codes.map((code, i) => {
+            courses.set(code, {
+              code,
+              title: course_titles[i],
+              units: 0, // TODO: total units
             });
-          if (course_codes.length !== course_titles.length) {
-            console.warn(
-              "found different length code,title lists in and block:",
-              { course_titles, course_codes },
-              "in",
-              degree.name
-            );
-          } else if (course_titles.length === 0) {
-            console.warn(
-              "didnt find any titles for course list:",
-              course_codes
-            );
+          });
+        }
+
+        course = { and: course_codes };
+      } else if (course_elem.length !== 1) {
+        if ($(tr).hasClass("listsum")) {
+          continue;
+        }
+        // TODO: handle sections with references to other information on page
+        console.log("no title for:", $(tr).find("td.codecol").text().trim());
+      }
+      if (!is_and && course_elem.length === 1) {
+        course = course_elem.text().trim();
+      }
+      const has_orclass = $(tr).hasClass("orclass");
+      const last = requirements.length - 1;
+
+      if (in_sftf) {
+        const last_or = requirements[last].or;
+        if (last_or.length === 0) {
+          last_or.push(course);
+        } else if (last_or.length >= 1) {
+          if (last_or.length === 1 && has_orclass) {
+            sftf_sep = "or";
+          }
+          if (has_orclass || prev_was_or || sftf_sep == null) {
+            requirements[last].or.push(course);
           } else {
-            course_codes.map((code, i) => {
-              courses.set(code, {
-                code,
-                title: course_titles[i],
-                units: 0, // TODO: total units
-              });
-            });
+            in_sftf = false;
+            sftf_sep = null;
           }
-
-          course = { and: course_codes };
-        } else if (course_elem.length !== 1) {
-          if ($(tr).hasClass("listsum")) {
-            continue;
-          }
-          // TODO: handle sections with references to other information on page
-          console.log("no title for:", $(tr).find("td.codecol").text().trim());
         }
-        if (!is_and && course_elem.length === 1) {
-          course = course_elem.text().trim();
-        }
-        const has_orclass = $(tr).hasClass("orclass");
-        const last = requirements.length - 1;
-
-        if (in_sftf) {
-          const last_or = requirements[last].or;
-          if (last_or.length === 0) {
-            last_or.push(course);
-          } else if (last_or.length >= 1) {
-            if (last_or.length === 1 && has_orclass) {
-              sftf_sep = "or";
-            }
-            if (has_orclass || prev_was_or || sftf_sep == null) {
-              requirements[last].or.push(course);
-            } else {
-              in_sftf = false;
-              sftf_sep = null;
-            }
-          }
-          prev_was_or = false;
-        }
-        if (!in_sftf && has_orclass) {
-          // TODO: assert data.cur.last is not or already
-          // (multiple or's chained togehter outside of sftf)
-          requirements[last] = {
-            or: [requirements[last], course],
-          };
-        } else if (!in_sftf) {
-          // Normal row
-          requirements.push(course);
-        }
-        if (typeof course === "string") {
-          const title = $(tr).find("td:not([class])").text().trim();
-          // TODO: more accurate units when in or/and block
-          const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
-          const units = parseInt(unitsStr);
-          const code = course;
-          const courseObj = RequirementCourseSchema.parse({
-            title,
-            units,
-            code,
-          });
-          courses.set(code, courseObj);
-        }
+        prev_was_or = false;
+      }
+      if (!in_sftf && has_orclass) {
+        // TODO: assert data.cur.last is not or already
+        // (multiple or's chained togehter outside of sftf)
+        requirements[last] = {
+          or: [requirements[last], course],
+        };
+      } else if (!in_sftf) {
+        // Normal row
+        requirements.push(course);
+      }
+      if (typeof course === "string") {
+        const title = $(tr).find("td:not([class])").text().trim();
+        // TODO: more accurate units when in or/and block
+        const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
+        const units = parseInt(unitsStr);
+        const code = course;
+        const courseObj = RequirementCourseSchema.parse({
+          title,
+          units,
+          code,
+        });
+        courses.set(code, courseObj);
       }
     }
-    // TODO: Parse GE table
-    // (returning false prevents it from being parsed by ending the iteration after the first table)
-    return false;
+  }
+  // TODO: Parse GE table
+  // (returning false prevents it from being parsed by ending the iteration after the first table)
+  return { courses, requirements };
+};
+export const scrapeDegreeRequirements = async (degree: Degree) => {
+  const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
+  let requirements;
+
+  // TODO: Parse footers (sc_footnotes)
+  const tables = $("table.sc_courselist");
+  console.log(tables.length);
+
+  tables.each((_ti, table) => {
+    // page has flat structure and this is a way to find the previous h2 element (prevUntil is exclusive)
+    const titleElem = $(table).prevUntil("h2").last().prev();
+    const title = $(titleElem).text().trim();
+    if (title === "Degree Requirements and Curriculum") {
+      requirements = parseMajorCourseRequirementsTable($, table);
+    } else if (title === "General Education (GE) Requirements") {
+      // const geRequirements = parseGeCourseRequirementsTable($, table)
+    } else {
+      console.warn("Unrecognized table with title:", title);
+    }
   });
   // NOTE: it is expected that information from crosslistings can be parsed in subject course lists and handled properly when using degree course requirements
   // const crossListedCourses = new Map();
   // TODO: use non-crosslisted code when inserting course into courses, requirements instead of having postProcess loop
-  const crossListedCourses = new Map();
-  courses.forEach((req, code) => {
-    const codeWOCrosslist = code.replace(/\/[A-Z]+/, "");
-    req.code = codeWOCrosslist;
-    crossListedCourses.set(code, req);
-  });
-  crossListedCourses.forEach((req, crossListedCourseCode) => {
-    courses.delete(crossListedCourseCode);
-    courses.set(req.code, req);
-  });
+  // const crossListedCourses = new Map();
+  // requirements.courses.forEach((req, code) => {
+  //   const codeWOCrosslist = code.replace(/\/[A-Z]+/, "");
+  //   req.code = codeWOCrosslist;
+  //   crossListedCourses.set(code, req);
+  // });
+  // crossListedCourses.forEach((req, crossListedCourseCode) => {
+  //   requirements.courses.delete(crossListedCourseCode);
+  //   requirements.courses.set(req.code, req);
+  // });
 
   // TODO: check for correctness by counting the units and comparing to the degree's unit count
 
-  return degree;
+  return requirements;
 };
 
 export const scrapeDegrees = async () => {
@@ -390,7 +387,7 @@ export const scrapeDegrees = async () => {
 };
 
 const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
-const CourseCodeSchema = z.string().regex(/^[A-Z]+\s\d+$/)
+const CourseCodeSchema = z.string().regex(/^[A-Z]+\s\d+$/);
 
 const CourseSchema = z.object({
   code: CourseCodeSchema,
@@ -490,5 +487,3 @@ export const scrapeSubjects = async () => {
   });
   return subjects;
 };
-
-
