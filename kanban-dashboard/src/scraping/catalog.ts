@@ -128,7 +128,11 @@ export const DegreeRequirementsSchema = z.object({
   courses: z.map(z.string(), RequirementCourseSchema),
 });
 
-const parseMajorCourseRequirementsTable = ($, table, degree) => {
+const parseMajorCourseRequirementsTable = (
+  $: cheerio.CheerioAPI,
+  table: cheerio.Element,
+  degree: Degree
+) => {
   // select from the following
   // If we're in a sftf block the courses are in one of the following formats:
   // a)
@@ -322,29 +326,65 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
           code,
         });
         courses.set(code, courseObj);
-      } else console.warn("unrecognized:", course)
+      } else console.warn("unrecognized:", course);
     }
   }
-    // or and and groups
-  const groups = requirements.filter(req => typeof req !== "string")
+  // or and and groups
+  const groups = requirements.filter((req) => typeof req !== "string");
   return { courses, groups };
 };
+
+const GeAreaCodeRE = /[ABCDEF][1234]/;
+const GeDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
+const GeAreaRE = /Area [ABCDEF]( Elective)?/;
+
+const GeRequirementSchema = z.object({
+  code: z
+    .string()
+    .regex(GeAreaCodeRE)
+    .or(z.string().regex(GeDivisionCodeRE))
+    .or(z.string().regex(GeAreaRE))
+    .or(z.undefined()),
+  // TODO: unitsOf
+  // TODO: constraints (C1 or C2) / fullfilled by (B3 = lab w/ B1 or B2 course)
+});
+
+type GeRequirement = z.infer<typeof GeRequirementSchema>;
+
+const parseGeCourseRequirementsTable = (
+  $: cheerio.CheerioAPI,
+  table: cheerio.Element
+) => {
+  const requirements: GeRequirement[] = $(table)
+    .find("tr")
+    .filter(":not(:is(.areaheader,.listsum))")
+    .map((_i, tr) => {
+      const label = $(tr).find("td").first().text();
+      let [code] = label.match(GeAreaCodeRE) ?? label.match(GeAreaRE) ?? label.match(GeDivisionCodeRE) ?? label.match(/^[ABCDEF]/) ?? [];
+      if (!code) console.error("unrecognized ge:", label);
+      return { code }
+    })
+    .get()
+    .filter(({code}) => !!code)
+  console.log(requirements);
+  return requirements;
+};
+
 export const scrapeDegreeRequirements = async (degree: Degree) => {
   const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
-  let requirements;
+  let requirements = {};
 
   // TODO: Parse footers (sc_footnotes)
   const tables = $("table.sc_courselist");
-  console.log(tables.length);
 
   tables.each((_ti, table) => {
     // page has flat structure and this is a way to find the previous h2 element (prevUntil is exclusive)
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
-      requirements = parseMajorCourseRequirementsTable($, table, degree);
+      // requirements.major = parseMajorCourseRequirementsTable($, table, degree);
     } else if (title === "General Education (GE) Requirements") {
-      // const geRequirements = parseGeCourseRequirementsTable($, table)
+      requirements.ge = parseGeCourseRequirementsTable($, table);
     } else {
       console.warn("Unrecognized table with title:", title);
     }
