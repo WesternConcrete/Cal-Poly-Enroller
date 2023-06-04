@@ -105,6 +105,7 @@ export const RequirementSchema = z.object({
 });
 
 export const RequirementCourseSchema = z.object({
+  kind: RequirementTypeSchema.or(z.string()),
   code: z.string(),
   units: z.number(),
   title: z.string(),
@@ -161,7 +162,7 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
   const requirements = [];
   const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 
-  let cur_section: string | null = null;
+  let curRequirementKind: string | null = null;
   // within a select from the following block
   // see comment at top of file which explains these flags
   let in_sftf = false;
@@ -177,21 +178,21 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
       prev_was_or = false;
       sftf_sep = null;
       // new section
-      const cur_section_title = $(tr).text().trim();
-      if (cur_section_title.includes("MAJOR COURSES")) {
-        cur_section = "major";
-      } else if (cur_section_title.includes("Electives")) {
+      const sectionTitle = $(tr).text().trim();
+      if (sectionTitle.includes("MAJOR COURSES")) {
+        curRequirementKind = "major";
+      } else if (sectionTitle.includes("Electives")) {
         // FIXME: include the type of elective
-        cur_section = "elective";
-      } else if (cur_section_title.includes("GENERAL EDUCATION")) {
-        cur_section = "ge";
-      } else if (cur_section_title.includes("SUPPORT COURSES")) {
-        cur_section = "support";
+        curRequirementKind = "elective";
+      } else if (sectionTitle.includes("GENERAL EDUCATION")) {
+        curRequirementKind = "ge";
+      } else if (sectionTitle.includes("SUPPORT COURSES")) {
+        curRequirementKind = "support";
       } else {
-        cur_section = cur_section_title as RequirementType;
-        // console.log("Unrecognized section kind for", cur_section_title);
+        curRequirementKind = sectionTitle as RequirementType;
+        console.log("Unrecognized section kind for", sectionTitle);
       }
-      if (!cur_section) {
+      if (!curRequirementKind) {
         console.error("no text in header:", $(tr));
         break;
       }
@@ -222,8 +223,8 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
     } else {
       const course_elem = $(tr).find("td.codecol a[title]");
       let course: any; // TODO: type this
-      const is_and = course_elem.length > 1;
-      if (is_and) {
+      const isAndGroup = course_elem.length > 1;
+      if (isAndGroup) {
         // course is actually courses plural
         // make sure it's actually an '&' of the courses
         if (!$(tr).find("span.blockindent").text().includes("&")) {
@@ -236,11 +237,11 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
         $(course_elem).each((_i, c) => {
           course_codes.push($(c).text().trim());
         });
-        const course_titles = [];
+        const course_titles: string[] = [];
         const titles = $(tr).find("td:not([class])");
         $(titles)
           .contents()
-          .each((i, t) => {
+          .each((i: number, t) => {
             if (t.type === "text" && i === 0) {
               course_titles.push($(t).text().trim());
             } else if (t.type === "tag" && t.name === "span") {
@@ -259,6 +260,7 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
         } else {
           course_codes.map((code, i) => {
             courses.set(code, {
+              kind: curRequirementKind,
               code,
               title: course_titles[i],
               units: 0, // TODO: total units
@@ -274,7 +276,7 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
         // TODO: handle sections with references to other information on page
         console.log("no title for:", $(tr).find("td.codecol").text().trim());
       }
-      if (!is_and && course_elem.length === 1) {
+      if (!isAndGroup && course_elem.length === 1) {
         course = course_elem.text().trim();
       }
       const has_orclass = $(tr).hasClass("orclass");
@@ -314,12 +316,13 @@ const parseMajorCourseRequirementsTable = ($, table, degree) => {
         const units = parseInt(unitsStr);
         const code = course;
         const courseObj = RequirementCourseSchema.parse({
+          kind: curRequirementKind,
           title,
           units,
           code,
         });
         courses.set(code, courseObj);
-      }
+      } else console.warn("unrecognized:", course)
     }
   }
     // or and and groups
