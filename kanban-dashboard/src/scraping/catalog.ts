@@ -127,7 +127,7 @@ export const DegreeRequirementsSchema = z.object({
   courses: z.map(z.string(), RequirementCourseSchema),
 });
 
-const parseMajorCourseRequirementsTable = ($, table) => {
+const parseMajorCourseRequirementsTable = ($, table, degree) => {
   // select from the following
   // If we're in a sftf block the courses are in one of the following formats:
   // a)
@@ -322,9 +322,9 @@ const parseMajorCourseRequirementsTable = ($, table) => {
       }
     }
   }
-  // TODO: Parse GE table
-  // (returning false prevents it from being parsed by ending the iteration after the first table)
-  return { courses, requirements };
+    // or and and groups
+  const groups = requirements.filter(req => typeof req !== "string")
+  return { courses, groups };
 };
 export const scrapeDegreeRequirements = async (degree: Degree) => {
   const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
@@ -339,7 +339,7 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
-      requirements = parseMajorCourseRequirementsTable($, table);
+      requirements = parseMajorCourseRequirementsTable($, table, degree);
     } else if (title === "General Education (GE) Requirements") {
       // const geRequirements = parseGeCourseRequirementsTable($, table)
     } else {
