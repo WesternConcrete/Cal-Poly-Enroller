@@ -103,7 +103,7 @@ export default function CourseCard({ requirement, index }: Props) {
                   </div>
                 </div>
                 <div className="absolute scale-60 top-[0.1rem] right-[0.1rem]">
-                  {COMPLETE_STATUS[completeStatus].icon()}
+                  {/* {COMPLETE_STATUS[completeStatus].icon()} */}
                 </div>
               </div>
             </div>

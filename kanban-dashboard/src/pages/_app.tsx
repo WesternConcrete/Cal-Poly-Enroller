@@ -7,8 +7,17 @@ import "~/styles/globals.css"
 // import "../dashboard/overrides.css";
 // import theme from "../styles/theme";
 import { api } from "~/utils/api";
+import { SessionProvider } from "next-auth/react"
+import { Session } from "next-auth";
+import type { AppProps } from "next/app";
+import { FlowchartStateProvider } from "~/dashboard/state";
 
-const App: AppType = ({ Component, pageProps }) => {
+const App = ({
+  Component,
+  pageProps,
+}: AppProps<{
+  session: Session;
+}>) => {
 
   return (
     <React.Fragment>
@@ -19,9 +28,15 @@ const App: AppType = ({ Component, pageProps }) => {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
+      
+      <SessionProvider session={pageProps.session}>
+        <FlowchartStateProvider>
         <Component {...pageProps} />
+        </FlowchartStateProvider>
+      </SessionProvider>
     </React.Fragment>
   );
 };
+
 
 export default api.withTRPC(App);
