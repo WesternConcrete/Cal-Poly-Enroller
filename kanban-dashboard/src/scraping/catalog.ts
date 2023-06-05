@@ -105,6 +105,7 @@ const CourseCodeSchema = z.string().transform(stripCrosslistInfoFromCourseCode);
 
 type CourseCode = z.infer<typeof CourseCodeSchema>;
 type RequirementGroupList = (RequirementGroup | CourseCode)[];
+type RequirementGroupKind = "or" | "and";
 type RequirementGroup =
   | { or: RequirementGroupList }
   | { and: RequirementGroupList };
@@ -145,12 +146,11 @@ export type Degree = z.infer<typeof DegreeSchema>;
 const GEAreaCodeRE = /[ABCDEF][1234]/;
 const GEDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
 const GeAreaRE = /Area [ABCDEF]( Elective)?/;
-const GeSchema = z.union([
+const GESubAreaVariant = z.union([
   z.string().regex(GEAreaCodeRE),
   z.string().regex(GEDivisionCodeRE),
   z.string().regex(GeAreaRE),
 ]);
-export type GE = z.infer<typeof GeSchema>;
 
 const GeRequirementSchema = z.object({
   code: z
@@ -350,13 +350,16 @@ const parseMajorCourseRequirementsTable = (
           }
         }
         prev_was_or = false;
-      }
-      if (!in_sftf && has_orclass) {
+      } else if (has_orclass) {
         // TODO: assert data.cur.last is not or already
         // (multiple or's chained togehter outside of sftf)
-        groups[last] = {
-          or: [groups[last], course],
-        };
+        if (groups[last].or) {
+          groups[last].or.push(course);
+        } else {
+          groups[last] = {
+            or: [groups[last], course],
+          };
+        }
       } else if (!in_sftf) {
         // Normal row
         groups.push(course);
@@ -489,7 +492,7 @@ export const scrapeDegrees = async () => {
   return degrees;
 };
 
-const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
+// const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
 
 const CourseSchema = z.object({
   code: CourseCodeSchema,
@@ -503,6 +506,7 @@ const CourseSchema = z.object({
   minUnits: z.number(),
   maxUnits: z.number(),
 });
+
 type Course = z.infer<typeof CourseSchema>;
 
 export const scrapeSubjectCourses = async (subjectCode: string) => {
@@ -519,7 +523,7 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
       maxUnits = 0;
     const units_num = units_str.replace(" units", "");
     if (units_num.includes("-")) {
-      const [minUnits, maxUnits] = units_num.split("-").map(Number);
+      [minUnits, maxUnits] = units_num.split("-").map(Number);
     } else {
       let units = parseInt(units_num);
       minUnits = units;
@@ -589,13 +593,31 @@ export const scrapeSubjects = async () => {
   return subjects;
 };
 
-export const GEFullfillmentCoursesSchema = z.object({
-  ge: z.string(),
-  meta: z.array(z.string()),
-  courses: z.array(CourseCodeSchema),
-});
+const GEAreasEnum = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVES"]);
 
-export type GEFullfillmentCourses = z.infer<typeof GEFullfillmentCoursesSchema>;
+const GESubAreaSchema = z
+  .object({
+    constraints: z.array(z.string()).default([]),
+    name: z.string().nullable().default(null),
+    fullfilledBy: z.array(CourseCodeSchema).default([]),
+    description: z.string().nullable().default(null),
+  })
+  .default({});
+
+type GESubArea = z.infer<typeof GESubAreaSchema>;
+
+const GEAreaSchema = z
+  .object({
+    name: z.string().default(""),
+    constraints: z.array(z.string()).default([]),
+    subareas: z.record(GESubAreaVariant, GESubAreaSchema).default({}),
+  })
+  .default({});
+
+type GEArea = z.infer<typeof GEAreaSchema>;
+
+export const GEDataSchema = z.map(GEAreasEnum, GEAreaSchema);
+type GEData = z.infer<typeof GEDataSchema>;
 
 /** Returns courses that fulfill ge requirements and which requirements they fulfill */
 export const scrapeCourseGEFullfillments = async () => {
@@ -606,7 +628,7 @@ export const scrapeCourseGEFullfillments = async () => {
     .then(cheerio.load);
   // TODO: use high-unit/standard info for verification against major ge requirement scraping
 
-  const sections = new Map<GE, GEFullfillmentCourses>();
+  const sections: GEData = new Map();
   const areaTables = $("table.tbl_transfercredits").filter(
     (_i, table) =>
       // do not include info tables that are adjacent to sc_courselist tables
@@ -614,12 +636,7 @@ export const scrapeCourseGEFullfillments = async () => {
       $(table).prev(":not(.sc_courselist)").length > 0
   );
   areaTables.each((_i, table) => {
-    const info = {
-      meta: {
-        constraints: [],
-      },
-      subareas: {},
-    };
+    const info: GEArea = GEAreaSchema.parse({});
     const tbody = $(table).find("tbody");
     let areaLabel = $(tbody)
       .find("tr.firstrow")
@@ -627,9 +644,9 @@ export const scrapeCourseGEFullfillments = async () => {
       .first()
       .text()
       .trim();
-    let area = areaLabel;
+    let area : z.infer<typeof GEAreasEnum>;
     if (areaLabel.includes("GE ELECTIVES")) {
-      info.meta.name = areaLabel;
+      info.name = areaLabel;
       area = "ELECTIVES";
       // TODO: include limit info (only area B C D)
     } else {
@@ -638,39 +655,70 @@ export const scrapeCourseGEFullfillments = async () => {
         throw new Error(
           "unrecognized ge area label for section: ".concat(areaLabel)
         );
-      area = match[1];
+      area = GEAreasEnum.parse(match[1]);
       areaLabel = areaLabel.replace(match[0], "").trim();
-      info.meta.name = areaLabel;
+      info.name = areaLabel;
     }
 
-    String.prototype.includesAny = function (ss: string[]) {
-      let includes = false;
-      for (let s of ss) {
-        includes = this.includes(s);
-      }
-      return includes;
-    };
     $(tbody)
       .find("tr:not(.firstrow)")
       .find("td.column0")
-      .map((_i, labelElement) => $(labelElement).text().trim())
       .get()
+      .map((labelElement) => $(labelElement).text().trim())
       .filter((label) => {
         return !!label && !["Unit Sub-total", "GE TOTAL"].includes(label);
       })
       .forEach((label) => {
         let match;
+        let subarea;
+        let subareaInfo: GESubArea = GESubAreaSchema.parse({});
         if (
           (match = label.match(
-            new RegExp(`\\(${area}([1234])-?(Writing Intensive)?\\)`)
+            /(?:-?(Writing Intensive))|(?:\s-\s((?:[\w \d,;-]|\(Standard\))+))/
           ))
         ) {
-          let [matched, subarea, _wi] = match;
-          info.subareas[subarea] = {desc: label.replace(matched, "").replace(/1$/, "").trim()};
-          // TODO: handle wi (writing intensive)
+          let subconstraint = match[1] ?? match[2];
+          subareaInfo.constraints.push(subconstraint);
+          label = label.replace(match[0], "").replace("()", "").trim();
+          // still push the label at the end
+          match = undefined;
         }
-
-        if (!match) info.meta.constraints.push(label);
+        if ((match = label.match(new RegExp(`\\((${area}([1234])?)\\)`)))) {
+          let [matched, _subarea, num] = match;
+          label = label.replace(matched, "").replace(/1$/, "").trim();
+          if (num) {
+            subarea = _subarea;
+            subareaInfo.description = label;
+          }
+        }
+        if (
+          (match = label.match(
+            /((?:Upper|Lower)-Division) [A-F]( Elective)?s?/
+          ))
+        ) {
+        let [matched, _subarea, elective] = match;
+          _subarea += elective ?? "";
+          subarea = _subarea
+          label = label.replace(matched, "").trim();
+          subareaInfo.description = label ?? null;
+        }
+        if ((match = label.match(/(Area [A-F] Elective)/))) {
+            subarea = "Elective"
+        }
+        if (!subarea) {
+          info.constraints.push(label);
+          if (subareaInfo.constraints) {
+            console.warn(
+              "adding subconstraints:",
+              subareaInfo.constraints,
+              "to area:",
+              area,
+              "because no subarea was found"
+            );
+          }
+          return;
+        }
+        info.subareas[subarea] = subareaInfo;
       });
     sections.set(area, info);
   });
