@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Typography from "@material-ui/core/Typography";
-import Paper from "@material-ui/core/Paper";
 import { Draggable, type DraggableProvided } from "react-beautiful-dnd";
-import { useCardStyles } from "./styles";
 import CompleteIcon from "../components/icons/complete";
 import InProgressIcon from "../components/icons/in-progress";
 import IncompleteIcon from "../components/icons/incomplete";
@@ -21,19 +18,17 @@ export interface Props {
 type CompleteStatus = "complete" | "incomplete" | "in-progress";
 
 export default function CourseCard({ requirement, index }: Props) {
-  const classNames = useCardStyles();
-
   const COMPLETE_STATUS = {
     complete: {
-      class: classNames.complete_status,
+      class: "opacity-40 cursor-pointer",
       icon: () => <CompleteIcon />,
     },
     incomplete: {
-      class: classNames.incomplete_status,
+      class: "opacity-100",
       icon: () => <IncompleteIcon />,
     },
     "in-progress": {
-      class: classNames.in_progress_status,
+      class: "opacity-100",
       icon: () => <InProgressIcon />,
     },
   };
@@ -58,15 +53,15 @@ export default function CourseCard({ requirement, index }: Props) {
   const courseTypeClass = (courseType: RequirementType) => {
     switch (courseType) {
       case RequirementTypeSchema.enum.support:
-        return classNames.support;
+        return "bg-[#F5D2A4]";
       // case CourseType.CONCENTRATION:
       //   return classNames.concentration;
       // case CourseType.GWR:
       //   return classNames.gwe;
       case RequirementTypeSchema.enum.ge:
-        return classNames.ge;
+        return "bg-[#E2FCD6]";
       default:
-        return classNames.major;
+        return "bg-[#FEFDA6]";
     }
   };
 
@@ -79,40 +74,34 @@ export default function CourseCard({ requirement, index }: Props) {
       {(provided: DraggableProvided) => {
         return (
           <div
-            className={classNames.taskContainer}
+            className="mb-[0.5rem] flex border-[1px] border-solid border-[#6B718B] rounded-[0.5rem]"
             ref={provided.innerRef}
             {...provided.draggableProps}
           >
-            <Paper
-              className={`${classNames.task} ${courseTypeClass(
+            <div
+              className={`p-[.4rem] w-full min-h-[70px] rounded-[0.5rem] relative ${courseTypeClass(
                 requirement.courseType
               )} ${COMPLETE_STATUS[completeStatus].class}`}
               {...provided.dragHandleProps}
             >
-              <div className={classNames.taskHeader}>
+              <div className="grid justify-items-center grid-rows-[min-content,1fr,min-content] h-full row-gap-[0.2rem] w-full text-center justify-center">
                 <div>
-                  <Typography className={classNames.title}>
+                  <div className="mt-[0.5rem] font-bold text-[11px]">
                     {requirement.code}
-                  </Typography>
+                  </div>
 
-                  <Typography
-                    variant="subtitle2"
-                    className={classNames.courseName}
-                  >
+                  <div className="font-normal text-[9px]">
                     {requirement.title}
-                  </Typography>
-                  <Typography
-                    variant="subtitle2"
-                    className={classNames.unitCount}
-                  >
+                  </div>
+                  <div className="font-bold mt-[0.3rem] mb-[0.3rem] text-[9px]">
                     {requirement.units} units
-                  </Typography>
+                  </div>
                 </div>
-                <div className={classNames.statusIcon}>
-                  {COMPLETE_STATUS[completeStatus].icon()}
+                <div className="absolute scale-60 top-[0.1rem] right-[0.1rem]">
+                  {/* {COMPLETE_STATUS[completeStatus].icon()} */}
                 </div>
               </div>
-            </Paper>
+            </div>
           </div>
         );
       }}
