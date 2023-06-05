@@ -142,15 +142,21 @@ export const DegreeSchema = z.object({
 
 export type Degree = z.infer<typeof DegreeSchema>;
 
-const GeAreaCodeRE = /[ABCDEF][1234]/;
-const GeDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
+const GEAreaCodeRE = /[ABCDEF][1234]/;
+const GEDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
 const GeAreaRE = /Area [ABCDEF]( Elective)?/;
+const GeSchema = z.union([
+  z.string().regex(GEAreaCodeRE),
+  z.string().regex(GEDivisionCodeRE),
+  z.string().regex(GeAreaRE),
+]);
+export type GE = z.infer<typeof GeSchema>;
 
 const GeRequirementSchema = z.object({
   code: z
     .string()
-    .regex(GeAreaCodeRE)
-    .or(z.string().regex(GeDivisionCodeRE))
+    .regex(GEAreaCodeRE)
+    .or(z.string().regex(GEDivisionCodeRE))
     .or(z.string().regex(GeAreaRE))
     .or(z.null()),
   units: z.number().nonnegative(),
@@ -397,9 +403,9 @@ const parseGeCourseRequirementsTable = (
           return null;
         }
       }
-      let [code] = label.match(GeAreaCodeRE) ??
+      let [code] = label.match(GEAreaCodeRE) ??
         label.match(GeAreaRE) ??
-        label.match(GeDivisionCodeRE) ??
+        label.match(GEDivisionCodeRE) ??
         label.match(/^[ABCDEF]/) ?? [null];
       if (code === undefined) {
         if (label.includes("Select courses from two different areas")) {
@@ -497,7 +503,6 @@ const CourseSchema = z.object({
   minUnits: z.number(),
   maxUnits: z.number(),
 });
-
 type Course = z.infer<typeof CourseSchema>;
 
 export const scrapeSubjectCourses = async (subjectCode: string) => {
@@ -582,4 +587,115 @@ export const scrapeSubjects = async () => {
     subjects.push(SubjectSchema.parse({ name, code }));
   });
   return subjects;
+};
+
+export const GEFullfillmentCoursesSchema = z.object({
+  ge: z.string(),
+  meta: z.array(z.string()),
+  courses: z.array(CourseCodeSchema),
+});
+
+export type GEFullfillmentCourses = z.infer<typeof GEFullfillmentCoursesSchema>;
+
+/** Returns courses that fulfill ge requirements and which requirements they fulfill */
+export const scrapeCourseGEFullfillments = async () => {
+  const url =
+    "https://catalog.calpoly.edu/generalrequirementsbachelorsdegree/#GE-Requirements";
+  const $ = await fetch(url)
+    .then((res) => res.text())
+    .then(cheerio.load);
+  // TODO: use high-unit/standard info for verification against major ge requirement scraping
+
+  const sections = new Map<GE, GEFullfillmentCourses>();
+  const areaTables = $("table.tbl_transfercredits").filter(
+    (_i, table) =>
+      // do not include info tables that are adjacent to sc_courselist tables
+      $(table).next(":not(.sc_courselist)").length > 0 &&
+      $(table).prev(":not(.sc_courselist)").length > 0
+  );
+  areaTables.each((_i, table) => {
+    const info = {
+      meta: {
+        constraints: [],
+      },
+      subareas: {},
+    };
+    const tbody = $(table).find("tbody");
+    let areaLabel = $(tbody)
+      .find("tr.firstrow")
+      .find("td.column0")
+      .first()
+      .text()
+      .trim();
+    let area = areaLabel;
+    if (areaLabel.includes("GE ELECTIVES")) {
+      info.meta.name = areaLabel;
+      area = "ELECTIVES";
+      // TODO: include limit info (only area B C D)
+    } else {
+      let match = areaLabel.match(/\(AREA ([ABCDEF])\)/);
+      if (!match)
+        throw new Error(
+          "unrecognized ge area label for section: ".concat(areaLabel)
+        );
+      area = match[1];
+      areaLabel = areaLabel.replace(match[0], "").trim();
+      info.meta.name = areaLabel;
+    }
+
+    String.prototype.includesAny = function (ss: string[]) {
+      let includes = false;
+      for (let s of ss) {
+        includes = this.includes(s);
+      }
+      return includes;
+    };
+    $(tbody)
+      .find("tr:not(.firstrow)")
+      .find("td.column0")
+      .map((_i, labelElement) => $(labelElement).text().trim())
+      .get()
+      .filter((label) => {
+        return !!label && !["Unit Sub-total", "GE TOTAL"].includes(label);
+      })
+      .forEach((label) => {
+        let match;
+        if (
+          (match = label.match(
+            new RegExp(`\\(${area}([1234])-?(Writing Intensive)?\\)`)
+          ))
+        ) {
+          let [matched, subarea, _wi] = match;
+          info.subareas[subarea] = {desc: label.replace(matched, "").replace(/1$/, "").trim()};
+          // TODO: handle wi (writing intensive)
+        }
+
+        if (!match) info.meta.constraints.push(label);
+      });
+    sections.set(area, info);
+  });
+  const courseTables = $("table.sc_courselist");
+  courseTables.each((_i, table) => {
+    const headerElement = $(table)
+      .prev("table.sc_sctable")
+      .find("tbody")
+      .find("tr")
+      .find("td.column0")
+      .get();
+    // FIXME: error here
+    if (!headerElement) return;
+    const headerInfo = headerElement.map((e) => $(e).text().trim());
+    const [title, ...meta] = headerInfo;
+    // TODO: updating title when "td>div.courselistcomment" is encountered
+    // TODO: parsing "ge" from title
+    const courses = $(table)
+      .find("td.codecol")
+      .map((_i, codeCol) => $(codeCol).text().trim())
+      .get();
+    const ge = { ge: title, meta, courses };
+
+    // sections.set(ge.ge, ge);
+  });
+  // return Array.from(sections.values());
+  return sections;
 };
