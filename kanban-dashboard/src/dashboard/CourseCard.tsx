@@ -18,7 +18,6 @@ export interface Props {
 type CompleteStatus = "complete" | "incomplete" | "in-progress";
 
 export default function CourseCard({ requirement, index }: Props) {
-
   const COMPLETE_STATUS = {
     complete: {
       class: "opacity-40 cursor-pointer",
@@ -91,14 +90,10 @@ export default function CourseCard({ requirement, index }: Props) {
                     {requirement.code}
                   </div>
 
-                  <div
-                    className="font-normal text-[9px]"
-                  >
+                  <div className="font-normal text-[9px]">
                     {requirement.title}
                   </div>
-                  <div
-                    className="font-bold mt-[0.3rem] mb-[0.3rem] text-[9px]"
-                  >
+                  <div className="font-bold mt-[0.3rem] mb-[0.3rem] text-[9px]">
                     {requirement.units} units
                   </div>
                 </div>

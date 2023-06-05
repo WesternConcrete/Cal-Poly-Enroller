@@ -1,6 +1,6 @@
-const theme = {spacing: (num: number) => num}
+const theme = { spacing: (num: number) => num };
 
-export const useDashboardStyles = (() => ({
+export const useDashboardStyles = () => ({
   root: {
     height: "100vh",
     display: "flex",
@@ -10,9 +10,9 @@ export const useDashboardStyles = (() => ({
     flexGrow: 1,
     height: `calc(100vh - 65px)`, // 65 is height of appbar
   },
-}));
+});
 
-export const useMenubarStyles = (() => ({
+export const useMenubarStyles = () => ({
   menuButton: {
     marginRight: theme.spacing(2),
   },
@@ -41,33 +41,33 @@ export const useMenubarStyles = (() => ({
   currentUsername: {
     marginRight: 4,
   },
-}));
+});
 
-export const useUserItemStyles = (() => ({
+export const useUserItemStyles = () => ({
   editBtn: {
     marginLeft: 4,
   },
-}));
+});
 
-export const useUserEditorStyles = (() => ({
+export const useUserEditorStyles = () => ({
   root: {
     width: "100%",
   },
   listItem: {
     alignItems: "self-end",
   },
-}));
+});
 
-export const useCommonStyles = (() => ({
+export const useCommonStyles = () => ({
   dragHandle: {
     position: "absolute",
     left: 4,
     top: 10,
     color: "rgba(0, 0, 0, 0.54)",
   },
-}));
+});
 
-export const useBoardStyles = (() => ({
+export const useBoardStyles = () => ({
   board: {
     height: "100%",
     display: "flex",
@@ -108,15 +108,15 @@ export const useBoardStyles = (() => ({
   },
 
   addButton: {
-    backgroundColor: 'dark-green',
-    color: 'white',
+    backgroundColor: "dark-green",
+    color: "white",
     "&:hover": {
-      backgroundColor: 'dark-gray',
+      backgroundColor: "dark-gray",
     },
   },
-}));
+});
 
-export const useLaneStyles = (() => ({
+export const useLaneStyles = () => ({
   lane: {
     display: "flex",
     flexDirection: "column",
@@ -144,9 +144,9 @@ export const useLaneStyles = (() => ({
   dialog: {
     padding: theme.spacing(2),
   },
-}));
+});
 
-export const useCardStyles = (() => ({
+export const useCardStyles = () => ({
   taskContainer: {
     marginBottom: theme.spacing(0.5),
     display: "flex",
@@ -217,9 +217,9 @@ export const useCardStyles = (() => ({
   dialog: {
     padding: theme.spacing(2),
   },
-}));
+});
 
-export const useCourseDetailsStyles = (() => ({
+export const useCourseDetailsStyles = () => ({
   root: {
     padding: theme.spacing(1.5),
   },
@@ -236,9 +236,9 @@ export const useCourseDetailsStyles = (() => ({
   section: {
     marginTop: theme.spacing(3),
   },
-}));
+});
 
-export const useCourseAssignmentStyles = (() => ({
+export const useCourseAssignmentStyles = () => ({
   container: {
     display: "flex",
   },
@@ -248,4 +248,4 @@ export const useCourseAssignmentStyles = (() => ({
   unassignBtn: {
     padding: theme.spacing(1),
   },
-}));
+});

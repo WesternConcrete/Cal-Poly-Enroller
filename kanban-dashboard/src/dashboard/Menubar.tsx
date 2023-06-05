@@ -1,12 +1,24 @@
 import React, { Fragment, useRef, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react"
-import { useRouter } from 'next/router';
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { Check, ChevronsUpDown, PlusCircle, CreditCard, LogOut, Settings, User, Plus, Users, CheckCheck, GraduationCap } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import {
+  Check,
+  ChevronsUpDown,
+  PlusCircle,
+  CreditCard,
+  LogOut,
+  Settings,
+  User,
+  Plus,
+  Users,
+  CheckCheck,
+  GraduationCap,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -15,7 +27,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -24,15 +36,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-
+} from "@/components/ui/popover";
 
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
@@ -45,15 +56,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import LoadingBar from 'react-top-loading-bar'
+} from "@/components/ui/dropdown-menu";
+import LoadingBar from "react-top-loading-bar";
 import CalPoly from "~/components/icons/calpoly";
 
 export interface MenubarProps {}
 
 export default function Menubar({}: MenubarProps) {
-  
-
   const { setDegree, startYear } = React.useContext(FlowchartState);
   const router = useRouter();
   const classes = useMenubarStyles();
@@ -71,8 +80,6 @@ export default function Menubar({}: MenubarProps) {
   const degreesQuery = api.degrees.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
-
-  
 
   const [selectedDegreeDisplayName, setSelectedDegreeDisplayName] =
     React.useState<string>("Select a Degree");
@@ -92,11 +99,11 @@ export default function Menubar({}: MenubarProps) {
     }
   };
 
-  const ref = useRef(null as any)
+  const ref = useRef(null as any);
   const { data: session, status: sessionStatus } = useSession();
 
   useEffect(() => {
-    if (sessionStatus === 'loading') {
+    if (sessionStatus === "loading") {
       ref.current.staticStart();
     } else {
       ref.current.complete();
@@ -106,58 +113,61 @@ export default function Menubar({}: MenubarProps) {
   const trpcClient = api.useContext();
 
   return (
-      // <div className="h-[30px] overflow-x-hidden ">
-      //   {router.pathname === '/dashboard' && (
-      //   <div>
-      //     <Select
-      //     value={selectedDegreeDisplayName}
-      //     onValueChange={(value) => updateDegree(value)}
-      //   >
-      //     <SelectTrigger value="Select a Degree" key={-1}>
-      //       <SelectValue placeholder="Select a Degree">Select a Degree</SelectValue>
-      //     </SelectTrigger>
-      //     <SelectContent>
-      //       {degreesQuery.data &&
-      //         degreesQuery.data.map((degree, idx) => {
-      //           return (
-      //             <SelectItem value={degree.name} key={idx}>
-      //               {degree.name}, {degree.kind}
-      //             </SelectItem>
-      //           );
-      //         })}
-      //     </SelectContent>
-      //   </Select>
-      //   <div className="flex flex-grow"></div>
-      //   </div>
-      // )}
-        
-      // </div>
-      
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4">
-            
+    // <div className="h-[30px] overflow-x-hidden ">
+    //   {router.pathname === '/dashboard' && (
+    //   <div>
+    //     <Select
+    //     value={selectedDegreeDisplayName}
+    //     onValueChange={(value) => updateDegree(value)}
+    //   >
+    //     <SelectTrigger value="Select a Degree" key={-1}>
+    //       <SelectValue placeholder="Select a Degree">Select a Degree</SelectValue>
+    //     </SelectTrigger>
+    //     <SelectContent>
+    //       {degreesQuery.data &&
+    //         degreesQuery.data.map((degree, idx) => {
+    //           return (
+    //             <SelectItem value={degree.name} key={idx}>
+    //               {degree.name}, {degree.kind}
+    //             </SelectItem>
+    //           );
+    //         })}
+    //     </SelectContent>
+    //   </Select>
+    //   <div className="flex flex-grow"></div>
+    //   </div>
+    // )}
 
-            <UserNav />
-           
-         
+    // </div>
+
+    <div className="border-b">
+      <div className="flex h-16 items-center px-4">
+        <UserNav />
+
+        <div />
+        <div className="ml-auto flex items-center space-x-4">
           <div />
-          <div className="ml-auto flex items-center space-x-4">
-            <div />
-            {router.pathname === '/dashboard'? ( <><FlowchartSwitcher /> 
-            <Button className="bg-primaryGreen" disabled>Mark Complete <CheckCheck className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50"/> </Button>
-            <Button className="bg-primaryGreen">Enroll <GraduationCap className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50"/> </Button>
-            
-            
-            </>): (<CalPoly/>) }
-          </div>
+          {router.pathname === "/dashboard" ? (
+            <>
+              <FlowchartSwitcher />
+              <Button className="bg-primaryGreen" disabled>
+                Mark Complete{" "}
+                <CheckCheck className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
+              </Button>
+              <Button className="bg-primaryGreen">
+                Enroll{" "}
+                <GraduationCap className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
+              </Button>
+            </>
+          ) : (
+            <CalPoly />
+          )}
         </div>
-        <LoadingBar color="#16a34a" ref={ref} shadow={true} height={3}/>
       </div>
+      <LoadingBar color="#16a34a" ref={ref} shadow={true} height={3} />
+    </div>
   );
 }
-
-
-
 
 const flowcharts = [
   {
@@ -173,23 +183,26 @@ const flowcharts = [
       },
     ],
   },
-]
+];
 
-type Flowchart = (typeof flowcharts)[number]["options"][number]
+type Flowchart = (typeof flowcharts)[number]["options"][number];
 
-type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
+type PopoverTriggerProps = React.ComponentPropsWithoutRef<
+  typeof PopoverTrigger
+>;
 
-type TeamSwitcherProps = PopoverTriggerProps
+type TeamSwitcherProps = PopoverTriggerProps;
 
 export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
-  const [open, setOpen] = React.useState(false)
-  const [showNewFlowchartDialog, setShowNewFlowchartDialog] = React.useState(false)
-  const [selectedFlowchart, setSelectedFlowchart] = React.useState<Flowchart | null>(
-   null
-  )
+  const [open, setOpen] = React.useState(false);
+  const [showNewFlowchartDialog, setShowNewFlowchartDialog] =
+    React.useState(false);
+  const [selectedFlowchart, setSelectedFlowchart] =
+    React.useState<Flowchart | null>(null);
   const trpcClient = api.useContext();
 
-  const { setDegree, startYear, requirements } = React.useContext(FlowchartState);
+  const { setDegree, startYear, requirements } =
+    React.useContext(FlowchartState);
 
   const updateDegree = (name: string) => {
     if (!degreesQuery.data) {
@@ -205,20 +218,23 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
       }
     }
   };
-  const [value, setValue] = React.useState("")
-  const [openDegree, setOpenDegree] = React.useState(false)
+  const [value, setValue] = React.useState("");
+  const [openDegree, setOpenDegree] = React.useState(false);
 
   const degreesQuery = api.degrees.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
 
   const confirmSelectedDegree = () => {
-    updateDegree(value)
-    setShowNewFlowchartDialog(false)
-  }
+    updateDegree(value);
+    setShowNewFlowchartDialog(false);
+  };
 
   return (
-    <Dialog open={showNewFlowchartDialog} onOpenChange={setShowNewFlowchartDialog}>
+    <Dialog
+      open={showNewFlowchartDialog}
+      onOpenChange={setShowNewFlowchartDialog}
+    >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -229,8 +245,9 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
             aria-label="Select a flowchart"
             className={cn("w-[200px] justify-between", className)}
           >
-            
-            {selectedFlowchart ? selectedFlowchart.label:'Select flowchart...'}
+            {selectedFlowchart
+              ? selectedFlowchart.label
+              : "Select flowchart..."}
             <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -245,17 +262,17 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
                     <CommandItem
                       key={option.id}
                       onSelect={() => {
-                        setSelectedFlowchart(option)
-                        setOpen(false)
+                        setSelectedFlowchart(option);
+                        setOpen(false);
                       }}
                       className="text-sm"
                     >
-                     
                       {option.label}
                       <Check
                         className={cn(
                           "ml-auto h-4 w-4",
-                          selectedFlowchart && selectedFlowchart.id === option.id
+                          selectedFlowchart &&
+                            selectedFlowchart.id === option.id
                             ? "opacity-100"
                             : "opacity-0"
                         )}
@@ -271,8 +288,8 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
                 <DialogTrigger asChild>
                   <CommandItem
                     onSelect={() => {
-                      setOpen(false)
-                      setShowNewFlowchartDialog(true)
+                      setOpen(false);
+                      setShowNewFlowchartDialog(true);
                     }}
                   >
                     <PlusCircle className="mr-2 h-5 w-5" />
@@ -300,67 +317,81 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
             <div className="space-y-2">
               <Label htmlFor="plan">Degree</Label>
               <Popover open={openDegree} onOpenChange={setOpenDegree}>
-    <PopoverTrigger asChild>
-    <Button
-        variant="outline"
-        role="combobox"
-        aria-expanded={openDegree}
-        className="w-full justify-between"
-    >
-        {value
-        ? degreesQuery.data?.find((degree) => degree.name === value)?.name
-        : "Major..."}
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-    </Button>
-    </PopoverTrigger>
-    <PopoverContent className={`w-[470px] p-0 ${openDegree && `max-h-[250px]`}  overflow-auto`}>
-    <Command>
-        <CommandInput placeholder="Search degree..." />
-        <CommandEmpty>No degree found.</CommandEmpty>
-        <CommandGroup>
-        
-        {degreesQuery.data && (<div className="h-[200px] w-full">
-          { degreesQuery.data.map((degree, idx) => (
-            <CommandItem
-            key={degree.name + idx}
-            onSelect={(currentValue) => {
-                setValue(currentValue === value ? "" : degree.name)
-                setOpenDegree(false)
-            }}
-            >
-            <Check
-                className={cn(
-                "mr-2 h-4 w-4",
-                value === degree.name ? "opacity-100" : "opacity-0"
-                )}
-            />
-            {degree.name}
-            </CommandItem>
-            )
-            
-            )}
-        </div>)
-           }
-       
-        
-        </CommandGroup>
-    </Command>
-    </PopoverContent>
-</Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openDegree}
+                    className="w-full justify-between"
+                  >
+                    {value
+                      ? degreesQuery.data?.find(
+                          (degree) => degree.name === value
+                        )?.name
+                      : "Major..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className={`w-[470px] p-0 ${
+                    openDegree && `max-h-[250px]`
+                  }  overflow-auto`}
+                >
+                  <Command>
+                    <CommandInput placeholder="Search degree..." />
+                    <CommandEmpty>No degree found.</CommandEmpty>
+                    <CommandGroup>
+                      {degreesQuery.data && (
+                        <div className="h-[200px] w-full">
+                          {degreesQuery.data.map((degree, idx) => (
+                            <CommandItem
+                              key={degree.name + idx}
+                              onSelect={(currentValue) => {
+                                setValue(
+                                  currentValue === value ? "" : degree.name
+                                );
+                                setOpenDegree(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  value === degree.name
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {degree.name}
+                            </CommandItem>
+                          ))}
+                        </div>
+                      )}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setShowNewFlowchartDialog(false)} >
+          <Button
+            variant="outline"
+            onClick={() => setShowNewFlowchartDialog(false)}
+          >
             Cancel
           </Button>
-          <Button type="submit" className="bg-primaryGreen" onClick={confirmSelectedDegree}>Continue</Button>
+          <Button
+            type="submit"
+            className="bg-primaryGreen"
+            onClick={confirmSelectedDegree}
+          >
+            Continue
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
 
 export function UserNav() {
   const { data: session, status: sessionStatus } = useSession();
@@ -369,37 +400,34 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex flex-row justify-center items-center">
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            {sessionStatus === 'authenticated'? 
-             <AvatarImage src={session.user?.image ?? ""} alt="@user" />:
-            <AvatarImage src={`https://msrealtors.org/wp-content/uploads/2018/11/no-user-image.gif`} alt="@user" />
-            }
-            <AvatarFallback>
-             <AvatarImage src="/avatars.jpeg" alt="@shadcn" />
-            </AvatarFallback>
-          </Avatar>
-
-
-      
-        </Button>
-        <Button variant="link">{sessionStatus === 'authenticated' ? session.user?.email : "Login"}</Button>
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Avatar className="h-8 w-8">
+              {sessionStatus === "authenticated" ? (
+                <AvatarImage src={session.user?.image ?? ""} alt="@user" />
+              ) : (
+                <AvatarImage
+                  src={`https://msrealtors.org/wp-content/uploads/2018/11/no-user-image.gif`}
+                  alt="@user"
+                />
+              )}
+              <AvatarFallback>
+                <AvatarImage src="/avatars.jpeg" alt="@shadcn" />
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+          <Button variant="link">
+            {sessionStatus === "authenticated" ? session.user?.email : "Login"}
+          </Button>
         </div>
-       
-
-
-        
-        
-        
-        
-
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{session?.user?.name?.split(" ")[0] || "N/A"}</p>
+            <p className="text-sm font-medium leading-none">
+              {session?.user?.name?.split(" ")[0] || "N/A"}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-            {session?.user?.email}
+              {session?.user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -426,23 +454,22 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup> */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ redirect: true, callbackUrl: "/auth" })}>
+        <DropdownMenuItem
+          onClick={() => signOut({ redirect: true, callbackUrl: "/auth" })}
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
-
 
 export function DropdownMenuDemo() {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild></DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -462,7 +489,6 @@ export function DropdownMenuDemo() {
             <span>Settings</span>
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
-          
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -470,7 +496,7 @@ export function DropdownMenuDemo() {
             <Users className="mr-2 h-4 w-4" />
             <span>Team</span>
           </DropdownMenuItem>
-        
+
           <DropdownMenuItem>
             <Plus className="mr-2 h-4 w-4" />
             <span>New Team</span>
@@ -478,9 +504,7 @@ export function DropdownMenuDemo() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-       
-        
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
