@@ -1,6 +1,6 @@
 import React from 'react';
 import Menubar from '../dashboard/Menubar';
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 
 export interface LayoutProps {
   children?: React.ReactNode;

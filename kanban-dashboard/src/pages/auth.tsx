@@ -1,8 +1,6 @@
 import { useSession, signIn, signOut } from "next-auth/react"
-import { buttonVariants } from '@/components/ui/button';
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
-import Link from "next/link"
 import { useState } from "react"; // Import useState hook
 import Layout from "~/components/Layout";
 

@@ -1,10 +1,9 @@
 import React, { Fragment, useRef, useEffect } from "react";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useRouter } from 'next/router';
-import FlowchartSelectingMenu from "./FlowchartSelectingMenu";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
-import { Check, ChevronsUpDown, PlusCircle, CreditCard, LogOut, Settings, User, Plus, Users, ChevronDown, CheckCheck, GraduationCap } from "lucide-react"
+import { Check, ChevronsUpDown, PlusCircle, CreditCard, LogOut, Settings, User, Plus, Users, CheckCheck, GraduationCap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -33,13 +32,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+
+
 import { FlowchartState } from "~/dashboard/state";
 import { api } from "~/utils/api";
 import {
@@ -53,9 +47,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import LoadingBar from 'react-top-loading-bar'
-import { Skeleton } from "@/components/ui/skeleton"
 import CalPoly from "~/components/icons/calpoly";
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 export interface MenubarProps {}
 
@@ -187,7 +179,7 @@ type Flowchart = (typeof flowcharts)[number]["options"][number]
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
 
-interface TeamSwitcherProps extends PopoverTriggerProps {}
+type TeamSwitcherProps = PopoverTriggerProps
 
 export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
   const [open, setOpen] = React.useState(false)
