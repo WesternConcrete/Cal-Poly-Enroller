@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Requirement } from "@prisma/client";
 import assert from "assert";
 import * as cheerio from "cheerio/lib/slim";
 import { z } from "zod";
@@ -83,30 +83,49 @@ export const RequirementTypeSchema = z.enum([
 ]);
 export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 
-export const RequirementCourseCodeSchema = z.string();
+const stripCrosslistInfoFromCourseCode = (courseCode: string) => {
+  const match = courseCode.match(/([A-Z]+)(?:\/[A-Z]+)*\s+(\d+)(?:\s+\d+)*/);
+  console.log(match);
+  if (!match)
+    throw new Error(
+      `course code: ${courseCode} did not match the course code regex`
+    );
+  const [_, code, num] = match;
+  courseCode = code + " " + num;
+  if (!courseCode.match(/^[A-Z]+\s\d+$/))
+    throw new Error(
+      `resulting course code: ${courseCode} from stripping crosslist info is not a valid course code`
+    );
+  return courseCode;
+};
 
-export const RequirementOneOfSchema: z.ZodType = z.object({
-  kind: z.literal("oneof"),
-  oneof: z.array(
-    RequirementCourseCodeSchema.or(z.lazy(() => RequirementAllOfSchema))
-  ),
-});
-export const RequirementAllOfSchema = z.object({
-  kind: z.literal("allof"),
-  allof: z.array(RequirementCourseCodeSchema.or(RequirementOneOfSchema)),
-});
-export const RequirementSchema = z.object({
-  kind: RequirementTypeSchema.or(z.string()),
-  fulfilledBy: z.array(
-    RequirementCourseCodeSchema.or(RequirementAllOfSchema).or(
-      RequirementOneOfSchema
-    )
-  ),
-});
+// NOTE: it is expected that information from crosslistings can be parsed in subject course
+// lists and handled properly when using degree course requirements
+const CourseCodeSchema = z.string().transform(stripCrosslistInfoFromCourseCode); // .regex(/^[A-Z]+\s\d+$/);
+
+type CourseCode = z.infer<typeof CourseCodeSchema>;
+type RequirementGroupList = (RequirementGroup | CourseCode)[];
+type RequirementGroup =
+  | { or: RequirementGroupList }
+  | { and: RequirementGroupList };
+
+export const RequirementGroupSchema: z.ZodType<RequirementGroup> = z.lazy(() =>
+  z.union([
+    z.object({ or: z.array(RequirementGroupSchema.or(CourseCodeSchema)) }),
+    z.object({ and: z.array(RequirementGroupSchema.or(CourseCodeSchema)) }),
+  ])
+);
+
+// TODO: decide whether this is usefull
+// export const RequirementSchema = z.object({
+//   kind: RequirementTypeSchema.or(z.string()),
+//   fulfilledBy:
+//
+// });
 
 export const RequirementCourseSchema = z.object({
   kind: RequirementTypeSchema.or(z.string()),
-  code: z.string(),
+  code: CourseCodeSchema,
   units: z.number(),
   title: z.string(),
 });
@@ -142,7 +161,7 @@ type GeRequirement = z.infer<typeof GeRequirementSchema>;
 
 export const DegreeRequirementsSchema = z.object({
   degreeId: DegreeSchema.shape.id,
-  requirements: z.array(RequirementSchema),
+  groups: z.array(RequirementGroupSchema),
   courses: z.map(z.string(), RequirementCourseSchema),
   ge: z.array(GeRequirementSchema),
 });
@@ -183,8 +202,10 @@ const parseMajorCourseRequirementsTable = (
   // d)
   // [course]
   // or [course]
+  /// mapping of course code to meta information about the course (such as whether it is a support/major/etc)
   const courses = new Map();
-  const requirements = [];
+  // TODO:
+  const groups: RequirementGroup[] = [];
   const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
 
   let curRequirementKind: string | null = null;
@@ -215,7 +236,7 @@ const parseMajorCourseRequirementsTable = (
         curRequirementKind = "support";
       } else {
         curRequirementKind = sectionTitle as RequirementType;
-        console.log("Unrecognized section kind for", sectionTitle);
+        console.log("Unrecognized section kind:", sectionTitle);
       }
       if (!curRequirementKind) {
         console.error("no text in header:", $(tr));
@@ -225,7 +246,7 @@ const parseMajorCourseRequirementsTable = (
       const comment = $(tr).find("span.courselistcomment").text().trim();
       if (comment.match(SFTF_RE)) {
         in_sftf = true;
-        requirements.push({ or: [] });
+        groups.push({ or: [] });
         sftf_sep = null;
       } else if (comment === "or") {
         if (!in_sftf) {
@@ -242,7 +263,7 @@ const parseMajorCourseRequirementsTable = (
         }
         sftf_sep = "or";
         prev_was_or = true;
-      } else {
+      } else if (!comment.match(/\(?[Ss](ee|elect).*below.?\)?$/)) {
         console.error("unrecognized comment:", comment);
       }
     } else {
@@ -305,10 +326,10 @@ const parseMajorCourseRequirementsTable = (
         course = course_elem.text().trim();
       }
       const has_orclass = $(tr).hasClass("orclass");
-      const last = requirements.length - 1;
+      const last = groups.length - 1;
 
       if (in_sftf) {
-        const last_or = requirements[last].or;
+        const last_or = groups[last].or;
         if (last_or.length === 0) {
           last_or.push(course);
         } else if (last_or.length >= 1) {
@@ -316,7 +337,7 @@ const parseMajorCourseRequirementsTable = (
             sftf_sep = "or";
           }
           if (has_orclass || prev_was_or || sftf_sep == null) {
-            requirements[last].or.push(course);
+            groups[last].or.push(course);
           } else {
             in_sftf = false;
             sftf_sep = null;
@@ -327,14 +348,14 @@ const parseMajorCourseRequirementsTable = (
       if (!in_sftf && has_orclass) {
         // TODO: assert data.cur.last is not or already
         // (multiple or's chained togehter outside of sftf)
-        requirements[last] = {
-          or: [requirements[last], course],
+        groups[last] = {
+          or: [groups[last], course],
         };
       } else if (!in_sftf) {
         // Normal row
-        requirements.push(course);
+        groups.push(course);
       }
-      if (typeof course === "string") {
+      if (!course.and) {
         const title = $(tr).find("td:not([class])").text().trim();
         // TODO: more accurate units when in or/and block
         const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
@@ -347,11 +368,14 @@ const parseMajorCourseRequirementsTable = (
           code,
         });
         courses.set(code, courseObj);
-      } else console.warn("unrecognized:", course);
+      }
     }
   }
-  // or and and groups
-  const groups = requirements.filter((req) => typeof req !== "string");
+  courses.forEach((code, { kind }) => {
+    if (["support", "elective"].includes(kind) && !!groups.find(code)) {
+      console.error("/////", kind, code, "not in or/and group");
+    }
+  });
   return { courses, groups };
 };
 
@@ -359,6 +383,7 @@ const parseGeCourseRequirementsTable = (
   $: cheerio.CheerioAPI,
   table: cheerio.Element
 ) => {
+  // FIXME: parse ge "constraints" (C1 or C2, three different prefixes, etc)
   const requirements: GeRequirement[] = $(table)
     .find("tr")
     .filter(":not(:is(.areaheader,.listsum))")
@@ -378,7 +403,7 @@ const parseGeCourseRequirementsTable = (
         label.match(/^[ABCDEF]/) ?? [null];
       if (code === undefined) {
         if (label.includes("Select courses from two different areas")) {
-            return null;
+          return null;
         } else if (label.includes("GE Electives")) {
           code = null;
           console.log(label);
@@ -394,10 +419,7 @@ const parseGeCourseRequirementsTable = (
         const b3OneLabWarningStr =
           "One lab taken with either a B1 or B2 course";
         const twoAreasWarning = "Select courses from two different areas";
-        if (
-          !rowText.includes(twoAreasWarning) &&
-          code !== "B3"
-        ) {
+        if (!rowText.includes(twoAreasWarning) && code !== "B3") {
           console.error("could not determine why units for:", label, "was NaN");
         }
       }
@@ -410,7 +432,7 @@ const parseGeCourseRequirementsTable = (
 
 export const scrapeDegreeRequirements = async (degree: Degree) => {
   const $ = cheerio.load(await fetch(degree.link).then((res) => res.text()));
-  let requirements: DegreeRequirements = {};
+  let requirements: DegreeRequirements = {} as DegreeRequirements;
 
   // TODO: Parse footers (sc_footnotes)
   const tables = $("table.sc_courselist");
@@ -420,28 +442,22 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
-      // requirements.major = parseMajorCourseRequirementsTable($, table, degree);
+      const { courses, groups } = parseMajorCourseRequirementsTable(
+        $,
+        table,
+        degree
+      );
+      requirements.courses = courses;
+      requirements.groups = groups;
     } else if (title === "General Education (GE) Requirements") {
       requirements.ge = parseGeCourseRequirementsTable($, table);
     } else {
       console.warn("Unrecognized table with title:", title);
     }
   });
-  // NOTE: it is expected that information from crosslistings can be parsed in subject course lists and handled properly when using degree course requirements
-  // const crossListedCourses = new Map();
-  // TODO: use non-crosslisted code when inserting course into courses, requirements instead of having postProcess loop
-  // const crossListedCourses = new Map();
-  // requirements.courses.forEach((req, code) => {
-  //   const codeWOCrosslist = code.replace(/\/[A-Z]+/, "");
-  //   req.code = codeWOCrosslist;
-  //   crossListedCourses.set(code, req);
-  // });
-  // crossListedCourses.forEach((req, crossListedCourseCode) => {
-  //   requirements.courses.delete(crossListedCourseCode);
-  //   requirements.courses.set(req.code, req);
-  // });
 
   // TODO: check for correctness by counting the units and comparing to the degree's unit count
+  // could keep total units count in groups and check against stated unit totals
 
   return requirements;
 };
@@ -468,7 +484,6 @@ export const scrapeDegrees = async () => {
 };
 
 const TermSchema = z.enum(["F", "W", "SP", "SU", "TBD"]);
-const CourseCodeSchema = z.string().regex(/^[A-Z]+\s\d+$/);
 
 const CourseSchema = z.object({
   code: CourseCodeSchema,
@@ -549,7 +564,7 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
 
 export const SubjectSchema = z.object({
   name: z.string(),
-  code: z.string(),
+  code: CourseCodeSchema,
 });
 
 export type Subject = z.infer<typeof SubjectSchema>;
