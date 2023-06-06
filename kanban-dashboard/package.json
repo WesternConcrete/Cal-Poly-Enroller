@@ -25,6 +25,7 @@
     "@types/react-beautiful-dnd": "^13.1.4",
     "cheerio": "1.0.0-rc.12",
     "eslint-config-next": "^13.4.2",
+    "fetch-retry": "^5.0.6",
     "moment": "^2.29.4",
     "next": "^13.4.2",
     "normalized-reducer": "^0.5.1",

@@ -2,6 +2,8 @@ import { PrismaClient, Requirement } from "@prisma/client";
 import assert from "assert";
 import { constants } from "buffer";
 import * as cheerio from "cheerio/lib/slim";
+import fetchRetry from "fetch-retry";
+const fetch = fetchRetry(global.fetch)
 import { z } from "zod";
 
 const DOMAIN = "https://catalog.calpoly.edu";
