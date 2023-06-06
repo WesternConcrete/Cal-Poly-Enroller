@@ -1,5 +1,6 @@
 import { PrismaClient, Requirement } from "@prisma/client";
 import assert from "assert";
+import { constants } from "buffer";
 import * as cheerio from "cheerio/lib/slim";
 import { z } from "zod";
 
@@ -85,7 +86,6 @@ export type RequirementType = z.infer<typeof RequirementTypeSchema>;
 
 const stripCrosslistInfoFromCourseCode = (courseCode: string) => {
   const match = courseCode.match(/([A-Z]+)(?:\/[A-Z]+)*\s+(\d+)(?:\s+\d+)*/);
-  console.log(match);
   if (!match)
     throw new Error(
       `course code: ${courseCode} did not match the course code regex`
@@ -593,7 +593,7 @@ export const scrapeSubjects = async () => {
   return subjects;
 };
 
-const GEAreasEnum = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVES"]);
+const GEAreasEnum = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVES", "USCP"]);
 
 const GESubAreaSchema = z
   .object({
@@ -611,6 +611,7 @@ const GEAreaSchema = z
     name: z.string().default(""),
     constraints: z.array(z.string()).default([]),
     subareas: z.record(GESubAreaVariant, GESubAreaSchema).default({}),
+    fullfilledBy: z.array(CourseCodeSchema).default([]),
   })
   .default({});
 
@@ -619,7 +620,7 @@ type GEArea = z.infer<typeof GEAreaSchema>;
 export const GEDataSchema = z.map(GEAreasEnum, GEAreaSchema);
 type GEData = z.infer<typeof GEDataSchema>;
 
-/** Returns courses that fulfill ge requirements and which requirements they fulfill */
+/** Returns courses that fulfill ge requirements for each area */
 export const scrapeCourseGEFullfillments = async () => {
   const url =
     "https://catalog.calpoly.edu/generalrequirementsbachelorsdegree/#GE-Requirements";
@@ -644,7 +645,7 @@ export const scrapeCourseGEFullfillments = async () => {
       .first()
       .text()
       .trim();
-    let area : z.infer<typeof GEAreasEnum>;
+    let area: z.infer<typeof GEAreasEnum>;
     if (areaLabel.includes("GE ELECTIVES")) {
       info.name = areaLabel;
       area = "ELECTIVES";
@@ -678,7 +679,7 @@ export const scrapeCourseGEFullfillments = async () => {
           ))
         ) {
           let subconstraint = match[1] ?? match[2];
-          subareaInfo.constraints.push(subconstraint);
+          if (match[1]) subareaInfo.constraints.push(subconstraint);
           label = label.replace(match[0], "").replace("()", "").trim();
           // still push the label at the end
           match = undefined;
@@ -696,18 +697,18 @@ export const scrapeCourseGEFullfillments = async () => {
             /((?:Upper|Lower)-Division) [A-F]( Elective)?s?/
           ))
         ) {
-        let [matched, _subarea, elective] = match;
+          let [matched, _subarea, elective] = match;
           _subarea += elective ?? "";
-          subarea = _subarea
+          subarea = _subarea;
           label = label.replace(matched, "").trim();
           subareaInfo.description = label ?? null;
         }
         if ((match = label.match(/(Area [A-F] Elective)/))) {
-            subarea = "Elective"
+          subarea = "Elective";
         }
         if (!subarea) {
           info.constraints.push(label);
-          if (subareaInfo.constraints) {
+          if (subareaInfo.constraints.length > 0) {
             console.warn(
               "adding subconstraints:",
               subareaInfo.constraints,
@@ -722,28 +723,81 @@ export const scrapeCourseGEFullfillments = async () => {
       });
     sections.set(area, info);
   });
-  const courseTables = $("table.sc_courselist");
+  const courseTables = $("table.sc_courselist:not(div#uscptextcontainer *)");
+
   courseTables.each((_i, table) => {
     const headerElement = $(table)
       .prev("table.sc_sctable")
       .find("tbody")
-      .find("tr")
+      .find("tr.lastrow")
       .find("td.column0")
       .get();
-    // FIXME: error here
-    if (!headerElement) return;
+
     const headerInfo = headerElement.map((e) => $(e).text().trim());
-    const [title, ...meta] = headerInfo;
+    let [title, ...meta] = headerInfo;
+    const commentHeader = $(table)
+      .find("tr.firstrow span.courselistcomment.areaheader")
+      .first()
+      .text()
+      .trim();
+    if (commentHeader && commentHeader !== "") title = commentHeader;
+    console.log("title:", title);
+    // title = commentHeader;
     // TODO: updating title when "td>div.courselistcomment" is encountered
     // TODO: parsing "ge" from title
-    const courses = $(table)
-      .find("td.codecol")
-      .map((_i, codeCol) => $(codeCol).text().trim())
-      .get();
-    const ge = { ge: title, meta, courses };
+
+    const courses = z.array(CourseCodeSchema).parse(
+      $(table)
+        .find("td.codecol")
+        .map((_i, codeCol) => $(codeCol).text().trim())
+        .get()
+    );
+    if (!title) {
+      console.error("found courses for table with no title", { courses });
+      return;
+    }
+    let match;
+    if (title.includes("GE ELECTIVES")) {
+      sections.get("ELECTIVES")!.fullfilledBy = courses;
+    } else if ((match = title.match(/((?:Upper|Lower)-Division) ([A-F])/))) {
+      const [_, division, area] = match;
+      const subarea = sections.get(area)!.subareas[division];
+      if (!subarea) {
+        console.warn(
+          "creating new found subarea:",
+          division,
+          "for",
+          area,
+          "because it was found in the course list"
+        );
+        sections.get(area)!.subareas[division] = GESubAreaSchema.parse({
+          fulfilledBy: courses,
+        });
+      } else subarea.fullfilledBy = courses;
+    } else if ((match = title.match(/(([A-F])[1-4])/))) {
+      const [_, subarea, area] = match;
+      sections.get(area)!.subareas[subarea].fullfilledBy = courses;
+    if (subarea === "B2" || subarea === "B1") {
+        const b3courses = $(table)
+          .find('td:contains("& B3")')
+          .map((_i, b3desc) => $(b3desc).prev().text().trim())
+          .get();
+        const b3 = sections.get(area)!.subareas.B3
+        b3.fullfilledBy = b3.fullfilledBy ?? [];
+        b3.fullfilledBy.push(...b3courses);
+      }
+    }
+    // FIXME: (B2 & B3)
 
     // sections.set(ge.ge, ge);
   });
+  const uscpCourses = $("div#uscptextcontainer table.sc_courselist")
+    .first()
+    .find("td.codecol")
+    .map((_i, codeCol) => $(codeCol).text().trim())
+    .get();
+  sections.set("USCP", GEAreaSchema.parse({ fullfilledBy: uscpCourses }));
+
   // return Array.from(sections.values());
   return sections;
 };
