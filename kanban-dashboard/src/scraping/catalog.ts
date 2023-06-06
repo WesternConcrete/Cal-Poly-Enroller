@@ -127,7 +127,7 @@ export const RequirementGroupSchema: z.ZodType<RequirementGroup> = z.lazy(() =>
 // });
 
 export const RequirementCourseSchema = z.object({
-  kind: RequirementTypeSchema.or(z.string()),
+  kind: RequirementTypeSchema.or(z.string()).nullable(),
   code: CourseCodeSchema,
   units: z.number(),
   title: z.string(),
@@ -148,13 +148,29 @@ export type Degree = z.infer<typeof DegreeSchema>;
 const GEAreaCodeRE = /[ABCDEF][1234]/;
 const GEDivisionCodeRE = /(Upper|Lower)-Division [ABCDEF]( Elective)?/;
 const GeAreaRE = /Area [ABCDEF]( Elective)?/;
-const GESubAreaVariant = z.union([
+
+const GEDivisionSubAreaRE = /(Upper|Lower)-Division( Elective)?/;
+const GESubAreaVariantSchema = z.union([
   z.string().regex(GEAreaCodeRE),
   z.string().regex(GEDivisionCodeRE),
-  z.string().regex(GeAreaRE),
+  z.literal("Elective"),
 ]);
 
+const GEAreasEnumSchema = z.enum([
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "ELECTIVES",
+  "USCP",
+]);
+
+type GEArea = z.infer<typeof GEAreasEnumSchema>;
 const GeRequirementSchema = z.object({
+  area: GEAreasEnumSchema,
+  subarea: GESubAreaVariantSchema,
   code: z
     .string()
     .regex(GEAreaCodeRE)
@@ -179,7 +195,7 @@ export type DegreeRequirements = z.infer<typeof DegreeRequirementsSchema>;
 const parseMajorCourseRequirementsTable = (
   $: cheerio.CheerioAPI,
   table: cheerio.Element,
-  degree: Degree
+  ctx: { name: string; link: string }
 ) => {
   // select from the following
   // If we're in a sftf block the courses are in one of the following formats:
@@ -248,7 +264,6 @@ const parseMajorCourseRequirementsTable = (
       }
       if (!curRequirementKind) {
         console.error("no text in header:", $(tr));
-        break;
       }
     } else if ($(tr).find("span.courselistcomment").length > 0) {
       const comment = $(tr).find("span.courselistcomment").text().trim();
@@ -261,9 +276,9 @@ const parseMajorCourseRequirementsTable = (
           console.warn(
             "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
             "in",
-            degree.name,
+            ctx.name,
             "(",
-            degree.link,
+            ctx.link,
             ")",
             comment
           );
@@ -307,7 +322,7 @@ const parseMajorCourseRequirementsTable = (
             "found different length code,title lists in and block:",
             { course_titles, course_codes },
             "in",
-            degree.name
+            ctx.name
           );
         } else if (course_titles.length === 0) {
           console.warn("didnt find any titles for course list:", course_codes);
@@ -337,6 +352,8 @@ const parseMajorCourseRequirementsTable = (
       const last = groups.length - 1;
 
       if (in_sftf) {
+        if (!groups[last].or)
+          throw Error("expected or when trying to add course in sftf block");
         const last_or = groups[last].or;
         if (last_or.length === 0) {
           last_or.push(course);
@@ -453,6 +470,7 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
+      return
       const { courses, groups } = parseMajorCourseRequirementsTable(
         $,
         table,
@@ -461,12 +479,33 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
       requirements.courses = courses;
       requirements.groups = groups;
     } else if (title === "General Education (GE) Requirements") {
+      return
       requirements.ge = parseGeCourseRequirementsTable($, table);
     } else {
+      return
       console.warn("Unrecognized table with title:", title);
     }
   });
+  const concentrationsList = $("h2:contains(Concentration)+ul>li a")
+    .get()
+    .map((elem) => ({ name: $(elem).text(), link: "https://catalog.calpoly.edu" + $(elem).attr("href") }));
+  const concentrations = await Promise.all(
+    concentrationsList.map(async (conc) => {
+      if (!conc.link) throw new Error(`Concentration ${conc.name} has no link`);
+      const $ = await fetch(conc.link)
+        .then((res) => res.text())
+        .then(cheerio.load);
+      const tables = $("table.sc_courselist")
+        .get()
+      console.log("found", tables.length, "tables for concentration")
+      conc.courses = tables
+        .map((table) => parseMajorCourseRequirementsTable($, table, conc));
+      return conc;
+    })
+  );
+  requirements.concentrations = concentrations;
 
+  // FIXME: using unit counts to determine how many classes of sftf/or groups are required
   // TODO: check for correctness by counting the units and comparing to the degree's unit count
   // could keep total units count in groups and check against stated unit totals
 
@@ -595,9 +634,7 @@ export const scrapeSubjects = async () => {
   return subjects;
 };
 
-const GEAreasEnum = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVES", "USCP"]);
-
-const GESubAreaSchema = z
+const GESubAreaDataSchema = z
   .object({
     constraints: z.array(z.string()).default([]),
     name: z.string().nullable().default(null),
@@ -606,20 +643,20 @@ const GESubAreaSchema = z
   })
   .default({});
 
-type GESubArea = z.infer<typeof GESubAreaSchema>;
+type GESubAreaData = z.infer<typeof GESubAreaDataSchema>;
 
-const GEAreaSchema = z
+const GEAreaDataSchema = z
   .object({
     name: z.string().default(""),
     constraints: z.array(z.string()).default([]),
-    subareas: z.record(GESubAreaVariant, GESubAreaSchema).default({}),
+    subareas: z.record(GESubAreaVariantSchema, GESubAreaDataSchema).default({}),
     fullfilledBy: z.array(CourseCodeSchema).default([]),
   })
   .default({});
 
-type GEArea = z.infer<typeof GEAreaSchema>;
+type GEAreaData = z.infer<typeof GEAreaDataSchema>;
 
-export const GEDataSchema = z.map(GEAreasEnum, GEAreaSchema);
+export const GEDataSchema = z.map(GEAreasEnumSchema, GEAreaDataSchema);
 type GEData = z.infer<typeof GEDataSchema>;
 
 /** Returns courses that fulfill ge requirements for each area */
@@ -639,7 +676,7 @@ export const scrapeCourseGEFullfillments = async () => {
       $(table).prev(":not(.sc_courselist)").length > 0
   );
   areaTables.each((_i, table) => {
-    const info: GEArea = GEAreaSchema.parse({});
+    const info: GEAreaData = GEAreaDataSchema.parse({});
     const tbody = $(table).find("tbody");
     let areaLabel = $(tbody)
       .find("tr.firstrow")
@@ -647,7 +684,7 @@ export const scrapeCourseGEFullfillments = async () => {
       .first()
       .text()
       .trim();
-    let area: z.infer<typeof GEAreasEnum>;
+    let area: GEArea;
     if (areaLabel.includes("GE ELECTIVES")) {
       info.name = areaLabel;
       area = "ELECTIVES";
@@ -658,7 +695,7 @@ export const scrapeCourseGEFullfillments = async () => {
         throw new Error(
           "unrecognized ge area label for section: ".concat(areaLabel)
         );
-      area = GEAreasEnum.parse(match[1]);
+      area = GEAreasEnumSchema.parse(match[1]);
       areaLabel = areaLabel.replace(match[0], "").trim();
       info.name = areaLabel;
     }
@@ -674,7 +711,7 @@ export const scrapeCourseGEFullfillments = async () => {
       .forEach((label) => {
         let match;
         let subarea;
-        let subareaInfo: GESubArea = GESubAreaSchema.parse({});
+        let subareaInfo: GESubAreaData = GESubAreaDataSchema.parse({});
         if (
           (match = label.match(
             /(?:-?(Writing Intensive))|(?:\s-\s((?:[\w \d,;-]|\(Standard\))+))/
@@ -763,7 +800,9 @@ export const scrapeCourseGEFullfillments = async () => {
       sections.get("ELECTIVES")!.fullfilledBy = courses;
     } else if ((match = title.match(/((?:Upper|Lower)-Division) ([A-F])/))) {
       const [_, division, area] = match;
-      const subarea = sections.get(area)!.subareas[division];
+      const subarea = sections.get(GEAreasEnumSchema.parse(area))!.subareas[
+        division
+      ];
       if (!subarea) {
         console.warn(
           "creating new found subarea:",
@@ -772,19 +811,22 @@ export const scrapeCourseGEFullfillments = async () => {
           area,
           "because it was found in the course list"
         );
-        sections.get(area)!.subareas[division] = GESubAreaSchema.parse({
-          fulfilledBy: courses,
-        });
+        sections.get(GEAreasEnumSchema.parse(area))!.subareas[division] =
+          GESubAreaDataSchema.parse({
+            fulfilledBy: courses,
+          });
       } else subarea.fullfilledBy = courses;
     } else if ((match = title.match(/(([A-F])[1-4])/))) {
       const [_, subarea, area] = match;
-      sections.get(area)!.subareas[subarea].fullfilledBy = courses;
-    if (subarea === "B2" || subarea === "B1") {
+      sections.get(GEAreasEnumSchema.parse(area))!.subareas[
+        subarea
+      ].fullfilledBy = courses;
+      if (subarea === "B2" || subarea === "B1") {
         const b3courses = $(table)
           .find('td:contains("& B3")')
           .map((_i, b3desc) => $(b3desc).prev().text().trim())
           .get();
-        const b3 = sections.get(area)!.subareas.B3
+        const b3 = sections.get(GEAreasEnumSchema.parse(area))!.subareas.B3;
         b3.fullfilledBy = b3.fullfilledBy ?? [];
         b3.fullfilledBy.push(...b3courses);
       }
@@ -798,7 +840,10 @@ export const scrapeCourseGEFullfillments = async () => {
     .find("td.codecol")
     .map((_i, codeCol) => $(codeCol).text().trim())
     .get();
-  sections.set("USCP", GEAreaSchema.parse({ fullfilledBy: uscpCourses }));
+  sections.set("USCP", GEAreaDataSchema.parse({ fullfilledBy: uscpCourses }));
+  // FIXME: GWR courses
+  // FIXME: extract parsing of these tables into separate functtions
+  // to allow all ge's, uscp, gwr, and subjects from https://catalog.calpoly.edu/coursesaz
 
   // return Array.from(sections.values());
   return sections;
