@@ -186,7 +186,7 @@ export default function Menubar({}: MenubarProps) {
                     disabled={selectedRequirements.length === 0}
                   >
                     Mark Complete{" "}
-                    <CheckCheck className="ml-3 ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
+                    <CheckCheck className="icon-margin ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -217,7 +217,7 @@ export default function Menubar({}: MenubarProps) {
                     disabled={selectedRequirements.length === 0}
                   >
                     Enroll
-                    <GraduationCap className="ml-3 ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    <GraduationCap className="icon-margin ml-auto h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

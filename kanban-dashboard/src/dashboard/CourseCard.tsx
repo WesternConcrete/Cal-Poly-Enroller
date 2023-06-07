@@ -154,8 +154,8 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
             w-full 
             ${
               getCollapsed()
-                ? "min-h-[30px] opacity-40 w-[205px]"
-                : "min-h-[70px] w-[110px]"
+                ? "min-h-[30px] opacity-40 collapsed-course-width"
+                : "min-h-[70px] regular-course-width"
             } 
             ${getHoveringOverCollapsedQuarter() ? "mt-[0.5rem]" : ""}
             rounded-[0.5rem] 

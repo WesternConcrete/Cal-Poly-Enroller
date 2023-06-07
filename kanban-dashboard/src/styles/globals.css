@@ -78,4 +78,16 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  .icon-margin {
+    margin-left: .5rem !important
+  }
+  
+  .collapsed-course-width {
+    width: 195px !important;
+  }
+  
+  .regular-course-width {
+    width: 110px !important;
+  }
 }

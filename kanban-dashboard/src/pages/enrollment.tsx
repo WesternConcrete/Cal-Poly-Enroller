@@ -197,9 +197,9 @@ export default function EnrollmentPage() {
                           >
                             {section.courseCode}
                             {section.courseCode === copiedCourse ? (
-                              <Check className="ml-1 ml-auto h-4 w-4 shrink-0" />
+                              <Check className="icon-margin ml-auto h-4 w-4 shrink-0" />
                             ) : (
-                              <Copy className="ml-1 ml-auto h-4 w-4 shrink-0" />
+                              <Copy className="icon-margin ml-auto h-4 w-4 shrink-0" />
                             )}
                           </Button>
                         </TableCell>
