@@ -1,7 +1,7 @@
 import Layout from "../components/Layout";
 import { Transition } from "@headlessui/react";
 import React, { useState, useEffect } from "react";
-import { Check, ChevronsUpDown, BellRing } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { api } from "~/utils/api";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";

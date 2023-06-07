@@ -4,7 +4,6 @@ import CourseCard from "./CourseCard";
 import { useLaneStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/state";
 import { type Quarter } from "~/server/api/root";
-import { TERM_SEASON } from "~/scraping/registrar";
 
 export interface Props {
   quarter: Quarter;
@@ -27,26 +26,26 @@ export default function CollapsedQuarter({ quarter }: Props) {
         </div>
       </div>
       <Droppable type="quarter" droppableId={quarter.id.toString()}>
-  {(provided: DroppableProvided) => {
-    return (
-        <div
-          ref={provided.innerRef}
-          {...provided.droppableProps}
-          className={`p-[.5rem] h-full`}
-        >
-          {quarterRequirements.map((requirement, index) => (
-            <CourseCard
-              requirement={requirement}
-              index={index}
-              key={index}
-              collapsed={true}
-            />
-          ))}
-          {provided.placeholder}
-        </div>
-    );
-  }}
-</Droppable>
+        {(provided: DroppableProvided) => {
+          return (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`p-[.5rem] h-full`}
+            >
+              {quarterRequirements.map((requirement, index) => (
+                <CourseCard
+                  requirement={requirement}
+                  index={index}
+                  key={index}
+                  collapsed={true}
+                />
+              ))}
+              {provided.placeholder}
+            </div>
+          );
+        }}
+      </Droppable>
     </div>
   );
 }

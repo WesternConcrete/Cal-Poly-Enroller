@@ -4,8 +4,8 @@ import React, {
   createContext,
   useContext,
   type FC,
-  SetStateAction,
-  Dispatch,
+  type SetStateAction,
+  type Dispatch,
 } from "react";
 
 import { type Requirement, type Degree } from "~/server/api/root";
@@ -38,7 +38,9 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   const [degree, setDegree] = useState<Degree | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
 
-  const [selectedRequirements, setSelectedRequirements] = useState<number[]>([]);
+  const [selectedRequirements, setSelectedRequirements] = useState<number[]>(
+    []
+  );
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
@@ -57,7 +59,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
     startYear,
     setStartYear,
     selectedRequirements,
-    setSelectedRequirements
+    setSelectedRequirements,
   };
 
   // TODO: move nested courses fetch here to avoid loading spinner waterfall
@@ -67,7 +69,6 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
       {children}
     </FlowchartState.Provider>
   );
-  
 };
 
 export const useMoveRequirement = () => {
