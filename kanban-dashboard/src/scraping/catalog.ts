@@ -2,6 +2,7 @@ import { PrismaClient, Requirement } from "@prisma/client";
 import assert from "assert";
 import { constants } from "buffer";
 import * as cheerio from "cheerio/lib/slim";
+import { CheerioAPI } from "cheerio/lib/slim";
 import fetchRetry from "fetch-retry";
 const fetch = fetchRetry(global.fetch);
 import { z } from "zod";
@@ -219,15 +220,24 @@ const CourseRequirementSchema: z.ZodType<CourseRequirement> = z.lazy(() =>
 );
 
 const parseDegreeRequirementSectionHeader = (
-  sectionTitle: string
+  $: CheerioAPI,
+  headerElem: cheerio.Element
 ):
-  | { kind: RequirementType | null }
-  | { kind: "elective"; electiveKind: string } => {
+  | { kind: null; header: string }
+  | { kind: RequirementType }
+  | { kind: "elective"; electiveKind: string }
+  | { kind: "support"; supportKind?: string } => {
   let kind: RequirementType | null = null;
+  let sectionTitle = $(headerElem)
+    .find("span")
+    .text()
+    .replace(/\(.*\)$/, "")
+    .trim();
   let electiveKind;
+  let supportKind = null;
   if (sectionTitle.includes("MAJOR COURSES")) {
     kind = "major";
-  } else if (!!sectionTitle.match(/^[\w\/\s]+ electives?$/i)) {
+  } else if (!!sectionTitle.match(/^[\w\/\s\-]+ electives?$/i)) {
     // FIXME: include the type of elective
     kind = "elective";
     electiveKind = sectionTitle.replace(/electives?/i, "").trim();
@@ -235,11 +245,22 @@ const parseDegreeRequirementSectionHeader = (
     kind = "ge";
   } else if (sectionTitle.includes("SUPPORT COURSES")) {
     kind = "support";
+  } else {
+    kind = "support";
+    supportKind = sectionTitle;
   }
   if (electiveKind) {
     if (kind !== "elective")
       throw new Error("found elective without elective kind: " + sectionTitle);
     return { kind, electiveKind };
+  }
+  if (supportKind) {
+    if (kind !== "support")
+      throw new Error("found support without support kind: " + sectionTitle);
+    return { kind, supportKind };
+  }
+  if (!kind) {
+    return { kind, header: sectionTitle };
   }
   return { kind };
 };
@@ -332,7 +353,42 @@ export const parseCourseRequirementsTable = (
     }
     return CourseRequirementSchema.parse(course);
   };
-
+  const parseListOfCourseRows = (rows: cheerio.Cheerio<cheerio.Element>) => {
+    let courses: CourseRequirement[] = [];
+    rows.each((_, row) => {
+      if ($(row).is(":has(span.courselistcomment)")) {
+        // TODO: parsing comments (especially unit counts)
+        console.log("comment:", $(row).text());
+        return;
+      }
+      let course = parseCourseRow(row);
+      if (course.kind === "or") {
+        let prevCourse = courses.pop();
+        if (!prevCourse) {
+          console.error(
+            "found or row:",
+            $(row).text(),
+            "with no preceeding row"
+          );
+          return;
+        }
+        switch (prevCourse.kind) {
+          case "or":
+            prevCourse.courses.push(...course.courses);
+            course = prevCourse;
+            break;
+          case "course":
+          case "and":
+            course.units = prevCourse.units;
+            prevCourse.units = 0;
+            course.courses.push(prevCourse);
+            break;
+        }
+      }
+      courses.push(course);
+    });
+    return courses;
+  };
   // some of the concentrations have no top level header for the course list
   // if that is the case we add one add one with the label Tech Electives
   if (
@@ -341,9 +397,13 @@ export const parseCourseRequirementsTable = (
       ":has(tr.firstrow:has(td.codecol,span.courselistcomment:not(.areaheader)))"
     )
   ) {
-    $('<tr class="areaheader">Technical Electives</tr>').insertBefore(
-      "tr.firstrow"
-    );
+    let txt = "Technical Electives";
+    if ($(table).find("tr.firstrow").is(":has(td.codecol)")) {
+      txt = "MAJOR COURSES";
+    }
+    $(
+      `<tr class="areaheader"><td><span class="courselistcomment areaheader">${txt}</span></td></tr>`
+    ).insertBefore("tr.firstrow");
   }
   // TODO: consider just reparsing the page when a non-header header is found instead of checking each comment for each page
   // TODO: consider making sections not be the result of mapping but of pushing found sections to list and create way to modify the lists of
@@ -351,14 +411,21 @@ export const parseCourseRequirementsTable = (
   let comments = $(table)
     .find("tr:has(span.courselistcomment)")
     .each((_, c) => {
-      const txt = $(c).text();
+      const txt = $(c).find("span").text();
       let match;
       // sometimes things that should be headers but are comments instead :/
       // see Mathematics/Statistics Elective on the csc game-development concentration page
-      if (parseDegreeRequirementSectionHeader(txt).kind !== null) {
-        console.log("making comment:", $(c).text(), "a header");
-        $(c).addClass("areaheader");
-        return;
+      if (!$(c).hasClass("areaheader") && !$(c).prev().hasClass("areaheader")) {
+        let header = parseDegreeRequirementSectionHeader($, c);
+        if (
+          header.kind !== null &&
+          header.kind === "support" &&
+          !header.supportKind
+        ) {
+          console.log("making comment:", $(c).text(), "a header");
+          $(c).addClass("areaheader");
+          return;
+        }
       }
       const approvedBelowRE =
         /up to (\d+) units may be taken from the approved ([\w\s]+) listed below/i;
@@ -406,52 +473,21 @@ export const parseCourseRequirementsTable = (
               );
             }
           } else {
-            console.log($(orRow).text());
             courses = $(sftf).nextUntil(
               "tr.areaheader,tr:has(span.courselistcomment:contains(Select)),tr.listsum"
             );
           }
-               // TODO: remove this filterSelector and parse comments
-          courses = courses.filter(":has(tr.codecol)").get().map(parseCourseRow);
+          // FIXME: remove this filterSelector and parse comments
+          courses = parseListOfCourseRows(courses.filter(":has(td.codecol)"));
           $(sftf).addClass(parsedClass);
           return { kind: "or", courses, units: parseRowUnits(sftf) };
         });
       const remainingRows = $(sectionRows).not(`tr.${parsedClass}`);
-      let remainingCourses: CourseRequirement[] = [];
-      remainingRows.each((_, row) => {
-        if ($(row).is(":has(span.courselistcomment)")) {
-          // TODO: parsing comments (especially unit counts)
-          console.log("comment:", $(row).text());
-          return;
-        }
-        let course = parseCourseRow(row);
-        if (course.kind === "or") {
-          let prevCourse = remainingCourses.pop();
-          if (!prevCourse) {
-            console.error(
-              "found or row:",
-              $(row).text(),
-              "with no preceeding row"
-            );
-            return;
-          }
-          switch (prevCourse.kind) {
-            case "or":
-              prevCourse.courses.push(...course.courses);
-              course = prevCourse;
-              break;
-            case "course":
-            case "and":
-              course.units = prevCourse.units;
-              prevCourse.units = 0;
-              course.courses.push(prevCourse);
-              break;
-          }
-        }
-        remainingCourses.push(course);
-      });
+      let remainingCourses: CourseRequirement[] =
+        parseListOfCourseRows(remainingRows);
+
       const section = {
-        ...parseDegreeRequirementSectionHeader($(headerElem).text()),
+        ...parseDegreeRequirementSectionHeader($, headerElem),
         courses: sftfBlocks.concat(remainingCourses),
       };
       if (!section.kind) {
@@ -489,16 +525,29 @@ const parseGeCourseRequirementsTable = (
           return null;
         }
       }
-      let [code] = label.match(GEAreaCodeRE) ??
-        label.match(GeAreaRE) ??
-        label.match(GEDivisionCodeRE) ??
-        label.match(/^[ABCDEF]/) ?? [null];
-      if (code === undefined) {
+      let match;
+      let area = null;
+      let subarea = null;
+      if ((match = label.match(/([ABCDEF])([1234])?/))) {
+            let matched, num;
+        [matched, area, num] = match;
+        subarea = !!num ? matched : area
+      } else if ((match = label.match(/Area ([ABCDEF])( Elective)/))) {
+        let _;
+        [_, area, subarea] = match;
+      } else if (
+        (match = label.match(
+          /((?:Upper|Lower)-Division) ([A-F])( Elective)?s?/
+        ))
+      ) {
+        let _, elective;
+        [_, subarea, area, elective] = match;
+        subarea += elective ?? "";
+      }
+      if (area === null) {
         if (label.includes("Select courses from two different areas")) {
           return null;
         } else if (label.includes("GE Electives")) {
-          code = null;
-          console.log(label);
           console.assert(isNaN(units), "electives does not have NaN units");
         } else {
           console.error("unrecognized ge:", label);
@@ -511,11 +560,11 @@ const parseGeCourseRequirementsTable = (
         const b3OneLabWarningStr =
           "One lab taken with either a B1 or B2 course";
         const twoAreasWarning = "Select courses from two different areas";
-        if (!rowText.includes(twoAreasWarning) && code !== "B3") {
+        if (!rowText.includes(twoAreasWarning) && area !== "B3") {
           console.error("could not determine why units for:", label, "was NaN");
         }
       }
-      return { code, units };
+      return { area, subarea, units };
     })
     .get()
     .filter((req) => !!req);
@@ -534,7 +583,7 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
-        requirements.courses = parseCourseRequirementsTable($, table, degree)
+      requirements.courses = parseCourseRequirementsTable($, table, degree);
     } else if (title === "General Education (GE) Requirements") {
       requirements.ge = parseGeCourseRequirementsTable($, table);
     } else {
@@ -562,6 +611,10 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
       conc.courses = tables
         .map((table) => parseCourseRequirementsTable($, table, ctx))
         .flat();
+      const linkSegments = conc.link
+        .split("/")
+        .filter((s) => s.length > 0 && !s.startsWith("#"));
+      conc.id = linkSegments.at(-1);
       return conc;
     })
   );
