@@ -3,7 +3,7 @@ import assert from "assert";
 import { constants } from "buffer";
 import * as cheerio from "cheerio/lib/slim";
 import fetchRetry from "fetch-retry";
-const fetch = fetchRetry(global.fetch)
+const fetch = fetchRetry(global.fetch);
 import { z } from "zod";
 
 const DOMAIN = "https://catalog.calpoly.edu";
@@ -188,223 +188,287 @@ export const DegreeRequirementsSchema = z.object({
   groups: z.array(RequirementGroupSchema),
   courses: z.map(z.string(), RequirementCourseSchema),
   ge: z.array(GeRequirementSchema),
+  electives: z.map(z.string()),
 });
 
 export type DegreeRequirements = z.infer<typeof DegreeRequirementsSchema>;
 
-const parseMajorCourseRequirementsTable = (
+type CourseRequirement =
+  | { kind: "or"; courses: CourseRequirement[]; units: number }
+  | { kind: "and"; courses: CourseRequirement[]; units: number }
+  | { kind: "course"; course: CourseCode; units: number };
+
+const CourseRequirementSchema: z.ZodType<CourseRequirement> = z.lazy(() =>
+  z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("or"),
+      courses: z.array(CourseRequirementSchema),
+      units: z.number(),
+    }),
+    z.object({
+      kind: z.literal("and"),
+      courses: z.array(CourseRequirementSchema),
+      units: z.number(),
+    }),
+    z.object({
+      kind: z.literal("course"),
+      course: CourseCodeSchema,
+      units: z.number(),
+    }),
+  ])
+);
+
+const parseDegreeRequirementSectionHeader = (
+  sectionTitle: string
+):
+  | { kind: RequirementType | null }
+  | { kind: "elective"; electiveKind: string } => {
+  let kind: RequirementType | null = null;
+  let electiveKind;
+  if (sectionTitle.includes("MAJOR COURSES")) {
+    kind = "major";
+  } else if (!!sectionTitle.match(/^[\w\/\s]+ electives?$/i)) {
+    // FIXME: include the type of elective
+    kind = "elective";
+    electiveKind = sectionTitle.replace(/electives?/i, "").trim();
+  } else if (sectionTitle.includes("GENERAL EDUCATION")) {
+    kind = "ge";
+  } else if (sectionTitle.includes("SUPPORT COURSES")) {
+    kind = "support";
+  }
+  if (electiveKind) {
+    if (kind !== "elective")
+      throw new Error("found elective without elective kind: " + sectionTitle);
+    return { kind, electiveKind };
+  }
+  return { kind };
+};
+
+// select from the following blocks:
+// If we're in a sftf block the courses are in one of the following formats:
+// a)
+// [course]
+// or [course]
+// or [course]
+// ... until row not starting with "or"
+//
+// b)
+// [course]
+// or
+// [course]
+// or
+// ... until there are two [course] rows not separated by "or" row
+//
+// c)
+// [course]
+// [course]
+// [course]
+// ... until another sftf block or areaheader block (because y tf not)
+//
+// To differentiate these cases the in_sftf flag signifies if we're in a
+// stft block and the sftf_sep is either "or" (for cases a or b) or null (for case c)
+//
+// Note that or conditions can occur OUTSIDE of a sftf block in which
+// case we get our FOURTH and (hopefullly) final option:
+// d)
+// [course]
+// or [course]
+/// mapping of course code to meta information about the course (such as whether it is a support/major/etc)
+
+export const parseCourseRequirementsTable = (
   $: cheerio.CheerioAPI,
   table: cheerio.Element,
-  ctx: { name: string; link: string }
+  ctx: { kind: "degree" | "concentration"; name: string; link: string }
 ) => {
-  // select from the following
-  // If we're in a sftf block the courses are in one of the following formats:
-  // a)
-  // [course]
-  // or [course]
-  // or [course]
-  // ... until row not starting with "or"
-  //
-  // b)
-  // [course]
-  // or
-  // [course]
-  // or
-  // ... until there are two [course] rows not separated by "or" row
-  //
-  // c)
-  // [course]
-  // [course]
-  // [course]
-  // ... until another sftf block or areaheader block (because y tf not)
-  //
-  // To differentiate these cases the in_sftf flag signifies if we're in a
-  // stft block and the sftf_sep is either "or" (for cases a or b) or null (for case c)
-  //
-  // Note that or conditions can occur OUTSIDE of a sftf block in which
-  // case we get our FOURTH and (hopefullly) final option:
-  // d)
-  // [course]
-  // or [course]
-  /// mapping of course code to meta information about the course (such as whether it is a support/major/etc)
   const courses = new Map();
-  // TODO:
-  const groups: RequirementGroup[] = [];
-  const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
+  const parsedClass = "parsed";
 
-  let curRequirementKind: string | null = null;
-  // within a select from the following block
-  // see comment at top of file which explains these flags
-  let in_sftf = false;
-  let sftf_sep = null;
-  let prev_was_or = false;
-  const rows = $(table).find("tr");
-  for (let i = 0; i < rows.length; i++) {
-    const tr = rows[i];
-    // TODO: extracting <sup>1</sup> footnote tags
+  const parseRowUnits = (row: cheerio.Element) => {
+    // TODO: error checking
+    let unitsStr = $(row).find("td.hourscol").text();
+    let units = unitsStr == "" ? 0 : parseInt(unitsStr);
+    return units;
+  };
+  const markRowAsParsed = (
+    rowOrIndex: number | cheerio.Element,
+    row?: cheerio.Element
+  ) => {
+    if (typeof rowOrIndex !== "number") {
+      row = rowOrIndex;
+    }
+    if (!row) throw new Error("trying to mark undefined row as parsed");
+    $(row).addClass(parsedClass);
+  };
+  const parseCourseRow = (row: cheerio.Element): CourseRequirement => {
+    let codeCol = $(row).find("td.codecol");
+    if (codeCol.length !== 1) {
+      throw new Error(
+        `tried to parse row: ${$(row).text()} without codecol ${ctx.link}`
+      );
+    }
 
-    if ($(tr).hasClass("areaheader")) {
-      in_sftf = false;
-      prev_was_or = false;
-      sftf_sep = null;
-      // new section
-      const sectionTitle = $(tr).text().trim();
-      if (sectionTitle.includes("MAJOR COURSES")) {
-        curRequirementKind = "major";
-      } else if (sectionTitle.includes("Electives")) {
-        // FIXME: include the type of elective
-        curRequirementKind = "elective";
-      } else if (sectionTitle.includes("GENERAL EDUCATION")) {
-        curRequirementKind = "ge";
-      } else if (sectionTitle.includes("SUPPORT COURSES")) {
-        curRequirementKind = "support";
-      } else {
-        curRequirementKind = sectionTitle as RequirementType;
-        console.log("Unrecognized section kind:", sectionTitle);
-      }
-      if (!curRequirementKind) {
-        console.error("no text in header:", $(tr));
-      }
-    } else if ($(tr).find("span.courselistcomment").length > 0) {
-      const comment = $(tr).find("span.courselistcomment").text().trim();
-      if (comment.match(SFTF_RE)) {
-        in_sftf = true;
-        groups.push({ or: [] });
-        sftf_sep = null;
-      } else if (comment === "or") {
-        if (!in_sftf) {
-          console.warn(
-            "Found an \"or\" row outside of 'Select from the following' block. There's even more variations :/",
-            "in",
-            ctx.name,
-            "(",
-            ctx.link,
-            ")",
-            comment
-          );
-          break;
-        }
-        sftf_sep = "or";
-        prev_was_or = true;
-      } else if (!comment.match(/\(?[Ss](ee|elect).*below.?\)?$/)) {
-        console.error("unrecognized comment:", comment);
-      }
+    let units = parseRowUnits(row);
+
+    markRowAsParsed(row);
+
+    let code = $(codeCol).find("a.code");
+    let course;
+    // TODO: check for orclass
+    if (code.length > 1 && $(row).is(":has(span:contains(&))")) {
+      // and group
+      // TODO: check to make sure its an and row
+      let courses = $(code)
+        .map((_, c) => ({ kind: "course", course: $(c).text(), units: 0 }))
+        .get();
+      course = { kind: "and", courses, units };
+    } else if (codeCol.hasClass("orclass")) {
+      course = {
+        kind: "or",
+        courses: [{ kind: "course", course: $(code).text(), units: 0 }],
+        units,
+      };
     } else {
-      const course_elem = $(tr).find("td.codecol a[title]");
-      let course: any; // TODO: type this
-      const isAndGroup = course_elem.length > 1;
-      if (isAndGroup) {
-        // course is actually courses plural
-        // make sure it's actually an '&' of the courses
-        if (!$(tr).find("span.blockindent").text().includes("&")) {
-          console.error(
-            "multiple elements found but no & to be found in:",
-            $(tr)
-          );
-        }
-        const course_codes: string[] = [];
-        $(course_elem).each((_i, c) => {
-          course_codes.push($(c).text().trim());
-        });
-        const course_titles: string[] = [];
-        const titles = $(tr).find("td:not([class])");
-        $(titles)
-          .contents()
-          .each((i: number, t) => {
-            if (t.type === "text" && i === 0) {
-              course_titles.push($(t).text().trim());
-            } else if (t.type === "tag" && t.name === "span") {
-              course_titles.push($(t).text().trim().replace(/^and /, ""));
-            }
-          });
-        if (course_codes.length !== course_titles.length) {
-          console.warn(
-            "found different length code,title lists in and block:",
-            { course_titles, course_codes },
-            "in",
-            ctx.name
-          );
-        } else if (course_titles.length === 0) {
-          console.warn("didnt find any titles for course list:", course_codes);
-        } else {
-          course_codes.map((code, i) => {
-            courses.set(code, {
-              kind: curRequirementKind,
-              code,
-              title: course_titles[i],
-              units: 0, // TODO: total units
-            });
-          });
-        }
-
-        course = { and: course_codes };
-      } else if (course_elem.length !== 1) {
-        if ($(tr).hasClass("listsum")) {
-          continue;
-        }
-        // TODO: handle sections with references to other information on page
-        console.log("no title for:", $(tr).find("td.codecol").text().trim());
-      }
-      if (!isAndGroup && course_elem.length === 1) {
-        course = course_elem.text().trim();
-      }
-      const has_orclass = $(tr).hasClass("orclass");
-      const last = groups.length - 1;
-
-      if (in_sftf) {
-        if (!groups[last].or)
-          throw Error("expected or when trying to add course in sftf block");
-        const last_or = groups[last].or;
-        if (last_or.length === 0) {
-          last_or.push(course);
-        } else if (last_or.length >= 1) {
-          if (last_or.length === 1 && has_orclass) {
-            sftf_sep = "or";
-          }
-          if (has_orclass || prev_was_or || sftf_sep == null) {
-            groups[last].or.push(course);
-          } else {
-            in_sftf = false;
-            sftf_sep = null;
-          }
-        }
-        prev_was_or = false;
-      } else if (has_orclass) {
-        // TODO: assert data.cur.last is not or already
-        // (multiple or's chained togehter outside of sftf)
-        if (groups[last].or) {
-          groups[last].or.push(course);
-        } else {
-          groups[last] = {
-            or: [groups[last], course],
-          };
-        }
-      } else if (!in_sftf) {
-        // Normal row
-        groups.push(course);
-      }
-      if (!course.and) {
-        const title = $(tr).find("td:not([class])").text().trim();
-        // TODO: more accurate units when in or/and block
-        const unitsStr = $(tr).find("td.hourscol").text().trim() || 0;
-        const units = parseInt(unitsStr);
-        const code = course;
-        const courseObj = RequirementCourseSchema.parse({
-          kind: curRequirementKind,
-          title,
-          units,
-          code,
-        });
-        courses.set(code, courseObj);
-      }
+      course = { kind: "course", course: $(code).text(), units };
     }
+    return CourseRequirementSchema.parse(course);
+  };
+
+  // some of the concentrations have no top level header for the course list
+  // if that is the case we add one add one with the label Tech Electives
+  if (
+    ctx.kind === "concentration" &&
+    $(table).is(
+      ":has(tr.firstrow:has(td.codecol,span.courselistcomment:not(.areaheader)))"
+    )
+  ) {
+    $('<tr class="areaheader">Technical Electives</tr>').insertBefore(
+      "tr.firstrow"
+    );
   }
-  courses.forEach((code, { kind }) => {
-    if (["support", "elective"].includes(kind) && !!groups.find(code)) {
-      console.error("/////", kind, code, "not in or/and group");
-    }
-  });
-  return { courses, groups };
+  // TODO: consider just reparsing the page when a non-header header is found instead of checking each comment for each page
+  // TODO: consider making sections not be the result of mapping but of pushing found sections to list and create way to modify the lists of
+  // headers/sftf comments then use if statements instead of the following replacements
+  let comments = $(table)
+    .find("tr:has(span.courselistcomment)")
+    .each((_, c) => {
+      const txt = $(c).text();
+      let match;
+      // sometimes things that should be headers but are comments instead :/
+      // see Mathematics/Statistics Elective on the csc game-development concentration page
+      if (parseDegreeRequirementSectionHeader(txt).kind !== null) {
+        console.log("making comment:", $(c).text(), "a header");
+        $(c).addClass("areaheader");
+        return;
+      }
+      const approvedBelowRE =
+        /up to (\d+) units may be taken from the approved ([\w\s]+) listed below/i;
+      if (!!(match = txt.match(approvedBelowRE))) {
+        const [_, units, sectionTitle] = match;
+        $(c).replaceWith(`<tr class="areaheader">${sectionTitle}</tr>
+                             <tr>
+                                <td> <span class="courselistcomment"> Select from the following</span></td>
+                                <td class="hourscol">${units}</td>
+                            </tr>`);
+      }
+    });
+
+  const sectionHeaders = $(table).find("tr.areaheader");
+  const SFTF_RE = /\s*Select( one sequence)? from the following.*/;
+  // TODO: check if table begins with course row (in concentrations) and figure out how to handle that
+  const sections = $(sectionHeaders)
+    .get()
+    .map((headerElem) => {
+      $(headerElem).addClass(parsedClass);
+      const sectionRows = $(headerElem).nextUntil("tr.areaheader,tr.listsum");
+      const sftfBlocks: CourseRequirement[] = $(sectionRows)
+        .filter("tr:has(span.courselistcomment)")
+        .filter(
+          (_i, e) => !!$(e).find("span.courselistcomment").text().match(SFTF_RE)
+        )
+        .get()
+        .map((sftf) => {
+          // see select from the following blocks comment above
+          let orRow = $(sftf).next().next();
+          let courses;
+          if ($(orRow).is(":has(td.orclass)")) {
+            console.log("orclass");
+            courses = $(orRow)
+              .nextUntil(":not(:has(td.orclass))")
+              .add(orRow)
+              .add($(orRow).prev());
+          } else if ($(orRow).is(":has(span.courselistcomment:contains(or))")) {
+            console.log("dedicated or row");
+            courses = $(orRow).prev().add($(orRow).next());
+            orRow.addClass(parsedClass);
+            if ($(orRow).next().next().text() === "or") {
+              console.warn(
+                "found more than two courses in or list separated by dedicated or rows...skipping"
+              );
+            }
+          } else {
+            console.log($(orRow).text());
+            courses = $(sftf).nextUntil(
+              "tr.areaheader,tr:has(span.courselistcomment:contains(Select)),tr.listsum"
+            );
+          }
+               // TODO: remove this filterSelector and parse comments
+          courses = courses.filter(":has(tr.codecol)").get().map(parseCourseRow);
+          $(sftf).addClass(parsedClass);
+          return { kind: "or", courses, units: parseRowUnits(sftf) };
+        });
+      const remainingRows = $(sectionRows).not(`tr.${parsedClass}`);
+      let remainingCourses: CourseRequirement[] = [];
+      remainingRows.each((_, row) => {
+        if ($(row).is(":has(span.courselistcomment)")) {
+          // TODO: parsing comments (especially unit counts)
+          console.log("comment:", $(row).text());
+          return;
+        }
+        let course = parseCourseRow(row);
+        if (course.kind === "or") {
+          let prevCourse = remainingCourses.pop();
+          if (!prevCourse) {
+            console.error(
+              "found or row:",
+              $(row).text(),
+              "with no preceeding row"
+            );
+            return;
+          }
+          switch (prevCourse.kind) {
+            case "or":
+              prevCourse.courses.push(...course.courses);
+              course = prevCourse;
+              break;
+            case "course":
+            case "and":
+              course.units = prevCourse.units;
+              prevCourse.units = 0;
+              course.courses.push(prevCourse);
+              break;
+          }
+        }
+        remainingCourses.push(course);
+      });
+      const section = {
+        ...parseDegreeRequirementSectionHeader($(headerElem).text()),
+        courses: sftfBlocks.concat(remainingCourses),
+      };
+      if (!section.kind) {
+        console.error("failed to parse header:", $(headerElem).text());
+      }
+      return section;
+    });
+  const unparsedRows = $(table)
+    .find("tr")
+    .not("." + parsedClass);
+  if (unparsedRows.length > 0) {
+    console.error(
+      "did not parse:",
+      unparsedRows.get().map((e) => $(e).text())
+    );
+  }
+  return sections;
 };
 
 const parseGeCourseRequirementsTable = (
@@ -470,36 +534,34 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
     const titleElem = $(table).prevUntil("h2").last().prev();
     const title = $(titleElem).text().trim();
     if (title === "Degree Requirements and Curriculum") {
-      return
-      const { courses, groups } = parseMajorCourseRequirementsTable(
-        $,
-        table,
-        degree
-      );
-      requirements.courses = courses;
-      requirements.groups = groups;
+        requirements.courses = parseCourseRequirementsTable($, table, degree)
     } else if (title === "General Education (GE) Requirements") {
-      return
       requirements.ge = parseGeCourseRequirementsTable($, table);
     } else {
-      return
       console.warn("Unrecognized table with title:", title);
     }
   });
   const concentrationsList = $("h2:contains(Concentration)+ul>li a")
     .get()
-    .map((elem) => ({ name: $(elem).text(), link: "https://catalog.calpoly.edu" + $(elem).attr("href") }));
+    .map((elem) => ({
+      name: $(elem).text(),
+      link: "https://catalog.calpoly.edu" + $(elem).attr("href"),
+    }));
   const concentrations = await Promise.all(
     concentrationsList.map(async (conc) => {
       if (!conc.link) throw new Error(`Concentration ${conc.name} has no link`);
       const $ = await fetch(conc.link)
         .then((res) => res.text())
         .then(cheerio.load);
-      const tables = $("table.sc_courselist")
-        .get()
-      console.log("found", tables.length, "tables for concentration")
+      const tables = $("table.sc_courselist").get();
+      // FIXME: uncomment this
+      const ctx: { kind: "concentration"; link: string; name: string } = {
+        ...conc,
+        kind: "concentration",
+      };
       conc.courses = tables
-        .map((table) => parseMajorCourseRequirementsTable($, table, conc));
+        .map((table) => parseCourseRequirementsTable($, table, ctx))
+        .flat();
       return conc;
     })
   );
