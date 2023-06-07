@@ -3,8 +3,8 @@ import React from "react";
 export default function CompleteIcon() {
   return (
     <svg
-      width="22"
-      height="19"
+      width="18"
+      height="15"
       viewBox="0 0 22 19"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

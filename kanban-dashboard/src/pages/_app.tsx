@@ -1,10 +1,6 @@
 import React from "react";
 import Head from "next/head";
 import "~/styles/globals.css";
-// import { ThemeProvider } from "@material-ui/core/styles";
-// import CssBaseline from "@material-ui/core/CssBaseline";
-// import "../dashboard/overrides.css";
-// import theme from "../styles/theme";
 import { api } from "~/utils/api";
 import { SessionProvider } from "next-auth/react";
 import { type Session } from "next-auth";
