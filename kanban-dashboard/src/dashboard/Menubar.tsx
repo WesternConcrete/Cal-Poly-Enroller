@@ -1,5 +1,5 @@
 import React, { Fragment, useRef, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useCurrentUsername } from "./CurrentUser";
 import { useMenubarStyles } from "./styles";
@@ -15,6 +15,8 @@ import {
   Users,
   CheckCheck,
   GraduationCap,
+  MoonIcon,
+  StarIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,7 +47,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { FlowchartState } from "~/dashboard/state";
+import { FlowchartState, useMoveRequirement } from "~/dashboard/state";
 import { api } from "~/utils/api";
 import {
   DropdownMenu,
@@ -59,11 +61,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import LoadingBar from "react-top-loading-bar";
 import CalPoly from "~/components/icons/calpoly";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export interface MenubarProps {}
 
 export default function Menubar({}: MenubarProps) {
-  const { setDegree, startYear } = React.useContext(FlowchartState);
+  const { setDegree, startYear, selectedRequirements, setSelectedRequirements } = React.useContext(FlowchartState);
   const router = useRouter();
   const classes = useMenubarStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -112,6 +125,18 @@ export default function Menubar({}: MenubarProps) {
 
   const trpcClient = api.useContext();
 
+  const moveRequirement = useMoveRequirement();
+
+  const markAllComplete = () => {
+    
+    selectedRequirements.forEach(req => {
+      const requirementId = req;
+      const quarterId = -1;
+      moveRequirement(requirementId, quarterId);
+    });
+    setSelectedRequirements([]);
+  };
+
   return (
     // <div className="h-[30px] overflow-x-hidden ">
     //   {router.pathname === '/dashboard' && (
@@ -150,14 +175,51 @@ export default function Menubar({}: MenubarProps) {
           {router.pathname === "/dashboard" ? (
             <>
               <FlowchartSwitcher />
-              <Button className="bg-primaryGreen" disabled>
+              <AlertDialog>
+                <AlertDialogTrigger disabled={selectedRequirements.length === 0} >
+                <Button className="bg-primaryGreen" disabled={selectedRequirements.length === 0}>
                 Mark Complete{" "}
                 <CheckCheck className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
               </Button>
-              <Button className="bg-primaryGreen">
-                Enroll{" "}
-                <GraduationCap className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50" />{" "}
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mark classes complete?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action will move all selected classes into the "Completed" column.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={markAllComplete} className="bg-primaryGreen">
+                    Confirm
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger disabled={selectedRequirements.length === 0} >
+                <Button className="bg-primaryGreen" disabled={selectedRequirements.length === 0}>
+                Enroll
+                <GraduationCap className="ml-4 ml-auto h-4 w-4 shrink-0 opacity-50" />
               </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>View open sections?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You will be redirected to a list of all open sections for the courses you selected
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction className="bg-primaryGreen" onClick={() => router.push('/enrollment')}>
+                    Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
             </>
           ) : (
             <CalPoly />
@@ -340,10 +402,8 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
                   <Command>
                     <CommandInput placeholder="Search degree..." />
                     <CommandEmpty>No degree found.</CommandEmpty>
-                    <CommandGroup>
-                      {degreesQuery.data && (
-                        <div className="h-[200px] w-full">
-                          {degreesQuery.data.map((degree, idx) => (
+                    <CommandGroup >
+                      {degreesQuery.data && degreesQuery.data.map((degree, idx) => (
                             <CommandItem
                               key={degree.name + idx}
                               onSelect={(currentValue) => {
@@ -363,9 +423,8 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
                               />
                               {degree.name}
                             </CommandItem>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                      }
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
@@ -396,9 +455,16 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
 export function UserNav() {
   const { data: session, status: sessionStatus } = useSession();
 
+  const handleLogin = () => {
+    signIn("google", {
+      callbackUrl: `${window.location.origin}/onboarding`,
+    });
+    
+  };
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild disabled={sessionStatus === "unauthenticated"}>
         <div className="flex flex-row justify-center items-center">
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
@@ -415,7 +481,7 @@ export function UserNav() {
               </AvatarFallback>
             </Avatar>
           </Button>
-          <Button variant="link">
+          <Button variant="link" onClick={sessionStatus === "unauthenticated"? () => handleLogin(): () => null}>
             {sessionStatus === "authenticated" ? session.user?.email : "Login"}
           </Button>
         </div>
