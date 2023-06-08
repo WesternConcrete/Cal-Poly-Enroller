@@ -154,7 +154,7 @@ model CourseRequirementGroup {
   degree          Degree?                  @relation(fields: [degreeId], references: [id])
   concentration   Concentration?           @relation(fields: [concentrationId], references: [id])
   degreeId        String?
-  concentrationId Int?
+  concentrationId String?
 
   @@index([id])
 }
@@ -165,7 +165,7 @@ enum RequirementsKind {
 }
 
 model Concentration {
-  id                 Int                      @id @default(autoincrement())
+  id                 String                   @id
   name               String
   courseRequirements CourseRequirementGroup[]
   degree             Degree                   @relation(fields: [degreeId], references: [id])
