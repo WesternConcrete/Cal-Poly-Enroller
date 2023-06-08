@@ -1,25 +1,23 @@
-import { PrismaClient } from "@prisma/client";
+import { Course, GESubArea, PrismaClient } from "@prisma/client";
 import {
   scrapeDegrees,
   scrapeSubjects,
   scrapeCollegesAndDepartments,
   scrapeSubjectCourses,
   scrapeDegreeRequirements,
+  CourseRequirement,
+  DegreeRequirementSection,
+  GeRequirement,
+  CourseCode,
 } from "../../scraping/catalog";
 
-export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
-  const [departments, subjects, degrees] = await Promise.all([
-    scrapeCollegesAndDepartments().then((colleges) =>
-      colleges
-        .map((col) => col.departments.map(({ name, id }) => ({ name, id })))
-        .flat()
-    ),
-    scrapeSubjects(),
-    scrapeDegrees(),
-  ]);
-  const skipDuplicates = true;
-  // TODO: figure out how to join these into a (single?) Promise.all
-  await prisma.department.createMany({ data: departments, skipDuplicates });
+const CREATE_DEGREES = true;
+const CREATE_COURSES = true;
+const CREATE_GE_REQUIREMENTS = false;
+const CREATE_COURSE_REQUIREMENTS = false;
+const skipDuplicates = true;
+const createCourses = async (prisma: PrismaClient) => {
+  const subjects = await scrapeSubjects();
   await prisma.subject.createMany({ data: subjects, skipDuplicates });
   const foundCourses = new Set();
   await Promise.all(
@@ -47,38 +45,48 @@ export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
       });
     })
   );
+};
 
-  await prisma.degree.createMany({ data: degrees, skipDuplicates });
-  await prisma.courseRequirement.deleteMany();
-  degrees.forEach(async (degree) => {
-    const courseCodes = await scrapeDegreeRequirements(degree).then((reqs) =>
-      Array.from(reqs.courses.keys())
-    );
-    courseCodes.forEach(async (courseCode) => {
-      console.log(
-        "creating course requirement",
-        courseCode,
-        "for degree",
-        degree.name
-      );
-      await prisma.courseRequirement
-        .create({
+const createDegrees = async (prisma: PrismaClient) => {
+  // await prisma.degree.deleteMany();
+  const degrees = await scrapeDegrees();
+  return await Promise.all(
+    degrees.map(
+      async (degree) =>
+        await prisma.degree.create({
           data: {
-            course: { connect: { code: courseCode } },
-            degree: { connect: { id: degree.id } },
+            name: degree.name,
+            link: degree.link,
+            id: degree.id,
+            kind: degree.kind,
+          },
+          select: {
+            id: true,
+            name: true,
+            link: true,
+            kind: true,
           },
         })
-        .catch((_e) =>
-          console.error(
-            "failed creating course requirement",
-            courseCode,
-            "for degree",
-            degree.name,
-            _e
-          )
-        );
+    )
+  );
+};
+
+export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
+  if (CREATE_COURSES) await createCourses(prisma);
+
+  let degrees;
+  if (CREATE_DEGREES) {
+    degrees = await createDegrees(prisma);
+  } else {
+    degrees = await prisma.degree.findMany({
+      select: {
+        id: true,
+        name: true,
+        link: true,
+        kind: true,
+      },
     });
-  });
+  }
   // FIXME: use CourseCodeSchema for ALL course codes to catch weird edge cases and prevent the "not found" errors when connecting
   // FIXME: implement retry logic as connection is very unstable
 };
