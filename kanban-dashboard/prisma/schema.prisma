@@ -31,11 +31,10 @@ model Course {
   // TODO: make this a bitmask
   termsTypicallyOffered String
 
-  fulfillsMajorRequirements     CourseRequirement[]
-  fullfillsGERequirements       GEAreaFullfillmentCourse[]
-  fullfillsElectiveRequirements ElectiveRequirement[]
-  USCP                          Boolean                    @default(false)
-  GWR                           Boolean                    @default(false)
+  fullfillsGERequirements     GEAreaFullfillmentCourse[]
+  fullfillsCourseRequirements CourseRequirement[]
+  USCP                        Boolean                    @default(false)
+  GWR                         Boolean                    @default(false)
 
   @@index([code, USCP, GWR])
 }
@@ -46,16 +45,14 @@ model Subject {
   courses Course[]
 }
 
+// TODO: make this a type
 model RecommendedCompletion {
-  id                  Int                   @id @default(autoincrement())
-  year                Int
-  term                Term
-  CourseRequirement   CourseRequirement[]
-  ElectiveRequirement ElectiveRequirement[]
-  GERequirement       GERequirement[]
+  year              Int
+  term              Term
+  GERequirement     GERequirement[]
+  CourseRequirement CourseRequirement[]
 
-  @@unique([year, term])
-  @@index([id, year, term])
+  @@id([year, term])
 }
 
 enum Term {
@@ -72,14 +69,17 @@ enum GEArea {
   D
   E
   F
+  ELECTIVE
 }
 
 enum GESubArea {
   LowerDivision
   UpperDivision
+  LowerDivisionElective
+  UpperDivisionElective
   F
   E
-  ELECTIVE
+  Elective
   A1
   A2
   A3
@@ -101,61 +101,34 @@ enum GESubArea {
 model GERequirement {
   area                      GEArea
   subArea                   GESubArea
-  degree                    DegreeRequirements     @relation(fields: [degreeRequirementsId], references: [id])
-  degreeId                  Int
   units                     Int
   recommendedCompletion     RecommendedCompletion? @relation(fields: [recommendedCompletionYear, recommendedCompletionTerm], references: [year, term])
-  recommendedCompletionTerm Term?
   recommendedCompletionYear Int?
-  degreeRequirementsId      Int
+  recommendedCompletionTerm Term?
+  degree                    Degree                 @relation(fields: [degreeId], references: [id])
+  degreeId                  String
   // TODO: connect to course requirement
 
   @@id([area, subArea, degreeId])
 }
 
-enum RequirementCourseKind {
+enum RequirementKind {
   major
   support
+  elective
 }
 
 model CourseRequirement {
   course                    Course                 @relation(fields: [courseCode], references: [code])
   courseCode                String
-  kind                      RequirementCourseKind
-  degree                    DegreeRequirements     @relation(fields: [degreeRequirementsId], references: [id])
-  degreeId                  Int
+  kind                      RequirementKind
   recommendedCompletion     RecommendedCompletion? @relation(fields: [recommendedCompletionYear, recommendedCompletionTerm], references: [year, term])
-  recommendedCompletionTerm Term?
   recommendedCompletionYear Int?
-  RequirementGroup          RequirementGroup?      @relation(fields: [requirementGroupId], references: [id])
-  requirementGroupId        Int?
-  degreeRequirementsId      Int
+  recommendedCompletionTerm Term?
+  RequirementGroup          CourseRequirementGroup @relation(fields: [requirementGroupId], references: [id])
+  requirementGroupId        Int
 
-  @@id([degreeId, courseCode])
-}
-
-model ElectiveRequirement {
-  id                     Int                     @id @default(autoincrement())
-  courses                Course[]
-  recommendedCompletions RecommendedCompletion[]
-  kind                   String
-  degree                 DegreeRequirements      @relation(fields: [degreeRequirementsId], references: [id])
-  degreeId               Int
-  unitsOf                Int
-  degreeRequirementsId   Int
-
-  @@unique([kind, degreeId])
-}
-
-// i.e. series A or series B
-model NestedRequirementGroup {
-  parent   RequirementGroup @relation("parent", fields: [parentId], references: [id])
-  parentId Int
-  child    RequirementGroup @relation("child", fields: [childId], references: [id])
-  childId  Int
-
-  @@id([childId, parentId])
-  @@index([childId, parentId])
+  @@id([courseCode, requirementGroupId])
 }
 
 enum RequirementGroupKind {
@@ -164,52 +137,52 @@ enum RequirementGroupKind {
 }
 
 // represents a series (such as PHYS 1,2,3) or a list of choices (such as an elective)
-model RequirementGroup {
-  id                   Int                      @id @default(autoincrement())
-  kind                 RequirementGroupKind
-  courses              CourseRequirement[]
+model CourseRequirementGroup {
+  id              Int                      @id @default(autoincrement())
+  groupKind       RequirementGroupKind
+  coursesKind     RequirementKind
+  // e.x. Life Science Support where coursesKind is elective
+  courseKindInfo  String?
+  courses         CourseRequirement[]
   // child and parent are swapped in the relation name because it is referring to the reference to itself
   // i.e. the reference to this groups parent views this group as the child
-  parentGroups         NestedRequirementGroup[] @relation("child")
-  childGroups          NestedRequirementGroup[] @relation("parent")
+  parentGroup     CourseRequirementGroup?  @relation("toParent", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId        Int?
+  childGroups     CourseRequirementGroup[] @relation("toParent")
   // should be total units for and group or total required for or group
-  unitsOf              Int?
-  DegreeRequirements   DegreeRequirements?      @relation(fields: [degreeRequirementsId], references: [id])
-  degreeRequirementsId Int?
+  unitsOf         Int?
+  degree          Degree?                  @relation(fields: [degreeId], references: [id])
+  concentration   Concentration?           @relation(fields: [concentrationId], references: [id])
+  degreeId        String?
+  concentrationId Int?
 
   @@index([id])
 }
 
-model DegreeRequirements {
-  id              Int                   @id @default(autoincrement())
-  electives       ElectiveRequirement[]
-  majorAndSupport CourseRequirement[]
-  ge              GERequirement[]
-  groups          RequirementGroup[]
-  Concentration   Concentration[]
-  Degree          Degree[]
+enum RequirementsKind {
+  degree
+  concentration
 }
 
 model Concentration {
-  id                   Int                @id @default(autoincrement())
-  name                 String
-  requirements         DegreeRequirements @relation(fields: [degreeRequirementsId], references: [id])
-  degreeRequirementsId Int
-  degree               Degree             @relation(fields: [degreeId], references: [id])
-  degreeId             String
+  id                 Int                      @id @default(autoincrement())
+  name               String
+  courseRequirements CourseRequirementGroup[]
+  degree             Degree                   @relation(fields: [degreeId], references: [id])
+  degreeId           String
 
   @@unique([degreeId, name])
 }
 
 model Degree {
-  id                   String             @id
-  name                 String
-  link                 String
+  id             String                   @id
+  name           String
+  link           String
   // TODO: make this an enum of BS, BA, etc.
-  kind                 String
-  requirements         DegreeRequirements @relation(fields: [degreeRequirementsId], references: [id])
-  degreeRequirementsId Int
-  concentrations       Concentration[]
+  kind           String
+  requirements   CourseRequirementGroup[]
+  concentrations Concentration[]
+  GERequirement  GERequirement[]
 
   @@unique([name, kind])
   @@index([id])
