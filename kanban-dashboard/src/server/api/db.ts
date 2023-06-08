@@ -2,7 +2,6 @@ import { Course, GESubArea, PrismaClient } from "@prisma/client";
 import {
   scrapeDegrees,
   scrapeSubjects,
-  scrapeCollegesAndDepartments,
   scrapeSubjectCourses,
   scrapeDegreeRequirements,
   CourseRequirement,
@@ -13,9 +12,11 @@ import {
 
 const CREATE_DEGREES = false;
 const CREATE_COURSES = false;
-const CREATE_GE_REQUIREMENTS = false;
-const CREATE_COURSE_REQUIREMENTS = true;
+const CREATE_GE_REQUIREMENTS = true;
+const CREATE_COURSE_REQUIREMENTS = false;
+
 const skipDuplicates = true;
+
 const createCourses = async (prisma: PrismaClient) => {
   const subjects = await scrapeSubjects();
   await prisma.subject.createMany({ data: subjects, skipDuplicates });
@@ -68,6 +69,25 @@ const createDegrees = async (prisma: PrismaClient) => {
           },
         })
     )
+  );
+};
+
+const createDegreeGERequirements = async (
+  prisma: PrismaClient,
+  ges: GeRequirement[],
+  degreeId: string
+) => {
+  return await Promise.all(
+    ges.map(async (geReq: GeRequirement) => {
+      await prisma.gERequirement.create({
+        data: {
+          degree: { connect: { id: degreeId } },
+          area: geReq.area,
+          subArea: geReq.subarea as GESubArea,
+          units: geReq.units,
+        },
+      });
+    })
   );
 };
 
@@ -168,6 +188,8 @@ export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
   if (CREATE_GE_REQUIREMENTS || CREATE_COURSE_REQUIREMENTS) {
     for (let degree of degrees) {
       const requirements = await scrapeDegreeRequirements(degree);
+      if (CREATE_GE_REQUIREMENTS)
+        await createDegreeGERequirements(prisma, requirements.ge, degree.id);
       if (CREATE_COURSE_REQUIREMENTS)
         await createCourseRequirements(prisma, requirements.courses, degree.id);
     }
