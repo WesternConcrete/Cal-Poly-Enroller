@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { DragDropContext, type DropResult } from "react-beautiful-dnd";
 import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
@@ -49,7 +49,6 @@ export default function Flowchart() {
       return;
     }
     if (source && destination) {
-      // moveRequirement: (requirementId: number, quarterId: number) => void;
       const requirementId = parseInt(draggableId);
       const quarterId = parseInt(destination.droppableId);
       moveRequirement(requirementId, quarterId);
@@ -70,6 +69,30 @@ export default function Flowchart() {
     setDraggingOver(draggingOverId);
   };
 
+  const renderQuarterGroup = (
+    title: string,
+    sliceStart: number,
+    sliceEnd: number
+  ) => (
+    <div className="flex flex-col h-full">
+      <div className="bg-black text-white text-center p-2 font-bold">
+        {title}
+      </div>
+      <div className="flex justify-center h-full">
+        {quartersQuery.data
+          ? quartersQuery.data.slice(sliceStart, sliceEnd).map((quarter) => (
+              <div
+                className="flex-shrink-0 w-[120px] overflow-x-hidden overflow-y-scroll flex flex-col items-center relative border-[1px] border-solid border-[#e1e4e8] mx-0"
+                key={quarter.id}
+              >
+                <Quarter quarter={quarter} />
+              </div>
+            ))
+          : null}
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full flex overflow-x-auto">
       <DragDropContext
@@ -88,22 +111,15 @@ export default function Flowchart() {
           }}
         >
           <div className="flex-grow-1 flex overflow-x-scroll scroll-behavior-smooth w-full">
-            <div
-              className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll w-full flex min-w-[220px] flex-col relative border-[1px] border-solid border-[#e1e4e8]"
-              key={collapsedQuarterData.id}
-            >
-              <CollapsedQuarter quarter={collapsedQuarterData} />
+            <div className="flex gap-1">
+              <div className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll w-full flex min-w-[140px] flex-col relative border-[1px] border-solid border-[#e1e4e8]">
+                <CollapsedQuarter quarter={collapsedQuarterData} />
+              </div>
+              {renderQuarterGroup("Freshmen", 0, 3)}
+              {renderQuarterGroup("Sophomore", 3, 6)}
+              {renderQuarterGroup("Junior", 6, 9)}
+              {renderQuarterGroup("Senior", 9, Infinity)}
             </div>
-            {quartersQuery.data
-              ? (quartersQuery.data || []).slice(3).map((quarter) => (
-                  <div
-                    className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll w-full flex min-w-[140px] flex-col relative border-[1px] border-solid border-[#e1e4e8]"
-                    key={quarter.id}
-                  >
-                    <Quarter quarter={quarter} />
-                  </div>
-                ))
-              : null}
           </div>
         </DraggingState.Provider>
       </DragDropContext>
