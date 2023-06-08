@@ -106,19 +106,7 @@ const stripCrosslistInfoFromCourseCode = (courseCode: string) => {
 // lists and handled properly when using degree course requirements
 const CourseCodeSchema = z.string().transform(stripCrosslistInfoFromCourseCode); // .regex(/^[A-Z]+\s\d+$/);
 
-type CourseCode = z.infer<typeof CourseCodeSchema>;
-type RequirementGroupList = (RequirementGroup | CourseCode)[];
-type RequirementGroupKind = "or" | "and";
-type RequirementGroup =
-  | { or: RequirementGroupList }
-  | { and: RequirementGroupList };
-
-export const RequirementGroupSchema: z.ZodType<RequirementGroup> = z.lazy(() =>
-  z.union([
-    z.object({ or: z.array(RequirementGroupSchema.or(CourseCodeSchema)) }),
-    z.object({ and: z.array(RequirementGroupSchema.or(CourseCodeSchema)) }),
-  ])
-);
+export type CourseCode = z.infer<typeof CourseCodeSchema>;
 
 // TODO: decide whether this is usefull
 // export const RequirementSchema = z.object({
@@ -141,7 +129,7 @@ export const DegreeSchema = z.object({
   kind: z.enum(BACHELOR_DEGREE_KINDS),
   link: z.string().url(),
   id: z.string(),
-  departmentId: z.string(),
+  // departmentId: z.string(),
 });
 
 export type Degree = z.infer<typeof DegreeSchema>;
@@ -157,44 +145,20 @@ const GESubAreaVariantSchema = z.union([
   z.literal("Elective"),
 ]);
 
-const GEAreasEnumSchema = z.enum([
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "ELECTIVES",
-  "USCP",
-]);
+const GEAreasEnumSchema = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVE"]);
 
 type GEArea = z.infer<typeof GEAreasEnumSchema>;
-const GeRequirementSchema = z.object({
+
+export const GeRequirementSchema = z.object({
   area: GEAreasEnumSchema,
   subarea: GESubAreaVariantSchema,
-  code: z
-    .string()
-    .regex(GEAreaCodeRE)
-    .or(z.string().regex(GEDivisionCodeRE))
-    .or(z.string().regex(GeAreaRE))
-    .or(z.null()),
   units: z.number().nonnegative(),
   // TODO: constraints (C1 or C2) / fullfilled by (B3 = lab w/ B1 or B2 course)
 });
 
-type GeRequirement = z.infer<typeof GeRequirementSchema>;
+export type GeRequirement = z.infer<typeof GeRequirementSchema>;
 
-export const DegreeRequirementsSchema = z.object({
-  degreeId: DegreeSchema.shape.id,
-  groups: z.array(RequirementGroupSchema),
-  courses: z.map(z.string(), RequirementCourseSchema),
-  ge: z.array(GeRequirementSchema),
-  electives: z.map(z.string()),
-});
-
-export type DegreeRequirements = z.infer<typeof DegreeRequirementsSchema>;
-
-type CourseRequirement =
+export type CourseRequirement =
   | { kind: "or"; courses: CourseRequirement[]; units: number }
   | { kind: "and"; courses: CourseRequirement[]; units: number }
   | { kind: "course"; course: CourseCode; units: number };
@@ -219,14 +183,54 @@ const CourseRequirementSchema: z.ZodType<CourseRequirement> = z.lazy(() =>
   ])
 );
 
-const parseDegreeRequirementSectionHeader = (
-  $: CheerioAPI,
-  headerElem: cheerio.Element
-):
+const DegreeRequirementSectionSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("major"),
+    courses: z.array(CourseRequirementSchema),
+  }),
+  z.object({
+    kind: z.literal("elective"),
+    electiveKind: z.string(),
+    courses: z.array(CourseRequirementSchema),
+  }),
+  z.object({
+    kind: z.literal("support"),
+    supportKind: z.string(),
+    courses: z.array(CourseRequirementSchema),
+  }),
+  z.object({ kind: z.literal("ge") }),
+]);
+export type DegreeRequirementSection = z.infer<
+  typeof DegreeRequirementSectionSchema
+>;
+
+export type DegreeRequirementSectionInfo =
   | { kind: null; header: string }
   | { kind: RequirementType }
   | { kind: "elective"; electiveKind: string }
-  | { kind: "support"; supportKind?: string } => {
+  | { kind: "support"; supportKind: string | null };
+
+export const DegreeRequirementsSchema = z.lazy(() =>
+  z.object({
+    courses: z.array(DegreeRequirementSectionSchema),
+    ge: z.array(GeRequirementSchema),
+    concentrations: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        link: z.string(),
+        courses: z.array(DegreeRequirementSectionSchema),
+      })
+    ),
+  })
+);
+
+export type DegreeRequirements = z.infer<typeof DegreeRequirementsSchema>;
+
+const parseDegreeRequirementSectionHeader = (
+  $: CheerioAPI,
+  headerElem: cheerio.Element
+): DegreeRequirementSectionInfo => {
   let kind: RequirementType | null = null;
   let sectionTitle = $(headerElem)
     .find("span")
@@ -254,9 +258,7 @@ const parseDegreeRequirementSectionHeader = (
       throw new Error("found elective without elective kind: " + sectionTitle);
     return { kind, electiveKind };
   }
-  if (supportKind) {
-    if (kind !== "support")
-      throw new Error("found support without support kind: " + sectionTitle);
+  if (kind === "support") {
     return { kind, supportKind };
   }
   if (!kind) {
@@ -528,13 +530,17 @@ const parseGeCourseRequirementsTable = (
       let match;
       let area = null;
       let subarea = null;
-      if ((match = label.match(/([ABCDEF])([1234])?/))) {
-            let matched, num;
-        [matched, area, num] = match;
-        subarea = !!num ? matched : area
+      if ((match = label.match(/^([ABCDEF])([1234])?$/))) {
+        let num;
+        [subarea, area, num] = match;
+        console.log(area, subarea);
       } else if ((match = label.match(/Area ([ABCDEF])( Elective)/))) {
-        let _;
-        [_, area, subarea] = match;
+        let _, elective;
+        [_, area, elective] = match;
+        if (!!elective) {
+          subarea = elective.trim();
+        }
+        console.log("Area", area, subarea);
       } else if (
         (match = label.match(
           /((?:Upper|Lower)-Division) ([A-F])( Elective)?s?/
@@ -542,7 +548,8 @@ const parseGeCourseRequirementsTable = (
       ) {
         let _, elective;
         [_, subarea, area, elective] = match;
-        subarea += elective ?? "";
+        subarea = subarea.replace("-", "") + (elective ? elective.trim() : "");
+        console.log(subarea, area, elective);
       }
       if (area === null) {
         if (label.includes("Select courses from two different areas")) {
@@ -567,7 +574,8 @@ const parseGeCourseRequirementsTable = (
       return { area, subarea, units };
     })
     .get()
-    .filter((req) => !!req);
+    .filter((req) => !!req && !!req.area);
+  console.dir(requirements, { depth: null });
   return requirements;
 };
 
@@ -729,7 +737,7 @@ export const scrapeSubjectCourses = async (subjectCode: string) => {
 
 export const SubjectSchema = z.object({
   name: z.string(),
-  code: CourseCodeSchema,
+  code: z.string(),
 });
 
 export type Subject = z.infer<typeof SubjectSchema>;
