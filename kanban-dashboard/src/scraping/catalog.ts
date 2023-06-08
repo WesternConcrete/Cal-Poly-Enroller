@@ -533,14 +533,12 @@ const parseGeCourseRequirementsTable = (
       if ((match = label.match(/^([ABCDEF])([1234])?$/))) {
         let num;
         [subarea, area, num] = match;
-        console.log(area, subarea);
       } else if ((match = label.match(/Area ([ABCDEF])( Elective)/))) {
         let _, elective;
         [_, area, elective] = match;
         if (!!elective) {
           subarea = elective.trim();
         }
-        console.log("Area", area, subarea);
       } else if (
         (match = label.match(
           /((?:Upper|Lower)-Division) ([A-F])( Elective)?s?/
@@ -549,7 +547,6 @@ const parseGeCourseRequirementsTable = (
         let _, elective;
         [_, subarea, area, elective] = match;
         subarea = subarea.replace("-", "") + (elective ? elective.trim() : "");
-        console.log(subarea, area, elective);
       }
       if (area === null) {
         if (label.includes("Select courses from two different areas")) {
@@ -574,8 +571,8 @@ const parseGeCourseRequirementsTable = (
       return { area, subarea, units };
     })
     .get()
+    // FIXME: figure out why req?.area is sometimes null
     .filter((req) => !!req && !!req.area);
-  console.dir(requirements, { depth: null });
   return requirements;
 };
 
@@ -598,6 +595,11 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
       console.warn("Unrecognized table with title:", title);
     }
   });
+    // FIXME: get to the bottom of this
+  if (!requirements.courses) {
+    console.error("no courses found for degree:", degree);
+    requirements.courses = [];
+  }
   const concentrationsList = $("h2:contains(Concentration)+ul>li a")
     .get()
     .map((elem) => ({
