@@ -5,6 +5,7 @@ import {
   type RequirementCourse,
   DegreeSchema,
   RequirementTypeSchema,
+  RequirementType,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -46,7 +47,15 @@ const QuarterSchema = z.object({
   year: YearSchema,
   termNum: SchoolYearTermSchema,
 });
+
 export type Quarter = z.infer<typeof QuarterSchema>;
+
+const randomQuarter = (startYear: number) => {
+  return termCode(
+    Math.floor(Math.random() * 4) + startYear,
+    SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
+  );
+};
 /**
  * This is the primary router for your server.
  *
@@ -116,21 +125,33 @@ export const appRouter = t.router({
             groupKind: true,
           },
         });
+        const geReqs = await ctx.prisma.gERequirement.findMany({
+          where: {
+            degreeId: input.degreeId,
+          },
+          select: {
+            units: true,
+            area: true,
+            subArea: true,
+          },
+        });
         return reqGroups.flatMap((group) => {
           return group.courses.map((req) => ({
             code: req.courseCode,
             id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
             title: req.course.title,
-            courseType: group.coursesKind,
-            quarterId: termCode(
-              Math.floor(Math.random() * 4) + input.startYear,
-              SchoolYearTermSchema.parse(
-                [2, 4, 8][Math.floor(Math.random() * 3)]
-              )
-            ),
+            courseType: group.coursesKind as RequirementType,
+            quarterId: randomQuarter(input.startYear),
             units: req.course.maxUnits,
           }));
-        });
+        }).concat(geReqs.map((req) => ({
+            code: `${req.area}-${req.subArea}`,
+            id: `${req.area}-${req.subArea}`,
+            title: `${req.subArea}`,
+            courseType: "ge",
+            quarterId: randomQuarter(input.startYear),
+            units: req.units,
+        })));
       }),
     all: t.procedure
       .output(z.array(z.object({ name: z.string(), id: z.string() })))
