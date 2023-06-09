@@ -28,4 +28,5 @@ jobs:
       - name: Vitest Coverage Report
         if: always()
         uses: davelosert/vitest-coverage-report-action@v1.4.0
-        working-directory: kanban-dashboard
+        with:
+          working-directory: kanban-dashboard
