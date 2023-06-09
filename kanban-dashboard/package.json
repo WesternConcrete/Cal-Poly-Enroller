@@ -9,7 +9,7 @@
     "lint": "next lint",
     "start": "next start",
     "format": "npx prettier --write src/",
-    "coverage": "npx vitest --coverage --run"
+    "coverage": "NODE_ENV=test npx vitest --coverage --run"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.15",

@@ -23,7 +23,7 @@ jobs:
 
       - name: run vitest
         working-directory: kanban-dashboard
-        run: npx vitest --coverage --run
+        run: npm run coverage
 
       - name: Vitest Coverage Report
         if: always()
