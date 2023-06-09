@@ -22,7 +22,7 @@ import {
   termCode,
 } from "~/scraping/registrar";
 import { GEArea, GESubArea } from "@prisma/client";
-import { scrapeSections } from "~/scraping/sections_fetch";
+import { scrapeSections, SectionSchema } from "~/scraping/sections_fetch";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -364,14 +364,7 @@ export const appRouter = t.router({
     .input(z.object({ courseCode: CourseCodeSchema, quarterId: z.number() }))
     .output(
       z.array(
-        z.object({
-          num: z.number(),
-          prof: z.string(),
-          dates: z.string(),
-          title: z.string(),
-          location: z.string(),
-          status: z.enum(["WAITLIST", "OPEN", "CLOSE"]),
-        })
+            SectionSchema
       )
     )
     .query(async (input) => {
