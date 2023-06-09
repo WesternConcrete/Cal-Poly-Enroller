@@ -8,16 +8,18 @@ import React, {
   type Dispatch,
 } from "react";
 
-import { type Requirement, type Degree } from "~/server/api/root";
+import { type Requirement, type Degree} from "~/server/api/root";
 import { api } from "~/utils/api";
 
 type Setter<S> = React.Dispatch<React.SetStateAction<S>>;
 
+export type PartialDegree = Pick<Degree, "name" | "id">;
+
 type FlowchartStateType = {
   requirements: Requirement[];
   setRequirements: Setter<Requirement[]>;
-  degree: Degree | null;
-  setDegree: Setter<Degree | null>;
+  degree: PartialDegree | null;
+  setDegree: Setter<PartialDegree | null>;
   startYear: number;
   setStartYear: Setter<number>;
   selectedRequirements: number[];
@@ -35,7 +37,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // TODO: remove StoreProvider and replace with trpc quarters query in flowchart
   // TODO: merge dashboard and flowhcart components
   // TODO: make moveRequirement a backend mutation
-  const [degree, setDegree] = useState<Degree | null>(null);
+  const [degree, setDegree] = useState<PartialDegree | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
 
   const [selectedRequirements, setSelectedRequirements] = useState<number[]>(
@@ -47,8 +49,8 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     console.log("updating requirements!");
   }, [requirements]);
-  const _requirementsQuery = api.degreeRequirements.useQuery(
-    { degree, startYear },
+  const _requirementsQuery = api.degrees.requirements.useQuery(
+    { degreeId: degree?.id ?? null, startYear },
     { enabled: false, onSuccess: (data) => setRequirements(data) }
   );
   const flowchartContext = {
@@ -74,9 +76,9 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
 export const useMoveRequirement = () => {
   const { degree, startYear } = useContext(FlowchartState);
   const trpcClient = api.useContext();
-  const moveRequirement = (requirementId: number, quarterId: number) => {
+  const moveRequirement = (requirementId: string, quarterId: number) => {
     trpcClient.degrees.requirements.setData(
-      { degree, startYear },
+      { degreeId: degree?.id ?? null, startYear },
       (requirements) => {
         if (!requirements) {
           console.error("No requirements found for degree:", degree);

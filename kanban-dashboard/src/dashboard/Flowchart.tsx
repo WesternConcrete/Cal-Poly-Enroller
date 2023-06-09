@@ -50,7 +50,7 @@ export default function Flowchart() {
     }
     if (source && destination) {
       // moveRequirement: (requirementId: number, quarterId: number) => void;
-      const requirementId = parseInt(draggableId);
+      const requirementId = draggableId;
       const quarterId = parseInt(destination.droppableId);
       moveRequirement(requirementId, quarterId);
     }

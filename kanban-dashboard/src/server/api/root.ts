@@ -18,7 +18,6 @@ import {
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";
-import { prisma } from "~/server/db";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -34,7 +33,7 @@ const SchoolYearTermSchema = z.union([
 
 const RequirementSchema = z.object({
   code: z.string(), // TODO: validate course code
-  id: z.number(),
+  id: z.string(),
   title: z.string(),
   courseType: RequirementTypeSchema,
   units: z.number().nonnegative(),
@@ -89,51 +88,77 @@ export const appRouter = t.router({
     requirements: t.procedure
       .input(
         z.object({
-          degree: DegreeSchema.nullable(),
+          degreeId: z.string().nullable(),
           startYear: z.number().gte(2000),
         })
       )
       .output(z.array(RequirementSchema))
-      .query(async ({ input }) => {
-        if (input.degree === null) {
-          return [];
-        }
-        let { requirements } = await prisma.degree.findUnique({
+      .query(async ({ ctx, input }) => {
+        if (!input.degreeId) return [];
+        const reqGroups = await ctx.prisma.courseRequirementGroup.findMany({
           where: {
-            id: input.degree.id,
+            degreeId: input.degreeId,
           },
           select: {
-            requirements: true,
+            courses: {
+              select: {
+                courseCode: true,
+                course: {
+                  select: {
+                    title: true,
+                    maxUnits: true,
+                    minUnits: true,
+                  },
+                },
+              },
+            },
+            coursesKind: true,
+            groupKind: true,
           },
-        }) ?? {};
-    if (!requirements || requirements.length === 0) {
-        const { courses } = await scrapeDegreeRequirements(input.degree);
-        requirements = Array.from(courses.values()).map(
-          (course: RequirementCourse, i) => ({
-            ...course,
-            courseType:
-              courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
+        });
+        return reqGroups.flatMap((group) => {
+          return group.courses.map((req) => ({
+            code: req.courseCode,
+            id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
+            title: req.course.title,
+            courseType: group.coursesKind,
             quarterId: termCode(
               Math.floor(Math.random() * 4) + input.startYear,
               SchoolYearTermSchema.parse(
                 [2, 4, 8][Math.floor(Math.random() * 3)]
               )
             ),
-            id: i,
-          })
-        );
-
-            }
+            units: req.course.maxUnits,
+          }));
+        });
       }),
-    all: t.procedure.query(async () => {
-      let degrees = await prisma.degree.findMany();
-      if (degrees.length === 0) {
-        // TODO: invalidation of db data
-        degrees = await scrapeDegrees();
-        await prisma.degree.createMany({ data: degrees });
-      }
-      return degrees;
-    }),
+    all: t.procedure
+      .output(z.array(z.object({ name: z.string(), id: z.string() })))
+      .query(async ({ ctx }) => {
+        let degrees = await ctx.prisma.degree.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        return degrees;
+      }),
+    concentrations: t.procedure
+      .input(z.object({ degreeId: z.string() }))
+      .output(z.array(z.object({ name: z.string(), id: z.string() })))
+      .query(async ({ ctx, input }) => {
+        return (
+          (await ctx.prisma.concentration.findMany({
+            where: {
+              degreeId: input.degreeId,
+            },
+            select: {
+              name: true,
+              id: true,
+            },
+          })) ?? []
+        );
+      }),
   }),
 });
 
