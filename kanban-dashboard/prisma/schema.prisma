@@ -1,164 +1,211 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// NOTE: models have either id or code fields
+// Models whose primary key is not explicitly used by cal poly have an id field although it may be something aquired from cal poly such as 
+// the degree id which is determined from the degree page url path on the catalog site
+// Models (such as subject) whose primary key is used by cal poly have a code field
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model Department {
-  id         Int          @id @default(autoincrement())
-  long_name  String
-  short_name String       @unique
-  Program    Program[]
-  Instructor Instructor[]
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Course {
-  id         Int    @id @default(autoincrement())
-  // TODO: make department table and convert this to a foreign key
-  department String
-  number     Int
+  code                  String  @id
+  subjectCode           String
+  subject               Subject @relation(fields: [subjectCode], references: [code])
+  title                 String
+  number                Int
+  description           String  @db.LongText
   // string because it can be range or single number and we only need
   // to display it either way
-  units      String
+  minUnits              Int
+  maxUnits              Int
   // string of comma separated terms
-  terms      String
+  // TODO: make this a bitmask
+  termsTypicallyOffered String
 
-  fulfillsRequirements Requirement[]
+  fullfillsGERequirements     GEAreaFullfillmentCourse[]
+  fullfillsCourseRequirements CourseRequirement[]
+  USCP                        Boolean                    @default(false)
+  GWR                         Boolean                    @default(false)
 
-  prerequisites   Prerequisite[] @relation("Prereq")
-  prerequisiteFor Prerequisite[] @relation("PrereqFor")
-  sections        Section[]
-
-  @@unique([department, number])
+  @@index([code, USCP, GWR])
 }
 
-model Prerequisite {
-  id               Int    @id @default(autoincrement())
-  requiredCourse   Course @relation(name: "Prereq", fields: [requiredCourseId], references: [id])
-  forCourse        Course @relation(name: "PrereqFor", fields: [forCourseId], references: [id])
-  forCourseId      Int
-  requiredCourseId Int
-
-  @@unique([requiredCourseId, forCourseId])
+model Subject {
+  code    String   @id
+  name    String
+  courses Course[]
 }
 
-model Requirement {
-  // TODO: figure out how to make unique ids based on the requirement
-  id      Int     @id @default(autoincrement())
-  course  Course  @relation(fields: [courseId], references: [id])
-  program Program @relation(fields: [programId], references: [id])
-  // Ge, major, tech elective, etc.
-  // TODO: make this an enum
-  kind    String
+// TODO: make this a type
+model RecommendedCompletion {
+  year              Int
+  term              Term
+  GERequirement     GERequirement[]
+  CourseRequirement CourseRequirement[]
 
-  courseId  Int
-  programId Int
+  @@id([year, term])
 }
 
-model Program {
-  id           Int           @id @default(autoincrement())
-  department   Department    @relation(fields: [departmentId], references: [id])
-  // BS, BA, etc.
-  type         String
-  requirements Requirement[]
-  departmentId Int
-  catolog      Catolog       @relation(fields: [catologId], references: [id])
-  catologId    Int
-  User         User[]
-
-  @@unique([departmentId, type])
+enum Term {
+  F
+  W
+  SP
+  SU
 }
 
-model Catolog {
-  id        Int       @id @default(autoincrement())
-  startYear Int
-  endYear   Int
-  programs  Program[]
+enum GEArea {
+  A
+  B
+  C
+  D
+  E
+  F
+  ELECTIVE
 }
 
-model Instructor {
-  id           Int        @id @default(autoincrement())
-  name         String     @unique
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId Int
-  officeHours  String
-  Section      Section[]
+enum GESubArea {
+  LowerDivision
+  UpperDivision
+  LowerDivisionElective
+  UpperDivisionElective
+  F
+  E
+  Elective
+  A1
+  A2
+  A3
+  A4
+  B1
+  B2
+  B3
+  B4
+  C1
+  C2
+  C3
+  C4
+  D1
+  D2
+  D3
+  D4
 }
 
-// TODO: make sure this is the best way we could store this
-model Meeting {
-  id                 Int      @id @default(autoincrement())
-  startTime          DateTime
-  endTime            DateTime
-  section            Section? @relation(fields: [sectionClassNumber], references: [classNumber])
-  sectionClassNumber Int?
-  location           String
+model GERequirement {
+  area                      GEArea
+  subArea                   GESubArea
+  units                     Int
+  recommendedCompletion     RecommendedCompletion? @relation(fields: [recommendedCompletionYear, recommendedCompletionTerm], references: [year, term])
+  recommendedCompletionYear Int?
+  recommendedCompletionTerm Term?
+  degree                    Degree                 @relation(fields: [degreeId], references: [id])
+  degreeId                  String
+  // TODO: connect to course requirement
+
+  @@id([area, subArea, degreeId])
 }
 
-model Availability {
-  id                 Int      @id @default(autoincrement())
-  seats              Int
-  capacity           Int
-  waitlist           Int
-  waitlistCapacity   Int
-  time               DateTime @default(now())
-  section            Section  @relation(fields: [sectionClassNumber], references: [classNumber])
-  sectionClassNumber Int
+enum RequirementKind {
+  major
+  support
+  elective
 }
 
-model Section {
-  classNumber      Int            @id
-  course           Course         @relation(fields: [courseId], references: [id])
-  courseId         Int
-  quarter          Quarter        @relation(fields: [quarterId], references: [id])
-  quarterId        Int
-  status           String
-  session          String
-  intstructionMode String
-  career           String
-  // TODO: make sure this aligns with a quarters start and end
-  // dates      MeetingTime
-  instructor       Instructor     @relation(fields: [instructorId], references: [id])
-  instructorId     Int
-  meetings         Meeting[]
-  grading          String
-  location         String
-  campus           String
-  classComponents  String
-  availability     Availability[]
+model CourseRequirement {
+  course                    Course                 @relation(fields: [courseCode], references: [code])
+  courseCode                String
+  kind                      RequirementKind
+  recommendedCompletion     RecommendedCompletion? @relation(fields: [recommendedCompletionYear, recommendedCompletionTerm], references: [year, term])
+  recommendedCompletionYear Int?
+  recommendedCompletionTerm Term?
+  RequirementGroup          CourseRequirementGroup @relation(fields: [requirementGroupId], references: [id])
+  requirementGroupId        Int
+
+  @@id([courseCode, requirementGroupId])
 }
 
-model Quarter {
-  id                  Int            @id @default(autoincrement())
-  term                String
-  year                Int
-  classes             Section[]
-  user                User?          @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
-  userCalPolyUsername String?
-  UserFlowchart       UserFlowchart? @relation(fields: [userFlowchartId], references: [id])
-  userFlowchartId     Int?
-  startDate           DateTime
-  endDate             DateTime
+enum RequirementGroupKind {
+  or
+  and
+}
+
+// represents a series (such as PHYS 1,2,3) or a list of choices (such as an elective)
+model CourseRequirementGroup {
+  id              Int                      @id @default(autoincrement())
+  groupKind       RequirementGroupKind
+  coursesKind     RequirementKind
+  // e.x. Life Science Support where coursesKind is elective
+  courseKindInfo  String?
+  courses         CourseRequirement[]
+  // child and parent are swapped in the relation name because it is referring to the reference to itself
+  // i.e. the reference to this groups parent views this group as the child
+  parentGroup     CourseRequirementGroup?  @relation("toParent", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId        Int?
+  childGroups     CourseRequirementGroup[] @relation("toParent")
+  // should be total units for and group or total required for or group
+  unitsOf         Int?
+  degree          Degree?                  @relation(fields: [degreeId], references: [id])
+  concentration   Concentration?           @relation(fields: [concentrationId], references: [id])
+  degreeId        String?
+  concentrationId String?
+
+  @@index([id])
+}
+
+enum RequirementsKind {
+  degree
+  concentration
+}
+
+model Concentration {
+  id                 String                   @id
+  name               String
+  courseRequirements CourseRequirementGroup[]
+  degree             Degree                   @relation(fields: [degreeId], references: [id])
+  degreeId           String
+
+  @@unique([degreeId, name])
+}
+
+model Degree {
+  id             String                   @id
+  name           String
+  link           String
+  // TODO: make this an enum of BS, BA, etc.
+  kind           String
+  requirements   CourseRequirementGroup[]
+  concentrations Concentration[]
+  GERequirement  GERequirement[]
+
+  @@unique([name, kind])
+  @@index([id])
+}
+
+model GEAreaFullfillmentCourse {
+  area     GEArea
+  subArea  GESubArea
+  courseId String
+  course   Course    @relation(fields: [courseId], references: [code])
+
+  @@id([area, subArea, courseId])
 }
 
 model User {
   calPolyUsername String          @id
-  program         Program         @relation(fields: [programId], references: [id])
   year            Int
-  quarters        Quarter[]
-  programId       Int
   flowcharts      UserFlowchart[]
 }
 
 model UserFlowchart {
-  id                  Int       @id @default(autoincrement())
-  user                User      @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
-  quarters            Quarter[]
+  id                  Int    @id @default(autoincrement())
+  user                User   @relation(fields: [userCalPolyUsername], references: [calPolyUsername])
+  startYear           Int
   userCalPolyUsername String
 }

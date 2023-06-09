@@ -95,7 +95,7 @@ export default function Menubar({}: MenubarProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const degreesQuery = api.degrees.useQuery(undefined, {
+  const degreesQuery = api.degrees.all.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
 
@@ -109,7 +109,7 @@ export default function Menubar({}: MenubarProps) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
         console.log("fetching degree requirements for:", degree);
-        trpcClient.degreeRequirements.prefetch({ degree, startYear });
+        trpcClient.degrees.requirements.prefetch({ degree, startYear });
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;
@@ -295,7 +295,7 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
         console.log("fetching degree requirements for:", degree);
-        trpcClient.degreeRequirements.prefetch({ degree, startYear });
+        trpcClient.degrees.requirements.prefetch({ degreeId: degree.id, startYear });
         setDegree(degree);
         break;
       }
@@ -304,7 +304,7 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
   const [value, setValue] = React.useState("");
   const [openDegree, setOpenDegree] = React.useState(false);
 
-  const degreesQuery = api.degrees.useQuery(undefined, {
+  const degreesQuery = api.degrees.all.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
 
