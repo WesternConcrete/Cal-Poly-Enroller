@@ -6,6 +6,7 @@ import {
   DegreeSchema,
   RequirementTypeSchema,
   RequirementType,
+  scrapeCourseGEFullfillments,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -39,9 +40,13 @@ export const GroupSchema = z.discriminatedUnion("kind", [
     area: z.string(),
     subArea: z.string(),
   }),
-  z.object({ kind: z.literal("uscp") }),
-  z.object({ kind: z.literal("gwr") }),
-  z.object({ kind: z.literal("elective"), groupId: z.number() }),
+  z.object({ kind: z.literal("uscp"), degreeId: z.string() }),
+  z.object({ kind: z.literal("gwr"), degreeId: z.string() }),
+  z.object({
+    kind: z.literal("elective"),
+    groupId: z.number(),
+    degreeId: z.string(),
+  }),
 ]);
 
 const RequirementSchema = z.object({
@@ -53,6 +58,7 @@ const RequirementSchema = z.object({
   quarterId: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
   groupId: GroupSchema.optional(),
 });
+
 export type Requirement = z.infer<typeof RequirementSchema>;
 
 const QuarterSchema = z.object({
@@ -69,6 +75,7 @@ const randomQuarter = (startYear: number) => {
     SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
   );
 };
+
 /**
  * This is the primary router for your server.
  *
@@ -200,7 +207,11 @@ export const appRouter = t.router({
                     courseType: group.coursesKind as RequirementType,
                     quarterId: randomQuarter(input.startYear),
                     units: childGroup.unitsOf ?? group.unitsOf,
-                    groupId: { kind: "elective", groupId: childGroup.id },
+                    groupId: {
+                      kind: "elective",
+                      groupId: childGroup.id,
+                      degreeId: input.degreeId,
+                    },
                   });
                 }
                 break;
@@ -246,10 +257,18 @@ export const appRouter = t.router({
             courseType: "ge",
             quarterId: randomQuarter(input.startYear),
             units: req.units,
-            groupId: { kind: "ge", area: req.area, subArea: req.subArea },
+            groupId: {
+              kind: "ge",
+              area: req.area,
+              subArea: req.subArea,
+              degreeId: input.degreeId,
+            },
           }))
         );
         console.dir(courses, { depth: null });
+        let courseSet = new Set(courses.map(c => c.id))
+        if (courseSet.size !== courses.length)
+            throw new Error(`only ${courseSet.size} unique ids in ${courses.length} courses`)
         return courses;
       }),
     all: t.procedure
@@ -280,6 +299,63 @@ export const appRouter = t.router({
         );
       }),
   }),
+  fulllfillments: t.procedure
+    .input(z.object({ group: GroupSchema }))
+    .output(
+      z.array(
+        z.object({ code: z.string(), title: z.string(), units: z.number() })
+      )
+    )
+    .query(async ({ ctx, input }) => {
+      switch (input.group.kind) {
+        case "uscp":
+          return await scrapeCourseGEFullfillments().then(
+            (reqs) => reqs.get("USCP")?.fullfilledBy
+          );
+          break;
+        case "gwr":
+          return await scrapeCourseGEFullfillments().then(
+            (reqs) => reqs.get("GWR")?.fullfilledBy
+          );
+          break;
+        case "ge":
+          return await scrapeCourseGEFullfillments().then(
+            (reqs) =>
+              reqs.get(input.group.area)?.[input.group.subArea].fullfilledBy
+          );
+          break;
+        case "elective":
+          return await ctx.prisma.courseRequirementGroup
+            .findUnique({
+              where: {
+                id: input.group.groupId,
+              },
+              select: {
+                courses: {
+                  select: {
+                    courseCode: true,
+                    course: {
+                      select: {
+                        title: true,
+                        maxUnits: true,
+                        minUnits: true,
+                      },
+                    },
+                  },
+                },
+              },
+            })
+            .then((courses) => {
+              if (!courses) return [];
+
+              return courses.courses.map((course) => ({
+                code: course.courseCode,
+                title: course.course.title,
+                units: course.course.maxUnits,
+              }));
+            });
+      }
+    }),
 });
 
 // export type definition of API

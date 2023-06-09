@@ -595,7 +595,7 @@ export const scrapeDegreeRequirements = async (degree: Degree) => {
       console.warn("Unrecognized table with title:", title);
     }
   });
-    // FIXME: get to the bottom of this
+  // FIXME: get to the bottom of this
   if (!requirements.courses) {
     console.error("no courses found for degree:", degree);
     requirements.courses = [];
@@ -781,8 +781,11 @@ const GEAreaDataSchema = z
 
 type GEAreaData = z.infer<typeof GEAreaDataSchema>;
 
-export const GEDataSchema = z.map(GEAreasEnumSchema, GEAreaDataSchema);
-type GEData = z.infer<typeof GEDataSchema>;
+export const GEDataSchema = z.map(
+  GEAreasEnumSchema.or(z.literal("USCP")).or(z.literal("GWR")),
+  GEAreaDataSchema
+);
+export type GEData = z.infer<typeof GEDataSchema>;
 
 /** Returns courses that fulfill ge requirements for each area */
 export const scrapeCourseGEFullfillments = async () => {
@@ -812,7 +815,7 @@ export const scrapeCourseGEFullfillments = async () => {
     let area: GEArea;
     if (areaLabel.includes("GE ELECTIVES")) {
       info.name = areaLabel;
-      area = "ELECTIVES";
+      area = "ELECTIVE";
       // TODO: include limit info (only area B C D)
     } else {
       let match = areaLabel.match(/\(AREA ([ABCDEF])\)/);
@@ -858,7 +861,7 @@ export const scrapeCourseGEFullfillments = async () => {
         }
         if (
           (match = label.match(
-            /((?:Upper|Lower)-Division) [A-F]( Elective)?s?/
+            /((?:Upper|Lower)-Division) [A-F]\s?(Elective)?s?/
           ))
         ) {
           let [matched, _subarea, elective] = match;
@@ -922,9 +925,10 @@ export const scrapeCourseGEFullfillments = async () => {
     }
     let match;
     if (title.includes("GE ELECTIVES")) {
-      sections.get("ELECTIVES")!.fullfilledBy = courses;
+      sections.get("ELECTIVE")!.fullfilledBy = courses;
     } else if ((match = title.match(/((?:Upper|Lower)-Division) ([A-F])/))) {
-      const [_, division, area] = match;
+      let [_, division, area] = match;
+      division = division.replace("-", "");
       const subarea = sections.get(GEAreasEnumSchema.parse(area))!.subareas[
         division
       ];
@@ -966,7 +970,19 @@ export const scrapeCourseGEFullfillments = async () => {
     .map((_i, codeCol) => $(codeCol).text().trim())
     .get();
   sections.set("USCP", GEAreaDataSchema.parse({ fullfilledBy: uscpCourses }));
-  // FIXME: GWR courses
+  const gwr$ = await fetch(
+    "https://catalog.calpoly.edu/coursesaz/#gwrcoursestext"
+  )
+    .then((r) => r.text())
+    .then(cheerio.load)
+
+     const gwrCourses = gwr$("h2:contains(GWR)")
+        .next("table.sc_courselist")
+        .find("a.code")
+        .get()
+        .map((c) => $(c).text());
+      sections.set("GWR", GEAreaDataSchema.parse({ fullfilledBy: gwrCourses }));
+
   // FIXME: extract parsing of these tables into separate functtions
   // to allow all ge's, uscp, gwr, and subjects from https://catalog.calpoly.edu/coursesaz
 
