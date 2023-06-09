@@ -29,7 +29,7 @@ import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 
-import { FlowchartState } from "~/dashboard/state";
+import { FlowchartState, STUDENT_YEAR_OPTIONS } from "~/dashboard/state";
 
 type CardProps = React.ComponentProps<typeof Card>;
 
@@ -106,8 +106,8 @@ export default function OnboardingPage() {
     }, 350);
   };
 
-  const [selectedYear, setSelectedYear] = useState<string>("");
-  const year_options = ["Freshman", "Sophomore", "Junior", "Senior"]
+  const { studentYear, setStudentYear } =
+  React.useContext(FlowchartState);
 
   const [selectedConcentration, setSelectedConcentration] = useState<string>("");
   const concentrations = [
@@ -116,6 +116,9 @@ export default function OnboardingPage() {
     "Data Science",
     "Human-Computer Interaction",
   ]
+
+
+
 
 
   return (
@@ -199,7 +202,7 @@ export default function OnboardingPage() {
                 </Button>
 
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={() => goToStep(step + 1)}
                 >
                   Next
@@ -274,7 +277,7 @@ export default function OnboardingPage() {
                 </Button>
 
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={() => goToStep(step + 1)}
                 >
                   Next
@@ -327,7 +330,7 @@ export default function OnboardingPage() {
                 </Button>
 
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={() => goToStep(step + 1)}
                 >
                   Next
@@ -351,10 +354,10 @@ export default function OnboardingPage() {
 
               <CardContent className="flex flex-wrap justify-center items-center gap-6">
                 {
-                  year_options.map((yr, index) => {
+                  STUDENT_YEAR_OPTIONS.map((yr, index) => {
                     const years = `w-1/5 flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer
                     ${
-                      selectedYear === yr
+                      studentYear === yr
                         ? "border-primaryGreen"
                         : "border-muted"
                     } `;
@@ -363,7 +366,7 @@ export default function OnboardingPage() {
                       <Label
                         htmlFor="card"
                         key={yr}
-                        onClick={() => setSelectedYear(yr)}
+                        onClick={() => setStudentYear(yr)}
                         className={years}
                       >
                         {yr}
@@ -378,7 +381,7 @@ export default function OnboardingPage() {
                 </Button>
 
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={() => goToStep(step + 1)}
                 >
                   Next

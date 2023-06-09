@@ -24,7 +24,18 @@ type FlowchartStateType = {
   setStartYear: Setter<number>;
   selectedRequirements: string[];
   setSelectedRequirements: Setter<string[]>;
+  studentYear: 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
+  setStudentYear:  Setter<'Freshman' | 'Sophomore' | 'Junior' | 'Senior'>;
+  studentTerm: 'Winter' | 'Spring' | 'Fall';
+  setStudentTerm: Setter< 'Winter' | 'Spring' | 'Fall'>;
+  indexMap: Record<string, number>;
+  setIndexMap: Setter<Record<string, number>>;
+
 };
+
+export const STUDENT_YEAR_OPTIONS = ['Freshman' , 'Sophomore' , 'Junior' , 'Senior'] as ('Freshman' | 'Sophomore' | 'Junior' | 'Senior')[];
+
+export const STUDENT_TERM_OPTIONS = ['Winter' , 'Spring',  'Fall'] as ('Winter' | 'Spring' | 'Fall')[]
 
 export const FlowchartState = createContext<FlowchartStateType>(
   {} as FlowchartStateType
@@ -38,11 +49,25 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // TODO: merge dashboard and flowhcart components
   // TODO: make moveRequirement a backend mutation
   const [degree, setDegree] = useState<PartialDegree | null>(null);
+  const [studentYear, setStudentYear] = useState<'Freshman' | 'Sophomore' | 'Junior' | 'Senior'>("Freshman");
+
+  const currentMonth = new Date().getMonth();
+
+  let currentSeason: 'Winter' | 'Spring' | 'Fall';
+  if (currentMonth < 3) currentSeason = 'Winter';
+  else if (currentMonth < 6) currentSeason = 'Spring';
+  else currentSeason = 'Fall';
+
+  const [studentTerm, setStudentTerm] = useState<'Winter' | 'Spring' | 'Fall'>(currentSeason);
+
+  const [indexMap, setIndexMap] = useState<Record<string, number>>({});
+  
   const [requirements, setRequirements] = useState<Requirement[]>([]);
 
   const [selectedRequirements, setSelectedRequirements] = useState<string[]>(
     []
   );
+
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
@@ -62,6 +87,12 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
     setStartYear,
     selectedRequirements,
     setSelectedRequirements,
+    studentYear,
+    setStudentYear,
+    studentTerm,
+    setStudentTerm,
+    indexMap, 
+    setIndexMap,
   };
 
   // TODO: move nested courses fetch here to avoid loading spinner waterfall
