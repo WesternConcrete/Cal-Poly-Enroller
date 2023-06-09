@@ -7,6 +7,9 @@ import {
   RequirementTypeSchema,
   RequirementType,
   scrapeCourseGEFullfillments,
+  GEData,
+  GEAreasEnumSchema,
+  GESubAreasEnumSchema,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -37,8 +40,8 @@ const SchoolYearTermSchema = z.union([
 export const GroupSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("ge"),
-    area: z.string(),
-    subArea: z.string(),
+    area: GEAreasEnumSchema,
+    subArea: GESubAreasEnumSchema,
   }),
   z.object({ kind: z.literal("uscp"), degreeId: z.string() }),
   z.object({ kind: z.literal("gwr"), degreeId: z.string() }),
@@ -60,6 +63,7 @@ const RequirementSchema = z.object({
 });
 
 export type Requirement = z.infer<typeof RequirementSchema>;
+export type JustCourseInfo = Pick<Requirement, "title" | "code" | "units">;
 
 const QuarterSchema = z.object({
   id: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
@@ -308,32 +312,72 @@ export const appRouter = t.router({
       }),
   }),
   fulllfillments: t.procedure
-    .input(z.object({ group: GroupSchema }))
+    .input(z.object({ group: GroupSchema.optional() }))
     .output(
       z.array(
         z.object({ code: z.string(), title: z.string(), units: z.number() })
       )
     )
     .query(async ({ ctx, input }) => {
+      if (!input.group) return [];
+      let reqs: GEData;
+      let courses: JustCourseInfo[];
       switch (input.group.kind) {
         case "uscp":
-          return await scrapeCourseGEFullfillments().then(
-            (reqs) => reqs.get("USCP")?.fullfilledBy
-          );
+          reqs = await scrapeCourseGEFullfillments();
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) => reqs.get("USCP")!.fullfilledBy.includes(c.code))
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
           break;
         case "gwr":
-          return await scrapeCourseGEFullfillments().then(
-            (reqs) => reqs.get("GWR")?.fullfilledBy
-          );
+          reqs = await scrapeCourseGEFullfillments();
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) => reqs.get("GWR").fullfilledBy?.includes(c.code))
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
           break;
         case "ge":
-          return await scrapeCourseGEFullfillments().then(
-            (reqs) =>
-              reqs.get(input.group.area)?.[input.group.subArea].fullfilledBy
-          );
+          reqs = await scrapeCourseGEFullfillments();
+          const {area, subArea} = input.group
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) =>
+                  reqs
+                    .get(area)?.subareas
+                    [subArea].fullfilledBy.includes(c.code)
+                )
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
           break;
         case "elective":
-          return await ctx.prisma.courseRequirementGroup
+          courses = await ctx.prisma.courseRequirementGroup
             .findUnique({
               where: {
                 id: input.group.groupId,
@@ -362,7 +406,9 @@ export const appRouter = t.router({
                 units: course.course.maxUnits,
               }));
             });
+          break;
       }
+      return courses ?? [];
     }),
 });
 

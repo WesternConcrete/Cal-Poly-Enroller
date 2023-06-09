@@ -7,7 +7,7 @@ import {
   RequirementTypeSchema,
   type RequirementType,
 } from "~/scraping/catalog";
-import { type Requirement } from "~/server/api/root";
+import { type Requirement, type JustCourseInfo } from "~/server/api/root";
 import { api } from "~/utils/api";
 import { DraggingState, FlowchartState } from "~/dashboard/state";
 import { Check, PlusCircle, ChevronsUpDown } from "lucide-react";
@@ -129,10 +129,17 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
   //will need to be updated. Only here for UI selecting GE's
   const is_ge = requirement.courseType === "ge";
   const [selectedRequirement, setSelectedRequirement] =
-    React.useState<Requirement | null>(null);
+    React.useState<JustCourseInfo | null>(null);
   //^^^^
 
-  const available_ge_options = requirements;
+  const { data: available_options } = api.fulllfillments.useQuery(
+    { group: requirement.groupId },
+    {
+      enabled:
+        requirement.courseType === "ge" ||
+        requirement.courseType === "elective",
+    }
+  );
 
   return (
     <Draggable
@@ -208,7 +215,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
                               {selectedRequirement.units} units
                             </div>
                             <RequirementSelector
-                              requirements={available_ge_options}
+                              requirements={available_options ?? []}
                               setSelectedRequirement={(req) =>
                                 setSelectedRequirement(req)
                               }
@@ -225,7 +232,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
                               {requirement.code}
                             </div>
                             <RequirementSelector
-                              requirements={available_ge_options}
+                              requirements={available_options ?? []}
                               setSelectedRequirement={(req) =>
                                 setSelectedRequirement(req)
                               }
@@ -243,7 +250,9 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
                         <div className={`mt-[0.5rem] font-bold text-[11px]`}>
                           {requirement.code}
                         </div>
-                        <div className={`overflow-hidden max-h-[100px] break-words`}>
+                        <div
+                          className={`overflow-hidden max-h-[100px] break-words`}
+                        >
                           <div className="font-normal text-[9px]">
                             {requirement.title}
                           </div>
@@ -271,9 +280,9 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
 }
 
 interface RequirementSelectorProps extends PopoverProps {
-  requirements: Requirement[];
-  setSelectedRequirement: (Requirement: Requirement) => void;
-  selectedRequirement: Requirement;
+  requirements: JustCourseInfo[];
+  setSelectedRequirement: (Requirement: JustCourseInfo) => void;
+  selectedRequirement: JustCourseInfo;
 }
 
 export function RequirementSelector({
@@ -284,7 +293,7 @@ export function RequirementSelector({
 }: RequirementSelectorProps) {
   const [open, setOpen] = React.useState(false);
   const [peekedRequirement, setPeekedRequirement] =
-    React.useState<Requirement | null>(null);
+    React.useState<JustCourseInfo | null>(null);
 
   return (
     <div className="grid gap-2">
@@ -319,7 +328,7 @@ export function RequirementSelector({
                   <RequirementItem
                     key={req.code}
                     requirement={req}
-                    isSelected={selectedRequirement?.id === req.id}
+                    isSelected={selectedRequirement?.code === req.code}
                     peekedRequirement={peekedRequirement}
                     onPeek={(req) => setPeekedRequirement(req)}
                     onSelect={() => {
@@ -390,7 +399,7 @@ function RequirementItem({
 
   return (
     <CommandItem
-      key={requirement.id}
+      key={requirement.code}
       onSelect={onSelect}
       ref={ref}
       className="aria-selected:bg-primary aria-selected:text-primary-foreground"

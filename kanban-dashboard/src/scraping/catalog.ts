@@ -145,9 +145,36 @@ const GESubAreaVariantSchema = z.union([
   z.literal("Elective"),
 ]);
 
-const GEAreasEnumSchema = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVE"]);
+export const GEAreasEnumSchema = z.enum(["A", "B", "C", "D", "E", "F", "ELECTIVE"]);
+export type GEArea = z.infer<typeof GEAreasEnumSchema>;
 
-type GEArea = z.infer<typeof GEAreasEnumSchema>;
+export const GESubAreasEnumSchema = z.enum([
+  "LowerDivision",
+  "UpperDivision",
+  "LowerDivisionElective",
+  "UpperDivisionElective",
+  "F",
+  "E",
+  "Elective",
+  "A1",
+  "A2",
+  "A3",
+  "A4",
+  "B1",
+  "B2",
+  "B3",
+  "B4",
+  "C1",
+  "C2",
+  "C3",
+  "C4",
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+] )
+
+export type GESubArea= z.infer<typeof GESubAreasEnumSchema>;
 
 export const GeRequirementSchema = z.object({
   area: GEAreasEnumSchema,
@@ -774,7 +801,7 @@ const GEAreaDataSchema = z
   .object({
     name: z.string().default(""),
     constraints: z.array(z.string()).default([]),
-    subareas: z.record(GESubAreaVariantSchema, GESubAreaDataSchema).default({}),
+    subareas: z.record(GESubAreasEnumSchema, GESubAreaDataSchema).default({}),
     fullfilledBy: z.array(CourseCodeSchema).default([]),
   })
   .default({});
@@ -866,7 +893,7 @@ export const scrapeCourseGEFullfillments = async () => {
         ) {
           let [matched, _subarea, elective] = match;
           _subarea += elective ?? "";
-          subarea = _subarea;
+          subarea = _subarea.replace("-", "");
           label = label.replace(matched, "").trim();
           subareaInfo.description = label ?? null;
         }
@@ -886,6 +913,7 @@ export const scrapeCourseGEFullfillments = async () => {
           }
           return;
         }
+        subarea = GESubAreasEnumSchema.parse(subarea)
         info.subareas[subarea] = subareaInfo;
       });
     sections.set(area, info);
