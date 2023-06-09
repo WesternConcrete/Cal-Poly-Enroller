@@ -352,11 +352,11 @@ export function RequirementSelector({
 }
 
 interface RequirementItemProps {
-  requirement: Requirement;
-  peekedRequirement: Requirement | null;
+  requirement: JustCourseInfo;
+  peekedRequirement: JustCourseInfo | null;
   isSelected: boolean;
   onSelect: () => void;
-  onPeek: (Requirement: Requirement) => void;
+  onPeek: (Requirement: JustCourseInfo) => void;
 }
 
 function RequirementItem({
