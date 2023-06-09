@@ -10,11 +10,12 @@ import {
   CourseCode,
 } from "../../scraping/catalog";
 
-const CREATE_DEGREES = false;
 const CREATE_COURSES = false;
-const CREATE_GE_REQUIREMENTS = false;
-const CREATE_COURSE_REQUIREMENTS = false;
+const CREATE_DEGREES = true;
+const CREATE_GE_REQUIREMENTS = true;
+const CREATE_COURSE_REQUIREMENTS = true;
 const CREATE_CONCENTRATIONS = true;
+const REMOVE_DEGREES_AND_REQUIREMENTS = false;
 
 const skipDuplicates = true;
 
@@ -129,6 +130,7 @@ const createRequirementGroup = async (
       data: {
         groupKind: group.kind as "or" | "and",
         coursesKind: section.kind,
+        unitsOf: group.units,
         courseKindInfo,
         courses: {
           createMany: {
@@ -202,8 +204,8 @@ const createConcentrations = async (
     data: {
       concentrations: {
         createMany: {
-          data: concentrations.map(({name,id}) => ({name, id})),
-            skipDuplicates,
+          data: concentrations.map(({ name, id }) => ({ name, id })),
+          skipDuplicates,
         },
       },
     },
@@ -226,7 +228,7 @@ const createConcentrations = async (
         },
         section
       );
-    // TODO: make array of root group ids and update all with connnect{many}
+      // TODO: make array of root group ids and update all with connnect{many}
       await prisma.concentration.update({
         where: { id: concentration.id },
         data: {
@@ -239,7 +241,39 @@ const createConcentrations = async (
   }
 };
 
+const removeDegreesAndRequirements = async (prisma: PrismaClient) => {
+  await prisma.courseRequirement.deleteMany({});
+  await prisma.courseRequirementGroup.updateMany({
+    where: {
+      parentGroup: {
+        isNot: null,
+      },
+    },
+    data: {
+      parentId: null,
+    },
+  });
+  await prisma.courseRequirementGroup.updateMany({
+    where: {
+      degree: {
+        isNot: null,
+      },
+    },
+    data: {
+      degreeId: null,
+    },
+  });
+  await prisma.gERequirement.deleteMany({});
+  await prisma.concentration.deleteMany({});
+  await prisma.courseRequirementGroup.deleteMany({});
+  await prisma.degree.deleteMany({});
+};
+
 export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
+  if (REMOVE_DEGREES_AND_REQUIREMENTS) {
+    await removeDegreesAndRequirements(prisma);
+    return "removed degrees and requirements";
+  }
   if (CREATE_COURSES) await createCourses(prisma);
 
   let degrees;
@@ -255,7 +289,11 @@ export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
       },
     });
   }
-  if (CREATE_GE_REQUIREMENTS || CREATE_COURSE_REQUIREMENTS || CREATE_CONCENTRATIONS) {
+  if (
+    CREATE_GE_REQUIREMENTS ||
+    CREATE_COURSE_REQUIREMENTS ||
+    CREATE_CONCENTRATIONS
+  ) {
     for (let degree of degrees) {
       const requirements = await scrapeDegreeRequirements(degree);
       if (CREATE_GE_REQUIREMENTS)
@@ -263,7 +301,11 @@ export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
       if (CREATE_COURSE_REQUIREMENTS)
         await createCourseRequirements(prisma, requirements.courses, degree.id);
       if (CREATE_CONCENTRATIONS)
-        await createConcentrations(prisma, requirements.concentrations, degree.id);
+        await createConcentrations(
+          prisma,
+          requirements.concentrations,
+          degree.id
+        );
     }
   }
   // FIXME: use CourseCodeSchema for ALL course codes to catch weird edge cases and prevent the "not found" errors when connecting
