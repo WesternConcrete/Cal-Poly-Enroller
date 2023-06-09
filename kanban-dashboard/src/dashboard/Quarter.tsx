@@ -19,18 +19,12 @@ export default function Quarter({ quarter }: Props) {
   const quarterRequirements = requirements.filter(
     (req) => req.quarterId === quarter.id
   );
-  quarterRequirements.forEach(
-    (req, index) => {
-      if(indexMap[req.id] === undefined) {
-        const copy = indexMap
-        copy[req.id] = index
-        setIndexMap(copy)
-      }
-    }
-  );
   
   const mappedQuarterRequirements = quarterRequirements.sort((a, b) => {
-    return indexMap[a.id] - indexMap[b.id]
+    const quarter_req_order = indexMap[a.quarterId] as string[]
+    const a_index = quarter_req_order.indexOf(a.id)
+    const b_index = quarter_req_order.indexOf(b.id)
+    return a_index - b_index    
   })
 
   return (
