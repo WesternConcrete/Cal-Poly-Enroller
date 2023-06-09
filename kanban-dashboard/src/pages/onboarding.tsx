@@ -109,13 +109,13 @@ export default function OnboardingPage() {
   const { studentYear, setStudentYear } =
   React.useContext(FlowchartState);
 
-  const [selectedConcentration, setSelectedConcentration] = useState<string>("");
   const concentrations = [
-    "Artificial Intelligence",
-    "Computer Systems",
-    "Data Science",
-    "Human-Computer Interaction",
+    "Aeronautics",
+    "Astronautics"
   ]
+
+  const [selectedConcentration, setSelectedConcentration] = useState<string>(concentrations[0]);
+
 
 
 

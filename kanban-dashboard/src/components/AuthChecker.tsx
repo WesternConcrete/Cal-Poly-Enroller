@@ -17,7 +17,7 @@ const withAuth = (Component: FC<Props>) => {
       if (!isUserLoggedIn && !isPageLoading) {
         setTimeout(() => router.push('/auth'), 100)
       } else if (isUserLoggedIn && router.pathname === '/auth') {
-        signOut();
+        setTimeout(() => router.push('/dashboard'), 100)
       }
     }, [isUserLoggedIn, isPageLoading, router]);
 

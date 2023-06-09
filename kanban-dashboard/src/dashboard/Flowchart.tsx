@@ -18,6 +18,11 @@ export default function Flowchart() {
     React.useContext(FlowchartState);
   const moveRequirement = useMoveRequirement();
   const quartersQuery = api.quarters.all.useQuery({ startYear });
+
+  const [dragging, setDragging] = React.useState(false);
+  const [draggingItem, setDraggingItem] = React.useState(null);
+
+  const handleDragStart = ({ draggableId }: Record<string, any>) => {
     setDragging(true);
     setDraggingItem(draggableId);
   };
