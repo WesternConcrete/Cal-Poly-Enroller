@@ -6,6 +6,10 @@ import {
   DegreeSchema,
   RequirementTypeSchema,
   RequirementType,
+  scrapeCourseGEFullfillments,
+  GEData,
+  GEAreasEnumSchema,
+  GESubAreasEnumSchema,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -36,12 +40,16 @@ const SchoolYearTermSchema = z.union([
 export const GroupSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("ge"),
-    area: z.string(),
-    subArea: z.string(),
+    area: GEAreasEnumSchema,
+    subArea: GESubAreasEnumSchema,
   }),
-  z.object({ kind: z.literal("uscp") }),
-  z.object({ kind: z.literal("gwr") }),
-  z.object({ kind: z.literal("elective"), groupId: z.number() }),
+  z.object({ kind: z.literal("uscp"), degreeId: z.string() }),
+  z.object({ kind: z.literal("gwr"), degreeId: z.string() }),
+  z.object({
+    kind: z.literal("elective"),
+    groupId: z.number(),
+    degreeId: z.string(),
+  }),
 ]);
 
 const RequirementSchema = z.object({
@@ -53,7 +61,9 @@ const RequirementSchema = z.object({
   quarterId: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
   groupId: GroupSchema.optional(),
 });
+
 export type Requirement = z.infer<typeof RequirementSchema>;
+export type JustCourseInfo = Pick<Requirement, "title" | "code" | "units">;
 
 const QuarterSchema = z.object({
   id: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
@@ -69,6 +79,7 @@ const randomQuarter = (startYear: number) => {
     SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
   );
 };
+
 /**
  * This is the primary router for your server.
  *
@@ -112,7 +123,6 @@ export const appRouter = t.router({
         z.object({
           degreeId: z.string().nullable(),
           startYear: z.number().gte(2000),
-          concentration: z.string().optional(),
         })
       )
       .output(z.array(RequirementSchema))
@@ -201,7 +211,11 @@ export const appRouter = t.router({
                     courseType: group.coursesKind as RequirementType,
                     quarterId: randomQuarter(input.startYear),
                     units: childGroup.unitsOf ?? group.unitsOf,
-                    groupId: { kind: "elective", groupId: childGroup.id },
+                    groupId: {
+                      kind: "elective",
+                      groupId: childGroup.id,
+                      degreeId: input.degreeId,
+                    },
                   });
                 }
                 break;
@@ -241,16 +255,32 @@ export const appRouter = t.router({
         });
         courses = courses.concat(
           geReqs.map((req) => ({
-            code: `GE Area ${req.area} ${req.subArea}`,
+            code: !!req.subArea.match(/[A-E]\d/)
+              ? `GE ${req.subArea}`
+              : `GE ${req.subArea
+                  .replace("Div", "-Div")
+                  .replace("Elective", "")} Area ${req.area}${
+                  req.subArea.includes("Elective") ? " Elective" : ""
+                }`,
             id: `${req.area}-${req.subArea}`,
             title: `${req.subArea}`,
             courseType: "ge",
             quarterId: randomQuarter(input.startYear),
             units: req.units,
-            groupId: { kind: "ge", area: req.area, subArea: req.subArea },
+            groupId: {
+              kind: "ge",
+              area: req.area,
+              subArea: req.subArea,
+              degreeId: input.degreeId,
+            },
           }))
         );
         console.dir(courses, { depth: null });
+        let courseSet = new Set(courses.map((c) => c.id));
+        if (courseSet.size !== courses.length)
+          throw new Error(
+            `only ${courseSet.size} unique ids in ${courses.length} courses`
+          );
         return courses;
       }),
     all: t.procedure
@@ -281,6 +311,105 @@ export const appRouter = t.router({
         );
       }),
   }),
+  fulllfillments: t.procedure
+    .input(z.object({ group: GroupSchema.optional() }))
+    .output(
+      z.array(
+        z.object({ code: z.string(), title: z.string(), units: z.number() })
+      )
+    )
+    .query(async ({ ctx, input }) => {
+      if (!input.group) return [];
+      let reqs: GEData;
+      let courses: JustCourseInfo[];
+      switch (input.group.kind) {
+        case "uscp":
+          reqs = await scrapeCourseGEFullfillments();
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) => reqs.get("USCP")!.fullfilledBy.includes(c.code))
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
+          break;
+        case "gwr":
+          reqs = await scrapeCourseGEFullfillments();
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) => reqs.get("GWR").fullfilledBy?.includes(c.code))
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
+          break;
+        case "ge":
+          reqs = await scrapeCourseGEFullfillments();
+          const {area, subArea} = input.group
+          courses = await ctx.prisma.course
+            .findMany({
+              select: { code: true, title: true, maxUnits: true },
+            })
+            .then((cs) =>
+              cs
+                .filter((c) =>
+                  reqs
+                    .get(area)?.subareas
+                    [subArea].fullfilledBy.includes(c.code)
+                )
+                .map((cs) => ({
+                  code: cs.code,
+                  title: cs.title,
+                  units: cs.maxUnits,
+                }))
+            );
+          break;
+        case "elective":
+          courses = await ctx.prisma.courseRequirementGroup
+            .findUnique({
+              where: {
+                id: input.group.groupId,
+              },
+              select: {
+                courses: {
+                  select: {
+                    courseCode: true,
+                    course: {
+                      select: {
+                        title: true,
+                        maxUnits: true,
+                        minUnits: true,
+                      },
+                    },
+                  },
+                },
+              },
+            })
+            .then((courses) => {
+              if (!courses) return [];
+
+              return courses.courses.map((course) => ({
+                code: course.courseCode,
+                title: course.course.title,
+                units: course.course.maxUnits,
+              }));
+            });
+          break;
+      }
+      return courses ?? [];
+    }),
 });
 
 // export type definition of API

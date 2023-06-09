@@ -8,14 +8,17 @@ import {
   DegreeRequirementSection,
   GeRequirement,
   CourseCode,
+  GEData,
+  scrapeCourseGEFullfillments,
 } from "../../scraping/catalog";
 
 const CREATE_COURSES = false;
-const CREATE_DEGREES = true;
-const CREATE_GE_REQUIREMENTS = true;
-const CREATE_COURSE_REQUIREMENTS = true;
-const CREATE_CONCENTRATIONS = true;
+const CREATE_DEGREES = false;
+const CREATE_GE_REQUIREMENTS = false;
+const CREATE_COURSE_REQUIREMENTS = false;
+const CREATE_CONCENTRATIONS = false;
 const REMOVE_DEGREES_AND_REQUIREMENTS = false;
+const UPDATE_GE_FULLFILLMENTS = true;
 
 const skipDuplicates = true;
 
@@ -241,6 +244,65 @@ const createConcentrations = async (
   }
 };
 
+const createGEFullfillments = async (prisma: PrismaClient, ges: GEData) => {
+  await prisma.gEAreaFullfillmentCourse.deleteMany();
+  for (let [area, info] of ges.entries()) {
+    for (let [subArea, subInfo] of Object.entries(info.subareas)) {
+      if (area === "USCP" || area === "GWR") {
+        await prisma.course.updateMany({
+          where: {
+            code: {
+              in: subInfo.fullfilledBy,
+            },
+          },
+          data: {
+            [area]: true,
+          },
+        });
+        continue;
+      }
+      for (let course of subInfo.fullfilledBy) {
+        if (!area || !subArea || !course) {
+          console.error("missing data for ge fullfillment", {
+            area,
+            subArea,
+            course,
+          });
+          continue;
+        }
+        try {
+          await prisma.course.findUniqueOrThrow({
+            where: {
+              code: course,
+            },
+          });
+        } catch {
+          console.error("could not find course:", course);
+          continue;
+        }
+        await prisma.gEAreaFullfillmentCourse
+          .create({
+            data: {
+              course: {
+                connect: { code: course },
+              },
+              courseId: course,
+              area,
+              subArea,
+            },
+          })
+          .catch((_) =>
+            console.error("failed to create:", {
+              area,
+              subArea,
+              course,
+            })
+          );
+      }
+    }
+  }
+};
+
 const removeDegreesAndRequirements = async (prisma: PrismaClient) => {
   await prisma.courseRequirement.deleteMany({});
   await prisma.courseRequirementGroup.updateMany({
@@ -288,6 +350,10 @@ export const updateCatalogDataInDB = async (prisma: PrismaClient) => {
         kind: true,
       },
     });
+  }
+  if (UPDATE_GE_FULLFILLMENTS) {
+    const ges = await scrapeCourseGEFullfillments();
+    await createGEFullfillments(prisma, ges);
   }
   if (
     CREATE_GE_REQUIREMENTS ||

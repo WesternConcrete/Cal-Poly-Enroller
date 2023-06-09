@@ -189,12 +189,13 @@ model Degree {
 }
 
 model GEAreaFullfillmentCourse {
+  id Int @id @default(autoincrement())
   area     GEArea
   subArea  GESubArea
   courseId String
   course   Course    @relation(fields: [courseId], references: [code])
 
-  @@id([area, subArea, courseId])
+  @@unique([area, subArea, courseId])
 }
 
 model User {
