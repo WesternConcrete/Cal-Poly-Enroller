@@ -98,6 +98,8 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
     switch (courseType) {
       case RequirementTypeSchema.enum.support:
         return "bg-[#F5D2A4]";
+      // case RequirementTypeSchema.enum.elective:
+      //   return "bg-[#F5D2A4]";
       // case CourseType.CONCENTRATION:
       //   return classNames.concentration;
       // case CourseType.GWR:
@@ -296,14 +298,17 @@ export function RequirementSelector({
     React.useState<JustCourseInfo | null>(null);
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2 justify-center" onClick={(event) => {
+      event.stopPropagation();
+  }}>
       <Popover open={open} onOpenChange={setOpen} {...props}>
-        <PopoverTrigger asChild>
+        <PopoverTrigger>
           {selectedRequirement ? (
             <Button
               variant="ghost"
               size="sm"
-              className="h-4 border-solid bg-white mt-[.6rem]"
+              className="h-4 border-solid bg-white mt-[.6rem] w-[75px]"
+              
             >
               <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
             </Button>

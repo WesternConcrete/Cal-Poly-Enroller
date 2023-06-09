@@ -22,9 +22,21 @@ type FlowchartStateType = {
   setDegree: Setter<PartialDegree | null>;
   startYear: number;
   setStartYear: Setter<number>;
-  selectedRequirements: number[];
-  setSelectedRequirements: Setter<number[]>;
+  selectedRequirements: string[];
+  setSelectedRequirements: Setter<string[]>;
+  studentYear: 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
+  setStudentYear:  Setter<'Freshman' | 'Sophomore' | 'Junior' | 'Senior'>;
+  studentTerm: 'Winter' | 'Spring' | 'Fall';
+  setStudentTerm: Setter< 'Winter' | 'Spring' | 'Fall'>;
+  indexMap: Record<string, string[]>;
+  setIndexMap: Setter<Record<string, string[]>>;
+  setIndexForQuarter: (des_quarter_id: string, dest_index: number, requirement_id: string) => void;
+
 };
+
+export const STUDENT_YEAR_OPTIONS = ['Freshman' , 'Sophomore' , 'Junior' , 'Senior'] as ('Freshman' | 'Sophomore' | 'Junior' | 'Senior')[];
+
+export const STUDENT_TERM_OPTIONS = ['Winter' , 'Spring',  'Fall'] as ('Winter' | 'Spring' | 'Fall')[]
 
 export const FlowchartState = createContext<FlowchartStateType>(
   {} as FlowchartStateType
@@ -38,11 +50,65 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // TODO: merge dashboard and flowhcart components
   // TODO: make moveRequirement a backend mutation
   const [degree, setDegree] = useState<PartialDegree | null>(null);
+  const [studentYear, setStudentYear] = useState<'Freshman' | 'Sophomore' | 'Junior' | 'Senior'>("Freshman");
+
+  const currentMonth = new Date().getMonth();
+
+  let currentSeason: 'Winter' | 'Spring' | 'Fall';
+  if (currentMonth < 3) currentSeason = 'Winter';
+  else if (currentMonth < 6) currentSeason = 'Spring';
+  else currentSeason = 'Fall';
+
+  const [studentTerm, setStudentTerm] = useState<'Winter' | 'Spring' | 'Fall'>(currentSeason);
+
+  const [indexMap, setIndexMap] = useState<Record<string, string[]>>({});
+
+
+  const setIndexForQuarter = (des_quarter_id: string, dest_index: number, requirement_id: string) => {
+    
+    let source_quarter_id;
+    Object.keys(indexMap).forEach(quarter => {
+      indexMap[quarter].forEach(req => {
+        if(req === requirement_id) {
+          source_quarter_id = quarter
+        }
+      })
+    })
+    if(source_quarter_id) {
+      if(indexMap[source_quarter_id] === undefined) {
+        indexMap[source_quarter_id] = []
+      }
+
+      indexMap[source_quarter_id] = indexMap[source_quarter_id].filter(
+        req_id => req_id !== requirement_id
+      )
+    }
+
+    
+    
+    if(indexMap[des_quarter_id] === undefined) {
+      indexMap[des_quarter_id] = []
+    }
+
+    indexMap[des_quarter_id].splice(dest_index, 0, requirement_id);
+    setIndexMap(indexMap)
+  }
+
+  
   const [requirements, setRequirements] = useState<Requirement[]>([]);
 
-  const [selectedRequirements, setSelectedRequirements] = useState<number[]>(
+  const setRequirementsWrapper = (requirements: Requirement[]) => {
+    requirements.forEach(req => {
+      console.log(req)
+      setIndexForQuarter(req.quarterId.toString(), 0,  req.id)
+    })
+    setRequirements(requirements)
+  }
+
+  const [selectedRequirements, setSelectedRequirements] = useState<string[]>(
     []
   );
+
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
@@ -51,7 +117,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   }, [requirements]);
   const _requirementsQuery = api.degrees.requirements.useQuery(
     { degreeId: degree?.id ?? null, startYear },
-    { enabled: false, onSuccess: (data) => setRequirements(data) }
+    { enabled: false, onSuccess: (data) => setRequirementsWrapper(data) }
   );
   const flowchartContext = {
     degree,
@@ -62,6 +128,13 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
     setStartYear,
     selectedRequirements,
     setSelectedRequirements,
+    studentYear,
+    setStudentYear,
+    studentTerm,
+    setStudentTerm,
+    indexMap, 
+    setIndexMap,
+    setIndexForQuarter,
   };
 
   // TODO: move nested courses fetch here to avoid loading spinner waterfall

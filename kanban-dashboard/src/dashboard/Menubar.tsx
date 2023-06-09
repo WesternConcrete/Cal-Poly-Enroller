@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Pencil,
   School,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -47,7 +48,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { FlowchartState, useMoveRequirement } from "~/dashboard/state";
+import { FlowchartState, STUDENT_TERM_OPTIONS, STUDENT_YEAR_OPTIONS, useMoveRequirement } from "~/dashboard/state";
 import { api } from "~/utils/api";
 import {
   DropdownMenu,
@@ -72,6 +73,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export interface MenubarProps {}
 
@@ -81,6 +91,7 @@ export default function Menubar({}: MenubarProps) {
     startYear,
     selectedRequirements,
     setSelectedRequirements,
+    setIndexForQuarter
   } = React.useContext(FlowchartState);
   const router = useRouter();
   const classes = useMenubarStyles();
@@ -136,6 +147,7 @@ export default function Menubar({}: MenubarProps) {
     selectedRequirements.forEach((req) => {
       const requirementId = req;
       const quarterId = -1;
+      setIndexForQuarter(quarterId.toString(), 0, requirementId)
       moveRequirement(requirementId, quarterId);
     });
     setSelectedRequirements([]);
@@ -184,7 +196,7 @@ export default function Menubar({}: MenubarProps) {
                   disabled={selectedRequirements.length === 0}
                 >
                   <Button
-                    className="bg-primaryGreen"
+                    className="bg-primaryGreen hover:bg-primaryGreenHover"
                     disabled={selectedRequirements.length === 0}
                   >
                     Mark Complete{" "}
@@ -203,7 +215,7 @@ export default function Menubar({}: MenubarProps) {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={markAllComplete}
-                      className="bg-primaryGreen"
+                      className="bg-primaryGreen hover:bg-primaryGreenHover"
                     >
                       Confirm
                     </AlertDialogAction>
@@ -215,7 +227,7 @@ export default function Menubar({}: MenubarProps) {
                   disabled={selectedRequirements.length === 0}
                 >
                   <Button
-                    className="bg-primaryGreen"
+                    className="bg-primaryGreen hover:bg-primaryGreenHover"
                     disabled={selectedRequirements.length === 0}
                   >
                     Enroll
@@ -233,7 +245,7 @@ export default function Menubar({}: MenubarProps) {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      className="bg-primaryGreen"
+                      className="bg-primaryGreen hover:bg-primaryGreenHover"
                       onClick={() => router.push("/enrollment")}
                     >
                       Continue
@@ -462,7 +474,7 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
           </Button>
           <Button
             type="submit"
-            className="bg-primaryGreen"
+            className="bg-primaryGreen hover:bg-primaryGreenHover"
             onClick={confirmSelectedDegree}
           >
             Continue
@@ -482,7 +494,22 @@ export function UserNav() {
     });
   };
 
+  
+
+  const { studentYear, setStudentYear, studentTerm, setStudentTerm } =
+    React.useContext(FlowchartState);
+
+  const [year, setYear] = React.useState(studentYear);
+  const [term, setTerm] = React.useState(studentTerm);
+
+
   const [isOpenEditYear, setIsOpenEditYear] = React.useState(false);
+  const [isOpenEditTerm, setIsOpenEditTerm] = React.useState(false);
+
+  // This effect updates the local 'year' state when 'studentYear' changes
+  React.useEffect(() => {
+    setYear(studentYear);
+  }, [studentYear]);
 
   return (
     <>
@@ -536,7 +563,14 @@ export function UserNav() {
             <School className="mr-2 h-4 w-4" />
             <span>Edit year</span>
           </div>
-          <span className="opacity-60">Freshman</span>
+          <span className="opacity-60">{studentYear}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="flex justify-between" onClick={() => setIsOpenEditTerm(true)}>
+          <div className="flex items-center">
+            <Clock className="mr-2 h-4 w-4" />
+            <span>Change term</span>
+          </div>
+          <span className="opacity-60">{studentTerm}</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -552,29 +586,24 @@ export function UserNav() {
     <Dialog open={isOpenEditYear} onOpenChange={setIsOpenEditYear}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit year</DialogTitle>
-            <DialogDescription>
-              The content filter flags text that may violate our content policy.
-              It&apos;s powered by our moderation endpoint which is free to use
-              to moderate your OpenAI API traffic. Learn more.
-            </DialogDescription>
+            <DialogTitle>What is your year?</DialogTitle>
+            
           </DialogHeader>
-          <div className="py-6">
-            <h4 className="text-sm text-muted-foreground">
-              Playground Warnings
-            </h4>
-            <div className="flex items-start justify-between space-x-4 pt-3">
-              <Label className="grid gap-1 font-normal" htmlFor="show">
-                <span className="font-semibold">
-                  Show a warning when content is flagged
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  A warning will be shown when sexual, hateful, violent or
-                  self-harm content is detected.
-                </span>
-              </Label>
-            </div>
-          </div>
+          <div className="space-y-2">
+              <Label htmlFor="plan">Select year</Label>
+          <Select onValueChange={(val: "Freshman" | "Sophomore" | "Junior" | "Senior") => setYear(val)}>
+      <SelectTrigger>
+        <SelectValue placeholder={year} />
+      </SelectTrigger>
+      <SelectContent>
+      <SelectGroup>
+    {STUDENT_YEAR_OPTIONS.map(yr => (
+      <SelectItem value={yr} key={yr}>{yr}</SelectItem>
+    ))}
+  </SelectGroup>
+      </SelectContent>
+    </Select>
+    </div>
           <DialogFooter>
           <Button
             variant="outline"
@@ -584,10 +613,48 @@ export function UserNav() {
           </Button>
           <Button
             type="submit"
-            className="bg-primaryGreen"
-            onClick={() => setIsOpenEditYear(false)}
+            className="bg-primaryGreen hover:bg-primaryGreenHover"
+            onClick={() => {setStudentYear(year); setIsOpenEditYear(false)}}
           >
-            Continue
+            Confirm
+          </Button>
+        </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isOpenEditTerm} onOpenChange={setIsOpenEditTerm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>What is the current term?</DialogTitle>
+            
+          </DialogHeader>
+          <div className="space-y-2">
+              <Label htmlFor="plan">Select term</Label>
+          <Select onValueChange={(val: "Winter" | "Spring" | "Fall") => setTerm(val)}>
+      <SelectTrigger>
+        <SelectValue placeholder={term} />
+      </SelectTrigger>
+      <SelectContent>
+      <SelectGroup>
+    {STUDENT_TERM_OPTIONS.map(term => (
+      <SelectItem value={term} key={term}>{term}</SelectItem>
+    ))}
+  </SelectGroup>
+      </SelectContent>
+    </Select>
+    </div>
+          <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsOpenEditTerm(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="bg-primaryGreen hover:bg-primaryGreenHover"
+            onClick={() => {setStudentTerm(term); setIsOpenEditTerm(false)}}
+          >
+            Confirm
           </Button>
         </DialogFooter>
         </DialogContent>
