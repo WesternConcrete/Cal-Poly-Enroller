@@ -266,9 +266,11 @@ export const appRouter = t.router({
           }))
         );
         console.dir(courses, { depth: null });
-        let courseSet = new Set(courses.map(c => c.id))
+        let courseSet = new Set(courses.map((c) => c.id));
         if (courseSet.size !== courses.length)
-            throw new Error(`only ${courseSet.size} unique ids in ${courses.length} courses`)
+          throw new Error(
+            `only ${courseSet.size} unique ids in ${courses.length} courses`
+          );
         return courses;
       }),
     all: t.procedure
