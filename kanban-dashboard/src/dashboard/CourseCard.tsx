@@ -222,7 +222,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
                             <div
                               className={`mt-[0.5rem] font-bold text-[11px]`}
                             >
-                              GE AREA B
+                              {requirement.code}
                             </div>
                             <RequirementSelector
                               requirements={available_ge_options}
@@ -243,7 +243,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
                         <div className={`mt-[0.5rem] font-bold text-[11px]`}>
                           {requirement.code}
                         </div>
-                        <div className={`overflow-hidden max-h-[100px]`}>
+                        <div className={`overflow-hidden max-h-[100px] break-words`}>
                           <div className="font-normal text-[9px]">
                             {requirement.title}
                           </div>

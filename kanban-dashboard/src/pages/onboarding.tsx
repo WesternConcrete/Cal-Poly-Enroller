@@ -40,6 +40,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const step_text = [
     "What's your major?",
+    "What's your concentration?",
     "What classes have you completed?",
     "What year are you?",
   ];
@@ -93,7 +94,7 @@ export default function OnboardingPage() {
     setGoingToNext(true);
     if (step < 0) {
       return handleLogout();
-    } else if (step > 1) {
+    } else if (step > 3) {
       setTimeout(() => router.push("/dashboard"), 450);
 
       return;
@@ -104,6 +105,18 @@ export default function OnboardingPage() {
       setGoingToNext(false);
     }, 350);
   };
+
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const year_options = ["Freshman", "Sophomore", "Junior", "Senior"]
+
+  const [selectedConcentration, setSelectedConcentration] = useState<string>("");
+  const concentrations = [
+    "Artificial Intelligence",
+    "Computer Systems",
+    "Data Science",
+    "Human-Computer Interaction",
+  ]
+
 
   return (
     <Layout>
@@ -196,7 +209,82 @@ export default function OnboardingPage() {
           </section>
         )}
 
-        {step === 1 && (
+{step === 1 && (
+          <section className="container flex flex-col items-center justify-center gap-6 pb-8 pt-6 md:py-10">
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
+              {step_text[step]}
+            </h1>
+            <Card className="w-[380px]">
+              <CardHeader>
+                <CardTitle>Select your concentration</CardTitle>
+              </CardHeader>
+
+              <CardContent className="grid gap-4">
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between"
+                    >
+                      {selectedConcentration || "Concentration..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className={`w-[330px] p-0 ${
+                      open && `max-h-[300px] overflow-auto`
+                    }`}
+                  >
+                    <Command>
+                      <CommandInput placeholder="Search degree..." />
+                      <CommandEmpty>No concentration found.</CommandEmpty>
+                      <CommandGroup>
+                        {concentrations.map((concentration, idx) => (
+                            <CommandItem
+                              key={concentration + idx}
+                              onSelect={(val) => {
+                                setSelectedConcentration(
+                                  val === selectedConcentration ? "" : concentration
+                                );
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedConcentration === concentration
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {concentration}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                  Go Back
+                </Button>
+
+                <Button
+                  className="bg-primaryGreen"
+                  onClick={() => goToStep(step + 1)}
+                >
+                  Next
+                </Button>
+              </CardFooter>
+            </Card>{" "}
+          </section>
+        )}
+
+        {step === 2 && (
           <section className="container flex flex-col items-center justify-center gap-6 pb-8 pt-6 md:py-10">
             <h1 className="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
               {step_text[step]}
@@ -228,6 +316,57 @@ export default function OnboardingPage() {
                         className={classes}
                       >
                         {req.code}
+                      </Label>
+                    );
+                  })}
+              </CardContent>
+
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                  Go Back
+                </Button>
+
+                <Button
+                  className="bg-primaryGreen"
+                  onClick={() => goToStep(step + 1)}
+                >
+                  Next
+                </Button>
+              </CardFooter>
+            </Card>
+          </section>
+        )}
+
+
+
+        {step === 3 && (
+          <section className="container flex flex-col items-center justify-center gap-6 pb-8 pt-6 md:py-10">
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
+              {step_text[step]}
+            </h1>
+            <Card className="w-[600px]">
+              <CardHeader>
+                <CardTitle>Select your year down below</CardTitle>
+              </CardHeader>
+
+              <CardContent className="flex flex-wrap justify-center items-center gap-6">
+                {
+                  year_options.map((yr, index) => {
+                    const years = `w-1/5 flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer
+                    ${
+                      selectedYear === yr
+                        ? "border-primaryGreen"
+                        : "border-muted"
+                    } `;
+
+                    return (
+                      <Label
+                        htmlFor="card"
+                        key={yr}
+                        onClick={() => setSelectedYear(yr)}
+                        className={years}
+                      >
+                        {yr}
                       </Label>
                     );
                   })}

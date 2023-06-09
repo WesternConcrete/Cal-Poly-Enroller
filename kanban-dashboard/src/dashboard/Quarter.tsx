@@ -23,7 +23,7 @@ export default function Quarter({ quarter }: Props) {
 
   return (
     <div className={`flex flex-col h-full board-status`}>
-      <div className="p-[1rem] flex w-full">
+      <div className="p-[.5rem] flex w-full">
         <div className="flex-grow-1 text-[11px] font-bold border-b-[1px] border-solid border-gray">
           {title}
         </div>

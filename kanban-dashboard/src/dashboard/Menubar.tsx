@@ -15,6 +15,8 @@ import {
   Users,
   CheckCheck,
   GraduationCap,
+  Pencil,
+  School,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -480,7 +482,10 @@ export function UserNav() {
     });
   };
 
+  const [isOpenEditYear, setIsOpenEditYear] = React.useState(false);
+
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger
         asChild
@@ -526,27 +531,14 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/* <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            <span>New Team</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup> */}
+       <DropdownMenuItem className="flex justify-between" onClick={() => setIsOpenEditYear(true)}>
+          <div className="flex items-center">
+            <School className="mr-2 h-4 w-4" />
+            <span>Edit year</span>
+          </div>
+          <span className="opacity-60">Freshman</span>
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => signOut({ redirect: true, callbackUrl: "/auth" })}
@@ -557,6 +549,50 @@ export function UserNav() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <Dialog open={isOpenEditYear} onOpenChange={setIsOpenEditYear}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit year</DialogTitle>
+            <DialogDescription>
+              The content filter flags text that may violate our content policy.
+              It&apos;s powered by our moderation endpoint which is free to use
+              to moderate your OpenAI API traffic. Learn more.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6">
+            <h4 className="text-sm text-muted-foreground">
+              Playground Warnings
+            </h4>
+            <div className="flex items-start justify-between space-x-4 pt-3">
+              <Label className="grid gap-1 font-normal" htmlFor="show">
+                <span className="font-semibold">
+                  Show a warning when content is flagged
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  A warning will be shown when sexual, hateful, violent or
+                  self-harm content is detected.
+                </span>
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsOpenEditYear(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="bg-primaryGreen"
+            onClick={() => setIsOpenEditYear(false)}
+          >
+            Continue
+          </Button>
+        </DialogFooter>
+        </DialogContent>
+      </Dialog>
+   </>
   );
 }
 
