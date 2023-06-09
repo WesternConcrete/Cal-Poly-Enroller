@@ -19,6 +19,7 @@ import {
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";
+import { GEArea, GESubArea } from "@prisma/client";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -32,6 +33,17 @@ const SchoolYearTermSchema = z.union([
   z.literal(8),
 ]);
 
+export const GroupSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("ge"),
+    area: z.string(),
+    subArea: z.string(),
+  }),
+  z.object({ kind: z.literal("uscp") }),
+  z.object({ kind: z.literal("gwr") }),
+  z.object({ kind: z.literal("elective"), groupId: z.number() }),
+]);
+
 const RequirementSchema = z.object({
   code: z.string(), // TODO: validate course code
   id: z.string(),
@@ -39,6 +51,7 @@ const RequirementSchema = z.object({
   courseType: RequirementTypeSchema,
   units: z.number().nonnegative(),
   quarterId: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
+  groupId: GroupSchema.optional(),
 });
 export type Requirement = z.infer<typeof RequirementSchema>;
 
@@ -121,8 +134,19 @@ export const appRouter = t.router({
                 },
               },
             },
+            childGroups: {
+              select: {
+                id: true,
+                unitsOf: true,
+                coursesKind: true,
+                courseKindInfo: true,
+                groupKind: true,
+              },
+            },
             coursesKind: true,
+            courseKindInfo: true,
             groupKind: true,
+            unitsOf: true,
           },
         });
         const geReqs = await ctx.prisma.gERequirement.findMany({
@@ -135,23 +159,98 @@ export const appRouter = t.router({
             subArea: true,
           },
         });
-        return reqGroups.flatMap((group) => {
-          return group.courses.map((req) => ({
-            code: req.courseCode,
-            id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
-            title: req.course.title,
-            courseType: group.coursesKind as RequirementType,
-            quarterId: randomQuarter(input.startYear),
-            units: req.course.maxUnits,
-          }));
-        }).concat(geReqs.map((req) => ({
-            code: `${req.area}-${req.subArea}`,
+        let courses = [];
+        reqGroups.forEach((group) => {
+          courses = courses.concat(
+            group.courses.map((req) => ({
+              code: req.courseCode,
+              id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
+              title: req.course.title,
+              courseType: group.coursesKind as RequirementType,
+              quarterId: randomQuarter(input.startYear),
+              units: req.course.maxUnits,
+            }))
+          );
+        });
+
+        reqGroups.forEach((group) => {
+          group.childGroups.forEach((childGroup) => {
+            switch (childGroup.groupKind) {
+              case "or":
+                if (!childGroup.unitsOf || !group.unitsOf)
+                  childGroup.unitsOf = 4;
+                let numCourses = (childGroup.unitsOf ?? group.unitsOf) / 4;
+                if (numCourses < 1) numCourses = 1;
+                let code;
+                let title;
+                if (group.coursesKind === "elective") {
+                  code = group.courseKindInfo
+                    ? group.courseKindInfo + " " + "Elective"
+                    : "Elective";
+                  title = "";
+                } else {
+                  console.warn("skipping group:", { group });
+                  return;
+                }
+                for (let i = 0; i < numCourses; i++) {
+                  courses.push({
+                    code,
+                    title,
+                    id: `${group.groupKind}-${group.coursesKind}-${group.courseKindInfo}-${i}`,
+                    courseType: group.coursesKind as RequirementType,
+                    quarterId: randomQuarter(input.startYear),
+                    units: childGroup.unitsOf ?? group.unitsOf,
+                    groupId: { kind: "elective", groupId: childGroup.id },
+                  });
+                }
+                break;
+              case "and":
+              // FIXME: fetch courses
+
+              // let subGroupCourses =
+              //   (await ctx.prisma.courseRequirementGroup.findUnique({
+              //     where: {
+              //       id: childGroup.id,
+              //     },
+              //     select: {
+              //       courses: {
+              //         select: {
+              //           courseCode: true,
+              //           course: {
+              //             select: {
+              //               title: true,
+              //             },
+              //           },
+              //         },
+              //       },
+              //     },
+              //   })) ?? { courses: [] };
+              // courses = courses.concat(
+              //   subGroupCourses.courses.map((req) => ({
+              //     code: req.courseCode,
+              //     title: req.course.title,
+              //     id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
+              //     courseType: group.coursesKind as RequirementType,
+              //     quarterId: randomQuarter(input.startYear),
+              //     units: group.unitsOf,
+              //   }))
+              // );
+            }
+          });
+        });
+        courses = courses.concat(
+          geReqs.map((req) => ({
+            code: `GE Area ${req.area} ${req.subArea}`,
             id: `${req.area}-${req.subArea}`,
             title: `${req.subArea}`,
             courseType: "ge",
             quarterId: randomQuarter(input.startYear),
             units: req.units,
-        })));
+            groupId: { kind: "ge", area: req.area, subArea: req.subArea },
+          }))
+        );
+        console.dir(courses, { depth: null });
+        return courses;
       }),
     all: t.procedure
       .output(z.array(z.object({ name: z.string(), id: z.string() })))
