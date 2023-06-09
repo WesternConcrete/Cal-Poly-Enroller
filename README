@@ -1,5 +1,3 @@
-# 307FinalProject
-
 The Cal Poly Flowchart Module is a personalized tool, integrated into the Cal Poly enrollment software, that allows students to track their major progress, plan future classes, and easily enroll in up-to-date courses, enhancing efficiency and effectiveness in academic planning. It helps students plan their classes more efficiently and effectively. Unlike the static flowcharts and PolyFlow, our product will be integrated with up-to-date Cal Poly class data and will be automatically configured based on the user’s class history. It will also be integrated with the enrollment software to allow students to easily enroll in classes that they plan to take at the start of each quarter.
 
 UI Prototype: https://tinyurl.com/ui-calpolyflowchart
