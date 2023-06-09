@@ -251,7 +251,13 @@ export const appRouter = t.router({
         });
         courses = courses.concat(
           geReqs.map((req) => ({
-            code: `GE Area ${req.area} ${req.subArea}`,
+            code: !!req.subArea.match(/[A-E]\d/)
+              ? `GE ${req.subArea}`
+              : `GE ${req.subArea
+                  .replace("Div", "-Div")
+                  .replace("Elective", "")} Area ${req.area}${
+                  req.subArea.includes("Elective") ? " Elective" : ""
+                }`,
             id: `${req.area}-${req.subArea}`,
             title: `${req.subArea}`,
             courseType: "ge",
@@ -266,9 +272,11 @@ export const appRouter = t.router({
           }))
         );
         console.dir(courses, { depth: null });
-        let courseSet = new Set(courses.map(c => c.id))
+        let courseSet = new Set(courses.map((c) => c.id));
         if (courseSet.size !== courses.length)
-            throw new Error(`only ${courseSet.size} unique ids in ${courses.length} courses`)
+          throw new Error(
+            `only ${courseSet.size} unique ids in ${courses.length} courses`
+          );
         return courses;
       }),
     all: t.procedure
