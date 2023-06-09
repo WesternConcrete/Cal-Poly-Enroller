@@ -1,12 +1,13 @@
 import React from "react";
 import Menubar from "../dashboard/Menubar";
 import { useSession } from "next-auth/react";
+import withAuth from "./AuthChecker";
 
 export interface LayoutProps {
   children?: React.ReactNode;
 }
 
-export default function Layout({ children }: LayoutProps) {
+function Layout({ children }: LayoutProps) {
   const { data: session, status: sessionStatus } = useSession();
 
   return (
@@ -21,3 +22,6 @@ export default function Layout({ children }: LayoutProps) {
     </div>
   );
 }
+
+
+export default withAuth(Layout)
