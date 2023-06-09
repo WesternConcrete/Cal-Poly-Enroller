@@ -104,7 +104,7 @@ const stripCrosslistInfoFromCourseCode = (courseCode: string) => {
 
 // NOTE: it is expected that information from crosslistings can be parsed in subject course
 // lists and handled properly when using degree course requirements
-const CourseCodeSchema = z.string().transform(stripCrosslistInfoFromCourseCode); // .regex(/^[A-Z]+\s\d+$/);
+export const CourseCodeSchema = z.string().transform(stripCrosslistInfoFromCourseCode); // .regex(/^[A-Z]+\s\d+$/);
 
 export type CourseCode = z.infer<typeof CourseCodeSchema>;
 

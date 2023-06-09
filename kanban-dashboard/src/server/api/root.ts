@@ -7,6 +7,7 @@ import {
   RequirementTypeSchema,
   RequirementType,
   scrapeCourseGEFullfillments,
+  CourseCodeSchema,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -21,6 +22,7 @@ import {
   termCode,
 } from "~/scraping/registrar";
 import { GEArea, GESubArea } from "@prisma/client";
+import { scrapeSections } from "~/scraping/sections_fetch";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -357,6 +359,23 @@ export const appRouter = t.router({
               }));
             });
       }
+    }),
+  sections: t.procedure
+    .input(z.object({ courseCode: CourseCodeSchema, quarterId: z.number() }))
+    .output(
+      z.array(
+        z.object({
+          num: z.number(),
+          prof: z.string(),
+          dates: z.string(),
+          title: z.string(),
+          location: z.string(),
+          status: z.enum(["WAITLIST", "OPEN", "CLOSE"]),
+        })
+      )
+    )
+    .query(async (input) => {
+      return await scrapeSections(input.courseCode, input.quarterId);
     }),
 });
 
