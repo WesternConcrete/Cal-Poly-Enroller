@@ -19,6 +19,6 @@ Install the Prettier extension in Visual Studio Code:
 1. In the Extensions view, search for "Prettier - Code formatter" and click "Install" next to the Prettier extension.
 2. In Visual Studio Code, go to "File" -> "Preferences" -> "Settings" (or use the shortcut Ctrl+,) to open the settings.
 3. Search for "Default Formatter" and select "esbenp.prettier-vscode" as the default formatter for your project.
-4. Customize Prettier settings (optional): If you want to customize Prettier's behavior, you can modify its settings. Search for          "Prettier" in the settings and adjust the options according to your preferences.
+4. Customize Prettier settings (optional): If you want to customize Prettier's behavior, you can modify its settings. Search for               "Prettier" in the settings and adjust the options according to your preferences.
 5. Enable format on save (optional): To automatically format your code with Prettier on save, search for "Editor: Format On Save" in the settings and enable it.
 
