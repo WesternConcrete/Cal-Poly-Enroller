@@ -22,7 +22,7 @@ const withAuth = (Component: FC<Props>) => {
     }, [isUserLoggedIn, isPageLoading, router]);
 
     if (isPageLoading) {
-      return <div>Loading...</div>; // Replace with your preferred loading UI
+      return <div></div>; // Replace with your preferred loading UI
     }
 
     return <Component {...props} />;

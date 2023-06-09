@@ -83,7 +83,7 @@ export default function Flowchart() {
         {quartersQuery.data
           ? quartersQuery.data.slice(sliceStart, sliceEnd).map((quarter) => (
               <div
-              className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll w-full flex w-[140px] flex-col relative border-[1px] border-solid border-[#e1e4e8]"
+              className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll flex w-[140px] flex-col relative border-[1px] border-solid border-[#e1e4e8]"
               key={quarter.id}
               >
                 <Quarter quarter={quarter} />
@@ -116,7 +116,7 @@ export default function Flowchart() {
           <div className="flex-grow-1 flex overflow-x-scroll scroll-behavior-smooth w-full">
             <div className="flex">
 
-              <div   className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll w-full flex w-[220px] flex-col relative border-[1px] border-solid border-[#e1e4e8] bt-none">
+              <div   className="flex-basis-[100%] flex-grow-0 overflow-x-hidden overflow-y-scroll flex w-[220px] flex-col relative border-[1px] border-solid border-[#e1e4e8] bt-none">
                 <CollapsedQuarter quarter={collapsedQuarterData} />
               </div>
               {renderQuarterGroup("Freshman", 0, 3)}
