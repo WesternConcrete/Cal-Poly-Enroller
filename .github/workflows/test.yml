@@ -1,12 +1,32 @@
-on: [push]
+on:
+  push:
+  pull_request:
+
 jobs:
   api_test:
     runs-on: ubuntu-latest
-    name: API Tests
+    name: API Tests + Coverage
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3
-      - name: Step CI Action
-        uses: stepci/stepci@main
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: 'Install Node'
+        uses: actions/setup-node@v2
         with:
-          workflow: "kanban-dashboard/stepci.yml"
+          node-version: '17.x'
 
+      - name: npm install
+        working-directory: kanban-dashboard
+        run: npm install
+
+      - name: run vitest
+        working-directory: kanban-dashboard
+        run: npx vitest --coverage --run
+
+      - name: Vitest Coverage Report
+        working-directory: kanban-dashboard
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v1.4.0

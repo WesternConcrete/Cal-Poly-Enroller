@@ -10,6 +10,7 @@ export default defineConfig({
     },
     coverage: {
       include: ["src/server/api/root.ts"],
+      reporter: ['text', 'json-summary', 'json'],
     },
   },
 });
