@@ -12,7 +12,7 @@ export interface Props {
 export default function CollapsedQuarter({ quarter }: Props) {
   const classNames = useLaneStyles();
   const { requirements, startYear } = useContext(FlowchartState);
-  const title = `COMPLETED`;
+  const title = `COMPLETED COURSES`;
 
   const quarterRequirements = requirements.filter(
     (req) => req.quarterId === quarter.id
@@ -20,7 +20,7 @@ export default function CollapsedQuarter({ quarter }: Props) {
 
   return (
     <div className={`flex flex-col h-full board-status flex flex-col h-full]`}>
-      <div className="p-[1rem] flex w-full">
+      <div className="p-[.5rem] flex w-full">
         <div className="flex-grow-1 text-[11px] font-bold border-b-[1px] border-solid border-gray">
           {title}
         </div>
