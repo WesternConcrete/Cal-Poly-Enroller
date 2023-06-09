@@ -267,6 +267,24 @@ export const appRouter = t.router({
             },
           }))
         );
+        courses.push({
+          code: "GWR",
+          id: "GWR",
+          title: "Graduation Writing Requirement",
+          courseType: "GWR",
+          quarterId: randomQuarter(startYear),
+          units: 4,
+          groupId: { kind: "GWR", degreeId: input.degreeId },
+        });
+        courses.push({
+          code: "USCP",
+          id: "USCP",
+          title: "United States Cultural Pluralism",
+          courseType: "USCP",
+          quarterId: randomQuarter(startYear),
+          units: 4,
+          groupId: { kind: "USCP", degreeId: input.degreeId },
+        });
         console.dir(courses, { depth: null });
         let courseSet = new Set(courses.map((c) => c.id));
         if (courseSet.size !== courses.length)
@@ -362,11 +380,7 @@ export const appRouter = t.router({
     }),
   sections: t.procedure
     .input(z.object({ courseCode: CourseCodeSchema, quarterId: z.number() }))
-    .output(
-      z.array(
-            SectionSchema
-      )
-    )
+    .output(z.array(SectionSchema))
     .query(async (input) => {
       return await scrapeSections(input.courseCode, input.quarterId);
     }),
