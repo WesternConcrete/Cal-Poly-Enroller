@@ -14,7 +14,7 @@ import { Trash } from "lucide-react";
 import { Requirement } from "~/server/api/root";
 
 export default function Flowchart() {
-  const { startYear, selectedRequirements, setSelectedRequirements, requirements, indexMap, setIndexMap } =
+  const { startYear, selectedRequirements, setSelectedRequirements, requirements, setIndexForQuarter } =
     React.useContext(FlowchartState);
   const moveRequirement = useMoveRequirement();
   const quartersQuery = api.quarters.all.useQuery({ startYear });
@@ -53,10 +53,7 @@ export default function Flowchart() {
       // moveRequirement: (requirementId: number, quarterId: number) => void;
       const requirementId = draggableId;
       const quarterId = parseInt(destination.droppableId);
-      const destination_index = destination.index
-      const indexMapCopy = indexMap
-      indexMapCopy[requirementId] = destination_index
-      setIndexMap(indexMapCopy)
+      setIndexForQuarter(destination.droppableId, destination.index, requirementId)
       moveRequirement(requirementId, quarterId);
     }
   };
@@ -133,22 +130,29 @@ export default function Flowchart() {
     })
   )
 
-
   const isRenderedQuarter = (quarter: {
     id: number;
     year: number;
-    termNum: 2 | 4 | 8;
+    termNum: 2 | 4 | 6 | 8;
   }, seasonMapping: Record<string, number>, year_index: number, currentSeason: string) => {
-   
   
-    const currentMappedSeason = seasonMapping[currentSeason];
-
+   
     if (quarter.year > year_index) {
+      // console.log(quarter.year, year_index)
       // Render all quarters in future years
       return true;
     } else if (quarter.year === year_index) {
+      // console.log( quarter.termNum, currentMappedSeason * 2)
       // For the current year, render the quarters that are in the current season or later
-      return quarter.termNum >= currentMappedSeason * 2;
+      if(currentSeason === 'Winter') {
+        return quarter.termNum !== 8
+      } else if (currentSeason === 'Spring') {
+        return quarter.termNum !== 8 && quarter.termNum !== 2
+      } else if (currentSeason === 'Summer') {
+        return  quarter.termNum !== 8 && quarter.termNum !== 2 && quarter.termNum !== 4
+      } else {
+        return true
+      }
     } else {
       // Do not render quarters in previous years
       return false;
@@ -166,11 +170,13 @@ export default function Flowchart() {
     if (quartersQuery.data) {
       quartersQuery.data.forEach((quarter) => {
         // Assuming you have some logic to determine if a quarter should be rendered
+        
         const shouldRender = isRenderedQuarter(quarter, seasonMapping, year_index, studentTerm);
         if (!shouldRender) {
           // Assuming you have some function to get quarter requirements
           const quarterRequirements = getQuarterRequirements(quarter.id);
           quarterRequirements.forEach((requirement: Requirement) => {
+            setIndexForQuarter("-1", 0, requirement.id)
             moveRequirement(requirement.id, -1);
           });
         }
@@ -179,7 +185,6 @@ export default function Flowchart() {
   }, [requirements, studentYear, quartersQuery.data, studentTerm]); 
     
   
-
 
   return (
     

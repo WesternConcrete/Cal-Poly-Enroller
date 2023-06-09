@@ -91,6 +91,7 @@ export default function Menubar({}: MenubarProps) {
     startYear,
     selectedRequirements,
     setSelectedRequirements,
+    setIndexForQuarter
   } = React.useContext(FlowchartState);
   const router = useRouter();
   const classes = useMenubarStyles();
@@ -146,6 +147,7 @@ export default function Menubar({}: MenubarProps) {
     selectedRequirements.forEach((req) => {
       const requirementId = req;
       const quarterId = -1;
+      setIndexForQuarter(quarterId.toString(), 0, requirementId)
       moveRequirement(requirementId, quarterId);
     });
     setSelectedRequirements([]);
