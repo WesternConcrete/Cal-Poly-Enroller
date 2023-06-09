@@ -5,9 +5,12 @@ tests:
     steps:
       - name: Quarters
         http:
-          url: http://localhost:3000/trpc
+          url: http://localhost:3000/api/trpc
           trpc:
             query:
-              - quarters.all
+              quarters/all:
+                json:
+                  startYear: 2021
+
           check:
             status: /^20/
