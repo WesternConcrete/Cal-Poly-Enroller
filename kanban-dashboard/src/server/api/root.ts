@@ -112,6 +112,7 @@ export const appRouter = t.router({
         z.object({
           degreeId: z.string().nullable(),
           startYear: z.number().gte(2000),
+          concentration: z.string().optional(),
         })
       )
       .output(z.array(RequirementSchema))
