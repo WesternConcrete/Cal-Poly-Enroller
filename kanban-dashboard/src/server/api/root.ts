@@ -1,10 +1,11 @@
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { t } from "~/server/api/trpc";
 import {
   scrapeDegrees,
   scrapeDegreeRequirements,
   type RequirementCourse,
   DegreeSchema,
   RequirementTypeSchema,
+  RequirementType,
 } from "~/scraping/catalog";
 export type {
   Degree,
@@ -18,6 +19,7 @@ import {
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";
+import { GEArea, GESubArea } from "@prisma/client";
 
 const courseType_arr = RequirementTypeSchema.options;
 
@@ -31,13 +33,25 @@ const SchoolYearTermSchema = z.union([
   z.literal(8),
 ]);
 
+export const GroupSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("ge"),
+    area: z.string(),
+    subArea: z.string(),
+  }),
+  z.object({ kind: z.literal("uscp") }),
+  z.object({ kind: z.literal("gwr") }),
+  z.object({ kind: z.literal("elective"), groupId: z.number() }),
+]);
+
 const RequirementSchema = z.object({
   code: z.string(), // TODO: validate course code
-  id: z.number(),
+  id: z.string(),
   title: z.string(),
   courseType: RequirementTypeSchema,
   units: z.number().nonnegative(),
   quarterId: z.number().gte(2000, { message: "term code < 2000" }), // see termCode function in scraping/registrar.ts for details
+  groupId: GroupSchema.optional(),
 });
 export type Requirement = z.infer<typeof RequirementSchema>;
 
@@ -46,74 +60,225 @@ const QuarterSchema = z.object({
   year: YearSchema,
   termNum: SchoolYearTermSchema,
 });
+
 export type Quarter = z.infer<typeof QuarterSchema>;
+
+const randomQuarter = (startYear: number) => {
+  return termCode(
+    Math.floor(Math.random() * 4) + startYear,
+    SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
+  );
+};
 /**
  * This is the primary router for your server.
  *
  * All routers added in /api/routers should be manually added here.
  */
-export const appRouter = createTRPCRouter({
-  currentQuarterId: publicProcedure
-    .output(z.number().gt(2000))
-    .query(async () => {
+export const appRouter = t.router({
+  quarters: t.router({
+    current: t.procedure.output(z.number().gt(2000)).query(async () => {
       return await scrapeCurrentQuarter();
     }),
-  quarters: publicProcedure
-    .input(z.object({ startYear: z.number().gte(2000) }))
-    .output(z.array(QuarterSchema))
-    .query(({ input: { startYear } }) => {
-      const quarters = [];
+    all: t.procedure
+      .input(z.object({ startYear: z.number().gte(2000) }))
+      .query(({ input: { startYear } }) => {
+        const quarters = [];
 
-      let calYear = startYear;
-      let schoolYear = 0;
+        let calYear = startYear;
+        let schoolYear = 0;
 
-      const q = (termSeason: Term) => ({
-        id: termCode(calYear, termSeason),
-        termNum: TERM_NUMBER[termSeason] as z.infer<
-          typeof SchoolYearTermSchema
-        >,
-        year: schoolYear,
-      });
-      while (schoolYear < 4) {
-        // winter/spring quarter will be in yeear 5 senior year but this is still 4th year
+        const q = (termSeason: Term) => ({
+          id: termCode(calYear, termSeason),
+          termNum: TERM_NUMBER[termSeason] as z.infer<
+            typeof SchoolYearTermSchema
+          >,
+          year: schoolYear,
+        });
+        while (schoolYear < 4) {
+          // winter/spring quarter will be in yeear 5 senior year but this is still 4th year
 
-        quarters.push(q("fall"));
-        calYear++;
-        quarters.push(q("winter"));
-        quarters.push(q("spring"));
-        schoolYear++;
-      }
-      return quarters;
-    }),
-  degreeRequirements: publicProcedure
-    .input(
-      z.object({
-        degree: DegreeSchema.nullable(),
-        startYear: z.number().gte(2000),
-      })
-    )
-    .output(z.array(RequirementSchema))
-    .query(async ({ input }) => {
-      if (input.degree === null) {
-        return [];
-      }
-      const courses = await scrapeDegreeRequirements(input.degree);
-      // generate random info for the data that isn't being scraped yet
-      return Array.from(courses.courses.values()).map(
-        (course: RequirementCourse, i) => ({
-          ...course,
-          courseType:
-            courseType_arr[Math.floor(Math.random() * courseType_arr.length)], // TODO: figure out course type from group
-          quarterId: termCode(
-            Math.floor(Math.random() * 4) + input.startYear,
-            SchoolYearTermSchema.parse([2, 4, 8][Math.floor(Math.random() * 3)])
-          ),
-          id: i,
+          quarters.push(q("fall"));
+          calYear++;
+          quarters.push(q("winter"));
+          quarters.push(q("spring"));
+          schoolYear++;
+        }
+        return quarters;
+      }),
+  }),
+  degrees: t.router({
+    requirements: t.procedure
+      .input(
+        z.object({
+          degreeId: z.string().nullable(),
+          startYear: z.number().gte(2000),
         })
-      );
-    }),
-  degrees: publicProcedure.query(async () => {
-    return scrapeDegrees();
+      )
+      .output(z.array(RequirementSchema))
+      .query(async ({ ctx, input }) => {
+        if (!input.degreeId) return [];
+        const reqGroups = await ctx.prisma.courseRequirementGroup.findMany({
+          where: {
+            degreeId: input.degreeId,
+          },
+          select: {
+            courses: {
+              select: {
+                courseCode: true,
+                course: {
+                  select: {
+                    title: true,
+                    maxUnits: true,
+                    minUnits: true,
+                  },
+                },
+              },
+            },
+            childGroups: {
+              select: {
+                id: true,
+                unitsOf: true,
+                coursesKind: true,
+                courseKindInfo: true,
+                groupKind: true,
+              },
+            },
+            coursesKind: true,
+            courseKindInfo: true,
+            groupKind: true,
+            unitsOf: true,
+          },
+        });
+        const geReqs = await ctx.prisma.gERequirement.findMany({
+          where: {
+            degreeId: input.degreeId,
+          },
+          select: {
+            units: true,
+            area: true,
+            subArea: true,
+          },
+        });
+        let courses = [];
+        reqGroups.forEach((group) => {
+          courses = courses.concat(
+            group.courses.map((req) => ({
+              code: req.courseCode,
+              id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
+              title: req.course.title,
+              courseType: group.coursesKind as RequirementType,
+              quarterId: randomQuarter(input.startYear),
+              units: req.course.maxUnits,
+            }))
+          );
+        });
+
+        reqGroups.forEach((group) => {
+          group.childGroups.forEach((childGroup) => {
+            switch (childGroup.groupKind) {
+              case "or":
+                if (!childGroup.unitsOf || !group.unitsOf)
+                  childGroup.unitsOf = 4;
+                let numCourses = (childGroup.unitsOf ?? group.unitsOf) / 4;
+                if (numCourses < 1) numCourses = 1;
+                let code;
+                let title;
+                if (group.coursesKind === "elective") {
+                  code = group.courseKindInfo
+                    ? group.courseKindInfo + " " + "Elective"
+                    : "Elective";
+                  title = "";
+                } else {
+                  console.warn("skipping group:", { group });
+                  return;
+                }
+                for (let i = 0; i < numCourses; i++) {
+                  courses.push({
+                    code,
+                    title,
+                    id: `${group.groupKind}-${group.coursesKind}-${group.courseKindInfo}-${i}`,
+                    courseType: group.coursesKind as RequirementType,
+                    quarterId: randomQuarter(input.startYear),
+                    units: childGroup.unitsOf ?? group.unitsOf,
+                    groupId: { kind: "elective", groupId: childGroup.id },
+                  });
+                }
+                break;
+              case "and":
+              // FIXME: fetch courses
+
+              // let subGroupCourses =
+              //   (await ctx.prisma.courseRequirementGroup.findUnique({
+              //     where: {
+              //       id: childGroup.id,
+              //     },
+              //     select: {
+              //       courses: {
+              //         select: {
+              //           courseCode: true,
+              //           course: {
+              //             select: {
+              //               title: true,
+              //             },
+              //           },
+              //         },
+              //       },
+              //     },
+              //   })) ?? { courses: [] };
+              // courses = courses.concat(
+              //   subGroupCourses.courses.map((req) => ({
+              //     code: req.courseCode,
+              //     title: req.course.title,
+              //     id: `${group.groupKind}-${group.coursesKind}-${req.courseCode}`,
+              //     courseType: group.coursesKind as RequirementType,
+              //     quarterId: randomQuarter(input.startYear),
+              //     units: group.unitsOf,
+              //   }))
+              // );
+            }
+          });
+        });
+        courses = courses.concat(
+          geReqs.map((req) => ({
+            code: `GE Area ${req.area} ${req.subArea}`,
+            id: `${req.area}-${req.subArea}`,
+            title: `${req.subArea}`,
+            courseType: "ge",
+            quarterId: randomQuarter(input.startYear),
+            units: req.units,
+            groupId: { kind: "ge", area: req.area, subArea: req.subArea },
+          }))
+        );
+        console.dir(courses, { depth: null });
+        return courses;
+      }),
+    all: t.procedure
+      .output(z.array(z.object({ name: z.string(), id: z.string() })))
+      .query(async ({ ctx }) => {
+        let degrees = await ctx.prisma.degree.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        return degrees;
+      }),
+    concentrations: t.procedure
+      .input(z.object({ degreeId: z.string() }))
+      .output(z.array(z.object({ name: z.string(), id: z.string() })))
+      .query(async ({ ctx, input }) => {
+        return (
+          (await ctx.prisma.concentration.findMany({
+            where: {
+              degreeId: input.degreeId,
+            },
+            select: {
+              name: true,
+              id: true,
+            },
+          })) ?? []
+        );
+      }),
   }),
 });
 

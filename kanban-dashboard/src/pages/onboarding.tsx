@@ -49,7 +49,7 @@ export default function OnboardingPage() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const router = useRouter();
-  const degreesQuery = api.degrees.useQuery(undefined, {
+  const degreesQuery = api.degrees.all.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
         console.log("fetching degree requirements for:", degree);
-        trpcClient.degreeRequirements.prefetch({ degree, startYear });
+        trpcClient.degrees.requirements.prefetch({ degreeId: degree.id, startYear });
         setDegree(degree);
         break;
       }

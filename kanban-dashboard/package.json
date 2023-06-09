@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "npx prisma db push && next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "start": "next start",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^1.7.15",
-    "@prisma/client": "^4.11.0",
+    "@prisma/client": "^4.14.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-avatar": "^1.0.3",
@@ -46,6 +46,7 @@
     "clsx": "^1.2.1",
     "cmdk": "^0.2.0",
     "eslint-config-next": "^13.4.2",
+    "fetch-retry": "^5.0.6",
     "framer-motion": "^10.12.16",
     "lucide-react": "^0.233.0",
     "moment": "^2.29.4",

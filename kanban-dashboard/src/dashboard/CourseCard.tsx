@@ -78,7 +78,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
   };
   const [completeStatus, setCompleteStatus] =
     useState<CompleteStatus>("incomplete");
-  const { data: currentQuarter } = api.currentQuarterId.useQuery(undefined, {
+  const { data: currentQuarter } = api.quarters.current.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
 

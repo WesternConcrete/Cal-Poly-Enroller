@@ -15,7 +15,7 @@ export default function Flowchart() {
   const { startYear, selectedRequirements, setSelectedRequirements } =
     React.useContext(FlowchartState);
   const moveRequirement = useMoveRequirement();
-  const quartersQuery = api.quarters.useQuery({ startYear });
+  const quartersQuery = api.quarters.all.useQuery({ startYear });
 
   const classNames = useBoardStyles();
 
@@ -50,7 +50,8 @@ export default function Flowchart() {
       return;
     }
     if (source && destination) {
-      const requirementId = parseInt(draggableId);
+      // moveRequirement: (requirementId: number, quarterId: number) => void;
+      const requirementId = draggableId;
       const quarterId = parseInt(destination.droppableId);
       moveRequirement(requirementId, quarterId);
     }
