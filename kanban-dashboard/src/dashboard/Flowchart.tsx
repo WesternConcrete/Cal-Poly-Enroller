@@ -34,12 +34,12 @@ export default function Flowchart() {
     draggableId,
   }: DropResult) => {
     if (
-      selectedRequirements.includes(parseInt(draggableId)) &&
+      selectedRequirements.includes((draggableId)) &&
       destination &&
       destination.droppableId === "-1"
     ) {
       setSelectedRequirements(
-        selectedRequirements.filter((req) => req !== parseInt(draggableId))
+        selectedRequirements.filter((req) => req !== (draggableId))
       );
     }
     setDragging(false);

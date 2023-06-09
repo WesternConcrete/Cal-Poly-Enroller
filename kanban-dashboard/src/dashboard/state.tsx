@@ -22,8 +22,8 @@ type FlowchartStateType = {
   setDegree: Setter<PartialDegree | null>;
   startYear: number;
   setStartYear: Setter<number>;
-  selectedRequirements: number[];
-  setSelectedRequirements: Setter<number[]>;
+  selectedRequirements: string[];
+  setSelectedRequirements: Setter<string[]>;
 };
 
 export const FlowchartState = createContext<FlowchartStateType>(
@@ -40,7 +40,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   const [degree, setDegree] = useState<PartialDegree | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
 
-  const [selectedRequirements, setSelectedRequirements] = useState<number[]>(
+  const [selectedRequirements, setSelectedRequirements] = useState<string[]>(
     []
   );
   // default to current year
