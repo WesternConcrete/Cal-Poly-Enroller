@@ -1,0 +1,13 @@
+version: "1.1"
+name: tRPC
+tests:
+  example:
+    steps:
+      - name: Quarters
+        http:
+          url: http://localhost:3000/trpc
+          trpc:
+            query:
+              - quarters.all
+          check:
+            status: /^20/
