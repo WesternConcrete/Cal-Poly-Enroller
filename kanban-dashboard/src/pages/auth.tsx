@@ -50,7 +50,7 @@ export default function AuthPage() {
             ) : session ? (
               <>
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={handleLogout} // Add handleLogout function to sign out
                   disabled={isLoadingLogout}
                 >
@@ -64,7 +64,7 @@ export default function AuthPage() {
             ) : (
               <>
                 <Button
-                  className="bg-primaryGreen"
+                  className="bg-primaryGreen hover:bg-primaryGreenHover"
                   onClick={() => handleLogin()}
                   disabled={isLoadingLogin}
                 >

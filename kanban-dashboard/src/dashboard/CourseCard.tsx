@@ -287,14 +287,17 @@ export function RequirementSelector({
     React.useState<Requirement | null>(null);
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2 justify-center" onClick={(event) => {
+      event.stopPropagation();
+  }}>
       <Popover open={open} onOpenChange={setOpen} {...props}>
-        <PopoverTrigger asChild>
+        <PopoverTrigger>
           {selectedRequirement ? (
             <Button
               variant="ghost"
               size="sm"
-              className="h-4 border-solid bg-white mt-[.6rem]"
+              className="h-4 border-solid bg-white mt-[.6rem] w-[75px]"
+              
             >
               <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
             </Button>

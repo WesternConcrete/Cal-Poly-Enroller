@@ -11,7 +11,6 @@ export interface Props {
 }
 
 export default function Quarter({ quarter }: Props) {
-  const classNames = useLaneStyles();
   const { requirements, startYear } = useContext(FlowchartState);
   const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
     startYear - 2000 + quarter.year
