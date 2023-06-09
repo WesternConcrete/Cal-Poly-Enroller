@@ -26,6 +26,8 @@ type FlowchartStateType = {
   setStudentYear:  Setter<'Freshman' | 'Sophomore' | 'Junior' | 'Senior'>;
   studentTerm: 'Winter' | 'Spring' | 'Fall';
   setStudentTerm: Setter< 'Winter' | 'Spring' | 'Fall'>;
+  indexMap: Record<string, number>;
+  setIndexMap: Setter<Record<string, number>>;
 
 };
 
@@ -54,6 +56,8 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   else currentSeason = 'Fall';
 
   const [studentTerm, setStudentTerm] = useState<'Winter' | 'Spring' | 'Fall'>(currentSeason);
+
+  const [indexMap, setIndexMap] = useState<Record<string, number>>({});
   
   const [degree, setDegree] = useState<Degree | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -85,6 +89,8 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
     setStudentYear,
     studentTerm,
     setStudentTerm,
+    indexMap, 
+    setIndexMap,
   };
 
   // TODO: move nested courses fetch here to avoid loading spinner waterfall

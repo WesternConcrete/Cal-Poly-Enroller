@@ -11,7 +11,7 @@ export interface Props {
 }
 
 export default function Quarter({ quarter }: Props) {
-  const { requirements, startYear } = useContext(FlowchartState);
+  const { requirements, startYear, indexMap, setIndexMap } = useContext(FlowchartState);
   const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
     startYear - 2000 + quarter.year
   }`;
@@ -19,6 +19,19 @@ export default function Quarter({ quarter }: Props) {
   const quarterRequirements = requirements.filter(
     (req) => req.quarterId === quarter.id
   );
+  quarterRequirements.forEach(
+    (req, index) => {
+      if(indexMap[req.id] === undefined) {
+        const copy = indexMap
+        copy[req.id] = index
+        setIndexMap(copy)
+      }
+    }
+  );
+  
+  const mappedQuarterRequirements = quarterRequirements.sort((a, b) => {
+    return indexMap[a.id] - indexMap[b.id]
+  })
 
   return (
     <div className={`flex flex-col h-full board-status`}>
@@ -35,7 +48,7 @@ export default function Quarter({ quarter }: Props) {
               {...provided.droppableProps}
               className="p-[.5rem] h-full"
             >
-              {quarterRequirements.map((requirement, index) => (
+              {mappedQuarterRequirements.map((requirement, index) => (
                 <CourseCard
                   requirement={requirement}
                   index={index}

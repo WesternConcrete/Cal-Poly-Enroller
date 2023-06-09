@@ -14,7 +14,7 @@ import { Trash } from "lucide-react";
 import { Requirement } from "@prisma/client";
 
 export default function Flowchart() {
-  const { startYear, selectedRequirements, setSelectedRequirements, requirements } =
+  const { startYear, selectedRequirements, setSelectedRequirements, requirements, indexMap, setIndexMap } =
     React.useContext(FlowchartState);
   const moveRequirement = useMoveRequirement();
   const quartersQuery = api.quarters.useQuery({ startYear });
@@ -52,6 +52,10 @@ export default function Flowchart() {
     if (source && destination) {
       const requirementId = parseInt(draggableId);
       const quarterId = parseInt(destination.droppableId);
+      const destination_index = destination.index
+      const indexMapCopy = indexMap
+      indexMapCopy[requirementId] = destination_index
+      setIndexMap(indexMapCopy)
       moveRequirement(requirementId, quarterId);
     }
   };

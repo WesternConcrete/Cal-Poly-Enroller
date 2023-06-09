@@ -98,6 +98,8 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
     switch (courseType) {
       case RequirementTypeSchema.enum.support:
         return "bg-[#F5D2A4]";
+      // case RequirementTypeSchema.enum.elective:
+      //   return "bg-[#F5D2A4]";
       // case CourseType.CONCENTRATION:
       //   return classNames.concentration;
       // case CourseType.GWR:
