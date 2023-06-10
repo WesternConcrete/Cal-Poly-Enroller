@@ -3,8 +3,8 @@ import {beforeEach} from "vitest"
 import {mockDeep, mockReset} from "vitest-mock-extended";
 
 beforeEach(() => {
-    mockReset(db)
+    mockReset(prisma)
 })
 
-const db = mockDeep<PrismaClient>()
-export default db
+const prisma = mockDeep<PrismaClient>()
+export default prisma

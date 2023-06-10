@@ -1,9 +1,5 @@
 import { t } from "~/server/api/trpc";
 import {
-  scrapeDegrees,
-  scrapeDegreeRequirements,
-  type RequirementCourse,
-  DegreeSchema,
   RequirementTypeSchema,
   RequirementType,
   scrapeCourseGEFullfillments,
@@ -23,9 +19,6 @@ import {
   scrapeCurrentQuarter,
   termCode,
 } from "~/scraping/registrar";
-import { GEArea, GESubArea } from "@prisma/client";
-
-const courseType_arr = RequirementTypeSchema.options;
 
 const YearSchema = z
   .number()
@@ -171,7 +164,8 @@ export const appRouter = t.router({
           },
         });
         let courses = [];
-        reqGroups.forEach((group) => {
+
+        for (let group of reqGroups) {
           courses = courses.concat(
             group.courses.map((req) => ({
               code: req.courseCode,
@@ -182,10 +176,10 @@ export const appRouter = t.router({
               units: req.course.maxUnits,
             }))
           );
-        });
+        }
 
-        reqGroups.forEach((group) => {
-          group.childGroups.forEach((childGroup) => {
+        for (let group of reqGroups) {
+            for (let childGroup of group.childGroups ?? []) {
             switch (childGroup.groupKind) {
               case "or":
                 if (!childGroup.unitsOf || !group.unitsOf)
@@ -251,8 +245,8 @@ export const appRouter = t.router({
               //   }))
               // );
             }
-          });
-        });
+          };
+        }
         courses = courses.concat(
           geReqs.map((req) => ({
             code: !!req.subArea.match(/[A-E]\d/)
@@ -347,7 +341,7 @@ export const appRouter = t.router({
             })
             .then((cs) =>
               cs
-                .filter((c) => reqs.get("GWR").fullfilledBy?.includes(c.code))
+                .filter((c) => reqs.get("GWR").fullfilledBy!.includes(c.code))
                 .map((cs) => ({
                   code: cs.code,
                   title: cs.title,
@@ -357,7 +351,7 @@ export const appRouter = t.router({
           break;
         case "ge":
           reqs = await scrapeCourseGEFullfillments();
-          const {area, subArea} = input.group
+          const { area, subArea } = input.group;
           courses = await ctx.prisma.course
             .findMany({
               select: { code: true, title: true, maxUnits: true },
@@ -366,8 +360,8 @@ export const appRouter = t.router({
               cs
                 .filter((c) =>
                   reqs
-                    .get(area)?.subareas
-                    [subArea].fullfilledBy.includes(c.code)
+                    .get(area)
+                    ?.subareas[subArea].fullfilledBy.includes(c.code)
                 )
                 .map((cs) => ({
                   code: cs.code,
