@@ -20,3 +20,14 @@ Install the Prettier extension in Visual Studio Code:
 4. Customize Prettier settings (optional): If you want to customize Prettier's behavior, you can modify its settings. Search for "Prettier" in the settings and adjust the options according to your preferences.
 5. Enable format on save (optional): To automatically format your code with Prettier on save, search for "Editor: Format On Save" in the settings and enable it.
 
+Development Environment:
+
+Using node 18:
+
+```
+cd kanban-dashboard
+npm install
+npm run postinstall
+```
+
+CI/CD Notes:
