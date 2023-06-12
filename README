@@ -1,5 +1,8 @@
 The Cal Poly Flowchart Module is a personalized tool, integrated into the Cal Poly enrollment software, that allows students to track their major progress, plan future classes, and easily enroll in up-to-date courses, enhancing efficiency and effectiveness in academic planning. It helps students plan their classes more efficiently and effectively. Unlike the static flowcharts and PolyFlow, our product will be integrated with up-to-date Cal Poly class data and will be automatically configured based on the user’s class history. It will also be integrated with the enrollment software to allow students to easily enroll in classes that they plan to take at the start of each quarter.
 
+Please note we only had two primary programmers for this project (as one of our team mates was primarily dedicted for design), so we did as much as we could handle throughout the quarter.
+
+
 UI Prototype: https://tinyurl.com/ui-calpolyflowchart
 
 Diagram: https://github.com/WesternConcrete/307FinalProject/wiki/Diagram
@@ -19,6 +22,8 @@ Install the Prettier extension in Visual Studio Code:
 3. Search for "Default Formatter" and select "esbenp.prettier-vscode" as the default formatter for your project.
 4. Customize Prettier settings (optional): If you want to customize Prettier's behavior, you can modify its settings. Search for "Prettier" in the settings and adjust the options according to your preferences.
 5. Enable format on save (optional): To automatically format your code with Prettier on save, search for "Editor: Format On Save" in the settings and enable it.
+
+
 
 Development Environment:
 
