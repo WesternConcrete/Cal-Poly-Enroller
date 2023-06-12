@@ -3,9 +3,9 @@ The Cal Poly Flowchart Module is a personalized tool, integrated into the Cal Po
 Please note we only had two primary programmers for this project (as one of our team mates was primarily dedicted for design), so we did as much as we could handle throughout the quarter.
 
 
-UI Prototype: https://tinyurl.com/ui-calpolyflowchart
+**UI Prototype**: https://tinyurl.com/ui-calpolyflowchart
 
-Diagram: https://github.com/WesternConcrete/307FinalProject/wiki/Diagram
+**Diagram:** https://github.com/WesternConcrete/307FinalProject/wiki/Diagram
 
 Setting up ESLint in Visual Studio Code:
 1. Install ESLint globally: Open your terminal or command prompt and run the following command: 
@@ -25,7 +25,7 @@ Install the Prettier extension in Visual Studio Code:
 
 
 
-Development Environment:
+**Development Environment:
 
 Using node 18:
 
@@ -39,7 +39,7 @@ npm run postinstall
 npm run dev
 ```
 
-CI/CD Notes:
+**CI/CD Notes:
 
 For our CI/CD, we used Vercel. Basically, instead of explicitly creating a .yml for our Github Actions, 
 we configured a Vercel project to be attached to our repository. Then, for every branch, whenever there 
@@ -49,7 +49,7 @@ can be found on '307-final-project.vercel.app'.
 All required environment variables are stored on Vercel, but unfortunately with Vercel's pricing plan 
 we cannot share the actual Vercel project with the instructor, it is only available to 2wconvery@gmail.com.
 
-Integration notes:
+**Integration notes:
 
 Any time we want to develop a new feature, we developed a strategy of creating branches and merging them back into main. 
 This strategy is as follows:
