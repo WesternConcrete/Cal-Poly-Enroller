@@ -1,0 +1,32 @@
+on:
+  push:
+  pull_request:
+
+jobs:
+  api_test:
+    runs-on: ubuntu-latest
+    name: API Tests + Coverage
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Install Node'
+        uses: actions/setup-node@v2
+        with:
+          node-version: '17.x'
+
+      - name: npm install
+        working-directory: kanban-dashboard
+        run: npm install
+
+      - name: run vitest
+        working-directory: kanban-dashboard
+        run: npm run coverage
+
+      - name: Vitest Coverage Report
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v1.4.0
+        with:
+          working-directory: kanban-dashboard
