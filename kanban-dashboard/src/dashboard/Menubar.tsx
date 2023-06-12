@@ -1,8 +1,6 @@
 import React, { Fragment, useRef, useEffect } from "react";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useCurrentUsername } from "./CurrentUser";
-import { useMenubarStyles } from "./styles";
 import {
   Check,
   ChevronsUpDown,
@@ -94,18 +92,7 @@ export default function Menubar({}: MenubarProps) {
     setIndexForQuarter
   } = React.useContext(FlowchartState);
   const router = useRouter();
-  const classes = useMenubarStyles();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-  const currentUsername = useCurrentUsername();
 
-  const handleMenu = (event: any) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
   const degreesQuery = api.degrees.all.useQuery(undefined, {
     staleTime: Infinity, // don't refresh until the user refreshes
   });
@@ -119,8 +106,7 @@ export default function Menubar({}: MenubarProps) {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
-        console.log("fetching degree requirements for:", degree);
-        trpcClient.degrees.requirements.prefetch({ degree, startYear });
+        trpcClient.degrees.requirements.prefetch({ degree, startYear } as any);
         setDegree(degree);
         setSelectedDegreeDisplayName(degree.name);
         break;
@@ -129,7 +115,7 @@ export default function Menubar({}: MenubarProps) {
   };
 
   const ref = useRef(null as any);
-  const { data: session, status: sessionStatus } = useSession();
+  const { status: sessionStatus } = useSession();
 
   useEffect(() => {
     if (sessionStatus === "loading") {
@@ -154,33 +140,6 @@ export default function Menubar({}: MenubarProps) {
   };
 
   return (
-    // <div className="h-[30px] overflow-x-hidden ">
-    //   {router.pathname === '/dashboard' && (
-    //   <div>
-    //     <Select
-    //     value={selectedDegreeDisplayName}
-    //     onValueChange={(value) => updateDegree(value)}
-    //   >
-    //     <SelectTrigger value="Select a Degree" key={-1}>
-    //       <SelectValue placeholder="Select a Degree">Select a Degree</SelectValue>
-    //     </SelectTrigger>
-    //     <SelectContent>
-    //       {degreesQuery.data &&
-    //         degreesQuery.data.map((degree, idx) => {
-    //           return (
-    //             <SelectItem value={degree.name} key={idx}>
-    //               {degree.name}, {degree.kind}
-    //             </SelectItem>
-    //           );
-    //         })}
-    //     </SelectContent>
-    //   </Select>
-    //   <div className="flex flex-grow"></div>
-    //   </div>
-    // )}
-
-    // </div>
-
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
         <UserNav />
@@ -306,7 +265,6 @@ export function FlowchartSwitcher({ className }: TeamSwitcherProps) {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
-        console.log("fetching degree requirements for:", degree);
         trpcClient.degrees.requirements.prefetch({ degreeId: degree.id, startYear });
         setDegree(degree);
         break;
@@ -524,13 +482,10 @@ export function UserNav() {
               {sessionStatus === "authenticated" ? (
                 <AvatarImage src={session.user?.image ?? ""} alt="@user" />
               ) : (
-                <AvatarImage
-                  src={`https://msrealtors.org/wp-content/uploads/2018/11/no-user-image.gif`}
-                  alt="@user"
-                />
+                <AvatarImage src={""} alt="@user" />
               )}
               <AvatarFallback>
-                <AvatarImage src="/avatars.jpeg" alt="@shadcn" />
+                  <AvatarImage src={""} alt="@user" />
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -660,48 +615,5 @@ export function UserNav() {
         </DialogContent>
       </Dialog>
    </>
-  );
-}
-
-export function DropdownMenuDemo() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild></DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <Users className="mr-2 h-4 w-4" />
-            <span>Team</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem>
-            <Plus className="mr-2 h-4 w-4" />
-            <span>New Team</span>
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

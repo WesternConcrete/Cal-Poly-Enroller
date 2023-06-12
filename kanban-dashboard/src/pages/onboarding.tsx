@@ -31,8 +31,6 @@ import { Label } from "@/components/ui/label";
 
 import { FlowchartState, STUDENT_YEAR_OPTIONS } from "~/dashboard/state";
 
-type CardProps = React.ComponentProps<typeof Card>;
-
 export default function OnboardingPage() {
   const trpcClient = api.useContext();
   const { setDegree, startYear, requirements } =
@@ -45,7 +43,6 @@ export default function OnboardingPage() {
     "What year are you?",
   ];
   const [going_to_next, setGoingToNext] = useState(false);
-  const [nextStepComplete, setNextStepComplete] = useState(false);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const router = useRouter();
@@ -72,7 +69,6 @@ export default function OnboardingPage() {
     for (const degree of degreesQuery.data) {
       // TODO: create record of string id: Degree for faster lookup
       if (degree.name === name) {
-        console.log("fetching degree requirements for:", degree);
         trpcClient.degrees.requirements.prefetch({ degreeId: degree.id, startYear });
         setDegree(degree);
         break;
@@ -80,17 +76,12 @@ export default function OnboardingPage() {
     }
   };
 
-  useEffect(() => {
-    console.log(requirements);
-  }, [requirements]);
-
   const setDegreeWrapper = (degree: string) => {
     updateDegree(degree);
     setValue(degree);
   };
 
   const goToStep = (step: number) => {
-    setNextStepComplete(true);
     setGoingToNext(true);
     if (step < 0) {
       return handleLogout();
@@ -100,7 +91,6 @@ export default function OnboardingPage() {
       return;
     }
     setTimeout(() => {
-      setNextStepComplete(false);
       setStep(step);
       setGoingToNext(false);
     }, 350);
