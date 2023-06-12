@@ -29,7 +29,7 @@ Development Environment:
 
 Using node 18:
 
-Correctly set environment variables in .env.local
+Correctly set environment variables in .env.local at ~/kanban-dashboard/
 
 ```
 cd kanban-dashboard
