@@ -77,3 +77,5 @@ As for testing, we were able to get ~80% coverage. The reason we couldnt get 100
 
 <img width="356" alt="Screenshot 2023-06-12 at 4 03 47 PM" src="https://github.com/WesternConcrete/307FinalProject/assets/77917227/55ba2bb0-5bcd-472c-a902-7b5736770cbc">
 
+*Note: This coverage report is from our most recent push to main*
+
