@@ -44,7 +44,7 @@ npm run dev
 For our CI/CD, we used Vercel. Basically, instead of explicitly creating a .yml for our Github Actions, 
 we configured a Vercel project to be attached to our repository. Then, for every branch, whenever there 
 is a push to that branch, Vercel makes a deployment for that branch. Our production branch for "main" 
-can be found on '307-final-project.vercel.app'.
+can be found on ``` 307-final-project.vercel.app ```.
 
 All required environment variables are stored on Vercel, but unfortunately with Vercel's pricing plan 
 we cannot share the actual Vercel project with the instructor, it is only available to 2wconvery@gmail.com.
