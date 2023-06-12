@@ -70,3 +70,10 @@ Whenever you are making a new change
    - approve the PR
    
 This process minimizes merge conflicts and ensures that we are safely updating the repo.
+
+***TESTING:***
+
+As for testing, we were able to get ~80% coverage. The reason we couldnt get 100% coverage is because our backend is primarily generated via scraped data, and there is no way to validate whether the data that was scraped is necessarily "correct". While our Github Actions incorrectly labels our coverage, you can identify the true code coverage by running ```npm run coverage```. This should yield a value of about 80%. We sincerely ask for some forgiveness when it comes to code coverage, we tried to cover as much as possible but it is unfortunately rather difficult to do this since our backend is mainly centered around scraping.
+
+<img width="356" alt="Screenshot 2023-06-12 at 4 03 47 PM" src="https://github.com/WesternConcrete/307FinalProject/assets/77917227/55ba2bb0-5bcd-472c-a902-7b5736770cbc">
+
