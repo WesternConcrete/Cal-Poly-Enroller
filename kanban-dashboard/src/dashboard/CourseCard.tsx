@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Draggable, type DraggableProvided } from "react-beautiful-dnd";
-import CompleteIcon from "../components/icons/complete";
-import InProgressIcon from "../components/icons/in-progress";
-import IncompleteIcon from "../components/icons/incomplete";
 import {
   RequirementTypeSchema,
   type RequirementType,
@@ -40,6 +37,22 @@ export interface Props {
   collapsed?: boolean;
 }
 
+interface RequirementSelectorProps extends PopoverProps {
+  requirements: JustCourseInfo[];
+  setSelectedRequirement: (Requirement: JustCourseInfo) => void;
+  selectedRequirement: JustCourseInfo;
+}
+
+interface RequirementItemProps {
+  requirement: JustCourseInfo;
+  peekedRequirement: JustCourseInfo | null;
+  isSelected: boolean;
+  onSelect: () => void;
+  onPeek: (Requirement: JustCourseInfo) => void;
+}
+
+type Procedure = (...args: any[]) => void;
+
 type CompleteStatus = "complete" | "incomplete" | "in-progress";
 
 export default function CourseCard({ requirement, index, collapsed }: Props) {
@@ -61,21 +74,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
       setSelectedRequirements([...selectedRequirements, requirement.id]);
     }
   };
-
-  const COMPLETE_STATUS = {
-    complete: {
-      class: "opacity-40 cursor-pointer",
-      icon: () => <CompleteIcon />,
-    },
-    incomplete: {
-      class: "opacity-100",
-      icon: () => <IncompleteIcon />,
-    },
-    "in-progress": {
-      class: "opacity-100",
-      icon: () => <InProgressIcon />,
-    },
-  };
+  
   const [completeStatus, setCompleteStatus] =
     useState<CompleteStatus>("incomplete");
   const { data: currentQuarter } = api.quarters.current.useQuery(undefined, {
@@ -98,6 +97,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
     switch (courseType) {
       case RequirementTypeSchema.enum.support:
         return "bg-[#F5D2A4]";
+      // COMMENTED IN CASE WE HAVE FUTURE COURSE TYPES
       // case RequirementTypeSchema.enum.elective:
       //   return "bg-[#F5D2A4]";
       // case CourseType.CONCENTRATION:
@@ -281,11 +281,7 @@ export default function CourseCard({ requirement, index, collapsed }: Props) {
   );
 }
 
-interface RequirementSelectorProps extends PopoverProps {
-  requirements: JustCourseInfo[];
-  setSelectedRequirement: (Requirement: JustCourseInfo) => void;
-  selectedRequirement: JustCourseInfo;
-}
+
 
 export function RequirementSelector({
   requirements,
@@ -351,14 +347,6 @@ export function RequirementSelector({
   );
 }
 
-interface RequirementItemProps {
-  requirement: JustCourseInfo;
-  peekedRequirement: JustCourseInfo | null;
-  isSelected: boolean;
-  onSelect: () => void;
-  onPeek: (Requirement: JustCourseInfo) => void;
-}
-
 function RequirementItem({
   requirement,
   isSelected,
@@ -368,7 +356,6 @@ function RequirementItem({
 }: RequirementItemProps) {
   const ref = React.useRef<HTMLDivElement>(null);
 
-  type Procedure = (...args: any[]) => void;
 
   function debounce<F extends Procedure>(func: F, waitMilliseconds: number): F {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;

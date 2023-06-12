@@ -99,7 +99,6 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
 
   const setRequirementsWrapper = (requirements: Requirement[]) => {
     requirements.forEach(req => {
-      console.log(req)
       setIndexForQuarter(req.quarterId.toString(), 0,  req.id)
     })
     setRequirements(requirements)
@@ -112,9 +111,7 @@ export const FlowchartStateProvider: FC<{ children: React.ReactNode }> = ({
   // default to current year
   // TODO: create way to select start year
   const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
-  useEffect(() => {
-    console.log("updating requirements!");
-  }, [requirements]);
+  
   const _requirementsQuery = api.degrees.requirements.useQuery(
     { degreeId: degree?.id ?? null, startYear },
     { enabled: false, onSuccess: (data) => setRequirementsWrapper(data) }
@@ -161,7 +158,6 @@ export const useMoveRequirement = () => {
         const newRequirements = requirements.map((r) => {
           if (r.id === requirementId) {
             found = true;
-            console.log("moving:", r, "to:", quarterId);
             r.quarterId = quarterId;
           }
           return r;
@@ -179,7 +175,6 @@ export const useMoveRequirement = () => {
 };
 
 export const DraggingState = React.createContext({
-  // existing state and functions...
   dragging: false,
   setDragging: (() => {}) as unknown as Dispatch<SetStateAction<boolean>>,
   draggingItem: null,

@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import { Droppable, type DroppableProvided } from "react-beautiful-dnd";
 import CourseCard from "./CourseCard";
-import { useLaneStyles } from "./styles";
 import { FlowchartState } from "~/dashboard/state";
 import { type Quarter } from "~/server/api/root";
 import { TERM_SEASON } from "~/scraping/registrar";
@@ -11,7 +10,7 @@ export interface Props {
 }
 
 export default function Quarter({ quarter }: Props) {
-  const { requirements, startYear, indexMap, setIndexMap } = useContext(FlowchartState);
+  const { requirements, startYear, indexMap } = useContext(FlowchartState);
   const title = `${TERM_SEASON[quarter.termNum].toUpperCase()} '${
     startYear - 2000 + quarter.year
   }`;

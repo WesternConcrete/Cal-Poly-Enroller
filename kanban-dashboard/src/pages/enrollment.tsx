@@ -97,7 +97,6 @@ export default function EnrollmentPage() {
   };
 
   const openRateMyProfessor = (instructor: string) => {
-    console.log(instructor);
     window.open(
       `https://www.ratemyprofessors.com/search/professors?q=${instructor}`,
       "_blank"

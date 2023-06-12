@@ -1,6 +1,5 @@
 import React, { useContext, useEffect } from "react";
 import { DragDropContext, type DropResult } from "react-beautiful-dnd";
-import { useBoardStyles } from "./styles";
 import Quarter from "./Quarter";
 import {
   FlowchartState,
@@ -134,16 +133,12 @@ export default function Flowchart() {
     id: number;
     year: number;
     termNum: 2 | 4 | 6 | 8;
-  }, seasonMapping: Record<string, number>, year_index: number, currentSeason: string) => {
+  }, year_index: number, currentSeason: string) => {
   
    
     if (quarter.year > year_index) {
-      // console.log(quarter.year, year_index)
-      // Render all quarters in future years
       return true;
     } else if (quarter.year === year_index) {
-      // console.log( quarter.termNum, currentMappedSeason * 2)
-      // For the current year, render the quarters that are in the current season or later
       if(currentSeason === 'Winter') {
         return quarter.termNum !== 8
       } else if (currentSeason === 'Spring') {
@@ -171,7 +166,7 @@ export default function Flowchart() {
       quartersQuery.data.forEach((quarter) => {
         // Assuming you have some logic to determine if a quarter should be rendered
         
-        const shouldRender = isRenderedQuarter(quarter, seasonMapping, year_index, studentTerm);
+        const shouldRender = isRenderedQuarter(quarter, year_index, studentTerm);
         if (!shouldRender) {
           // Assuming you have some function to get quarter requirements
           const quarterRequirements = getQuarterRequirements(quarter.id);
