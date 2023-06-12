@@ -22,7 +22,7 @@ Install the Prettier extension in Visual Studio Code:
 
 Development Environment:
 
-* Using node 18: *
+Using node 18:
 
 ```
 cd kanban-dashboard
