@@ -29,9 +29,9 @@ Development Environment:
 
 Using node 18:
 
-```
 Correctly set environment variables in .env.local
 
+```
 cd kanban-dashboard
 npm install
 npm run postinstall
