@@ -48,3 +48,25 @@ can be found on '307-final-project.vercel.app'.
 
 All required environment variables are stored on Vercel, but unfortunately with Vercel's pricing plan 
 we cannot share the actual Vercel project with the instructor, it is only available to 2wconvery@gmail.com.
+
+Integration notes:
+
+Any time we want to develop a new feature, we developed a strategy of creating branches and merging them back into main. 
+This strategy is as follows:
+
+Whenever you are making a new change
+   - checkout "main"
+   - pull main
+   - checkout a new sandbox branch that you will develop on from main
+   - when you are done, push your changes to this new branch
+   - checkout main
+   - pull main
+   - checkout a new "merge" branch from main
+   - on this new "merge" branch, do a "git merge <branch-name>" on your sandbox branch
+   - resolve merge conflicts on this new merge branch
+   - run linters
+   - once all conflicts are resolved and all is linted, push changes to the merge branch
+   - create a PR to pull this merge branch into main
+   - approve the PR
+   
+This process minimizes merge conflicts and ensures that we are safely updating the repo.
