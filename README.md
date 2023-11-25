@@ -3,6 +3,9 @@ The Cal Poly Flowchart Module is a personalized tool, integrated into the Cal Po
 Please note we only had two primary programmers for this project (as one of our team mates was primarily dedicted for design), so we did as much as we could handle throughout the quarter.
 
 
+![enroller](preview/enroller.gif) 
+
+
 ***UI Prototype*** https://tinyurl.com/ui-calpolyflowchart
 
 ***Diagram*** https://github.com/WesternConcrete/307FinalProject/wiki/Diagram
