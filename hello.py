@@ -1,3 +1,4 @@
 #!/usr/bin/env python3
+import uuid
 
-print("hello")
+print(uuid.uuid4())
